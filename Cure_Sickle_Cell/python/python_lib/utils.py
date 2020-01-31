@@ -41,7 +41,7 @@ def get_dic_renaming_vars(variablesDict: pd.DataFrame) -> dict:
     return dic_renaming
 
 
-def match_dummies_to_varNames(plain_columns: pd.Index,
+def match_dummies_to_names(plain_columns: pd.Index,
                              dummies_columns: pd.Index,
                              columns: list =["simplified_varName", "dummies_varName"]) -> pd.DataFrame:
     dic_map = {}

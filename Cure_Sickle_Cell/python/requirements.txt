@@ -1,0 +1,8 @@
+numpy>=1.17.3
+matplotlib>=3.1.1
+pandas>=0.25.3
+scipy>=1.3.1
+tqdm>=4.38.0
+statsmodels>=0.10.2
+git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git
+git+https://github.com/hms-dbmi/pic-sure-python-client.git 
