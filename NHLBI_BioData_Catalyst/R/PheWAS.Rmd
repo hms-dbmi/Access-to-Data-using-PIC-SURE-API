@@ -52,8 +52,8 @@ for (package in list_packages){
 #### Installing latest R PIC-SURE API libraries from github
 
 ```{r}
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-client")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds")
 ```
 
 #### Loading user-defined functions
@@ -124,12 +124,12 @@ head(variablesDict)
 Subseting to keep only the phenotypical variables + the "affection status", that will be used as the dependent variable for this illustration use-case.
 
 ```{r}
-mask_copdgene <- variablesDict["level_1"] == 'Genetic Epidemiology of COPD (COPDGene)'
-mask_pheno <- variablesDict["level_2"] == 'Subject Phenotype'
-mask_status <- variablesDict["level_3"] == 'Affection status'
+mask_copdgene <- variablesDict["level_0"] == 'Genetic Epidemiology of COPD (COPDGene)'
+mask_pheno <- variablesDict["level_1"] == 'Subject Phenotype'
+mask_status <- variablesDict["level_2"] == 'Affection status'
 mask_to_drop <- variablesDict[["simplified_name"]] %in% list("Dbgap_id", "De-identified site code", "A1AD: phenotype/genotype")
 mask_vars <- mask_copdgene & (mask_pheno | mask_status) & !mask_to_drop
-selected_vars <- variablesDict[mask_vars, "name"] %>% as.list()
+selected_vars <- variablesDict[mask_vars, ]$name %>% unname() %>% as.list()
 ```
 
 ```{r}
@@ -181,7 +181,7 @@ variablesDict[["df_name"]] <- variablesDict[["df_name"]]
 ```
 
 ```{r}
-checking_parsing(names(facts)[-1], variablesDict[mask_vars, "df_name"])
+checking_parsing(names(facts)[-1], variablesDict[mask_vars, ][["df_name"]])
 ```
 
 #### Selecting variables regarding their types
@@ -191,8 +191,8 @@ One important step in a PheWAS is to get the distinction between categorical and
 
 ```{r}
 mask_categories <- variablesDict[, "categorical"] == TRUE
-categorical_varnames <- variablesDict[mask_categories & mask_vars, "df_name"]
-continuous_varnames <- variablesDict[!mask_categories & mask_vars, "df_name"]
+categorical_varnames <- variablesDict[mask_categories & mask_vars, ][["df_name"]]
+continuous_varnames <- variablesDict[!mask_categories & mask_vars, ][["df_name"]]
 ```
 
 ### Selecting the dependent variable to study
@@ -202,6 +202,9 @@ Here we will use the **COPD status** as the case-control variable to dichotomize
 
 ```{r}
 dependent_varname <- variablesDict[variablesDict[["simplified_name"]] == "Affection status",][["df_name"]]
+```
+
+```{r}
 categorical_varnames <- categorical_varnames[-which(categorical_varnames == dependent_varname)]
 ```
 
@@ -302,10 +305,6 @@ variablesDict_enhanced <- dplyr::left_join(variablesDict, df_pvalues, by="df_nam
 variablesDict_enhanced <- dplyr::left_join(variablesDict, df_pvalues, by="df_name")
 ```
 
-```{r}
-head(variablesDict_enhanced)
-```
-
 #### Univariate test p-values distribution
 
 ```{r}
@@ -355,8 +354,8 @@ non_nan <- which(!is.na(variablesDict_enhanced$pvalues))
 plot_df <- variablesDict_enhanced[non_nan, ]
 plot_df$log_pvalues <- round(plot_df$log_pvalues, 5)
 
-plot_df = variablesDict[, c("df_name", "level_3")] %>%
-plyr::rename(replace = c("level_3" = "category")) %>%
+plot_df = variablesDict[, c("df_name", "level_2")] %>%
+plyr::rename(replace = c("level_2" = "category")) %>%
 right_join(plot_df, by="df_name")
 
 plot_df$df_name <- as.factor(plot_df$df_name)
