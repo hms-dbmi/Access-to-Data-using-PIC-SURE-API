@@ -19,7 +19,7 @@ jupyter:
 This notebook is an illustration example of how to use the R **PIC-SURE API** to select and query data from an HPDS-hosted database. It takes as use-case a simple PheWAS analysis. This notebook is intentionally straightforward, and explanation provided are only aimed at guiding through the PheWAS analysis pipeline. For a more step-by-step introduction to the R PIC-SURE API, see the `R_PICSURE-API_101_PheWAS_example.ipynb` Notebook.
 
 
-**Before running this notebook, please be sure to get an user-specific security token. For more information on how to proceed, see the `HPDS_connection.ipynb` notebook**
+**Before running this notebook, please be sure to get an user-specific security token. For more information on how to proceed, see the `get_your_token.ipynb` notebook**
 
 
 ## Environment set-up
@@ -31,7 +31,7 @@ This notebook is an illustration example of how to use the R **PIC-SURE API** to
 
 ### Packages installation
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 list_packages <- c("ggrepel",
                    "jsonlite",
                    "ggplot2",
