@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+import PicSureHpdsLib
+import PicSureClient
 
 def get_multiIndex_variablesDict(variablesDict: pd.DataFrame) -> pd.DataFrame:
 
@@ -72,3 +74,11 @@ def joining_variablesDict_onCol(variablesDict: pd.DataFrame,
     variablesDict_joined = variablesDict_joined.reset_index(drop=False)\
         .set_index(variablesDict_index_names)
     return variablesDict_joined
+
+
+def get_HPDS_con(PICSURE_network_URL, resource_id, my_token):
+    client = PicSureClient.Client()
+    connection = client.connect(PICSURE_network_URL, my_token)
+    adapter = PicSureHpdsLib.Adapter(connection)
+    db_con = adapter.useResource(resource_id)
+    return db_con
