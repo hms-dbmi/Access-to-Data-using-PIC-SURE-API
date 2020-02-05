@@ -13,7 +13,7 @@ jupyter:
     name: ir
 ---
 
-# Phenome-Wide analysis on COPDgene data: R PIC-SURE API use-case
+# PICSURE R API use-case: Phenome-Wide analysis on BioData Catalyst studies
 
 
 This notebook is an illustration example of how to use the R **PIC-SURE API** to select and query data from an HPDS-hosted database. It takes as use-case a simple PheWAS analysis. This notebook is intentionally straightforward, and explanation provided are only aimed at guiding through the PheWAS analysis pipeline. For a more step-by-step introduction to the R PIC-SURE API, see the `R_PICSURE-API_101_PheWAS_example.ipynb` Notebook.
@@ -154,16 +154,6 @@ Retrieving the data:
 
 ```{r}
 my_query = hpds::new.query(resource = resource)
-```
-
-```{r}
-## TEST 
-hpds::query.filter.add(query = my_query,
-                      keys = consent_dic[["name"]],
-                      "phs000179.c0")
-facts = hpds::query.run(query = my_query, result.type = "dataframe")
-
-## TEST 
 ```
 
 ```{r}
