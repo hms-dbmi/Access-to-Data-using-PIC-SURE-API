@@ -4,5 +4,5 @@ pandas>=0.25.3
 scipy>=1.3.1
 tqdm>=4.38.0
 statsmodels>=0.10.2
-git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git
-git+https://github.com/hms-dbmi/pic-sure-python-client.git 
+git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git@e04e83c1cc444df2baedebaaec12b001ba9ced99
+git+https://github.com/hms-dbmi/pic-sure-python-client.git@cce43ac007d3e58158e9b8a0dd833fa270417291
