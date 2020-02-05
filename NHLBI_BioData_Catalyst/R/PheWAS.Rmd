@@ -31,7 +31,7 @@ This notebook is an illustration example of how to use the R **PIC-SURE API** to
 
 ### Packages installation
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 list_packages <- c("ggrepel",
                    "jsonlite",
                    "ggplot2",
@@ -72,6 +72,7 @@ token_file <- "token.txt"
 
 ```{r}
 token <- scan(token_file, what = "character")
+
 ```
 
 ```{r}
@@ -100,6 +101,9 @@ This analysis is conducted using COPDGene Study data. The study overall goal is 
 <!-- #endregion -->
 
 ### 1. Retrieving variable dictionary from HPDS Database
+
+
+Retrieving variables dictionary only for the COPDGene study.
 
 ```{r}
 copdgene_variables <- hpds::find.in.dictionary(resource, "Genetic Epidemiology of COPD (COPDGene)")
@@ -136,18 +140,30 @@ selected_vars <- variablesDict[mask_vars, ]$name %>% unname() %>% as.list()
 print(selected_vars[1:5])
 ```
 
-Here we use the accession number of COPDGene study to select only the records that do match this strings.
+### Subsetting only COPDGene records
+
+
+To subset only the subjects from the COPDGene study, we are using the different COPDGene study accession codes, which all begins with 'phs000179...'.
 
 ```{r}
 phs_values = strsplit(consent_dic[["categoryValues"]], ",") %>% unlist()
 phs_copdgene = grep("phs000179\\.*", phs_values, perl=T, value=T) %>% as.list()
-# phs_copdgene = do.call(list, list(phs_copdgene))
 ```
 
 Retrieving the data:
 
 ```{r}
 my_query = hpds::new.query(resource = resource)
+```
+
+```{r}
+## TEST 
+hpds::query.filter.add(query = my_query,
+                      keys = consent_dic[["name"]],
+                      "phs000179.c0")
+facts = hpds::query.run(query = my_query, result.type = "dataframe")
+
+## TEST 
 ```
 
 ```{r}
