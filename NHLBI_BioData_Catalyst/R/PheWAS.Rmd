@@ -31,7 +31,7 @@ This notebook is an illustration example of how to use the R **PIC-SURE API** to
 
 ### Packages installation
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 list_packages <- c("ggrepel",
                    "jsonlite",
                    "ggplot2",
@@ -183,10 +183,10 @@ Since variable names are not the same between the dictionary and the dataframe c
 
 ```{r}
 variablesDict[["df_name"]] <- parsing_varNames(variablesDict[["name"]])
-variablesDict[["df_name"]] <- variablesDict[["df_name"]]
+
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 checking_parsing(names(facts)[-1], variablesDict[mask_vars, ][["df_name"]])
 ```
 
