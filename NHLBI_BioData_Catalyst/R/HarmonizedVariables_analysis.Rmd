@@ -207,15 +207,29 @@ facts <- facts[!is.na(facts[[sex_varname]]),]
 # ggplot options
 options(repr.plot.width=18, repr.plot.height=12)
 
-my_theme <- theme_bw() +
-theme(axis.title.y = element_text(face="italic", size=15),
+# ggplot options
+options(repr.plot.width=18, repr.plot.height=12)
+if (names(dev.cur()) %in% c("RStudioGD", "null device")) {
+  my_theme <- theme_bw() +
+theme(axis.title.y = element_text(size=12),
+      title = element_text(size=10),
+      axis.title.x = element_text(size=12),
+      axis.text.y = element_text(size=7),
+      axis.text.x = element_text(size=12),
+      legend.text = element_text(size=10),
+      panel.grid.major.x = element_blank()
+      )
+} else {
+    my_theme <- theme_bw() +
+theme(axis.title.y = element_text(size=15),
       title = element_text(size=20),
       axis.title.x = element_text(size=20),
       axis.text.y = element_text(size=15),
-      axis.text.x = element_text(angle=0, size=15),
+      axis.text.x = element_text(size=15),
       legend.text = element_text(size=15),
       panel.grid.major.x = element_blank()
       )
+}
 ```
 
 ```{r}
