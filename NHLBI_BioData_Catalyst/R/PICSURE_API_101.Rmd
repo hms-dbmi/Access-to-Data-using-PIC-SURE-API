@@ -58,29 +58,15 @@ GitHub repo:
 
 ### Packages installation
 
-```{r jupyter={'outputs_hidden': True}}
-list_packages <- c("ggrepel",
-                   "jsonlite", 
-                   "ggplot2",
-                   "plyr",
-                   "dplyr",
-                   "tidyr",
-                   "purrr",
-                   "devtools")
-
-for (package in list_packages){
-     if(! package %in% installed.packages()){
-         install.packages(package, dependencies = TRUE)
-     }
-     library(package, character.only = TRUE)
-}
+```{r}
+Rscript("R_lib/requirements.txt")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
 
 ```{r}
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, ref="353b541957e4bd2f26d0a72024937a1846a94ee0")
 ```
 
 ##### Loading user-defined functions
@@ -145,7 +131,7 @@ dictionary_search <- hpds::find.in.dictionary(resource, "COPD")
 
 Subsequently, objects created by the `dictionary.find` exposes the search result using 4 different methods: `.count()`, `.keys()`, `.entries()`, and `.DataFrame()`. 
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 print(list("Count"   = hpds::extract.count(dictionary_search), 
            "Keys"    = hpds::extract.keys(dictionary_search)[1:3],
            "Entries" = hpds::extract.entries(dictionary_search)[1:3]))
@@ -172,7 +158,7 @@ plain_variablesDict <- hpds::find.in.dictionary(resource, "COPDGene") %>% hpds::
 
 Moreover, using the `hpds::find.in.dictionary` function without arguments return every entries, as shown in the help documentation. *As for now, this takes a long time in the R PIC-SURE API implementation, and it will probably be fixed in the latter version of the API*
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 plain_variablesDict[10:20,]
 ```
 
@@ -192,7 +178,7 @@ Although not an official feature of the API, such functionality illustrate how t
 
 Printing part of the "parsed names" Dictionary allows to quickly see the tree-like organisation of the variables. Moreover, original and simplified variable names are now stored respectively in the "varName" and "simplified_varName" columns (simplified variable names is simply the last component of the variable name, which usually makes the most sense to know what each variable is about).
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 # Display the variables tree hierarchy from the variables name
 variablesDict <- get_multiIndex_variablesDict(plain_variablesDict)
 head(variablesDict)
@@ -200,7 +186,7 @@ head(variablesDict)
 
 Below is a simple example to illustrate the ease of use a parsed dictionary. Let's say we are interested in every variables pertaining to the "Medical history" and "Medication history" subcategories.
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 mask_medication <- variablesDict[,3] == "Medication History"
 mask_medical <- variablesDict[,3] == "Medical History"
 medication_history_variables <- variablesDict[mask_medical | mask_medication,]

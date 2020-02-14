@@ -32,28 +32,14 @@ This notebook is an illustration example of how to use the R **PIC-SURE API** to
 ### Packages installation
 
 ```{r jupyter={'outputs_hidden': True}}
-list_packages <- c("ggrepel",
-                   "jsonlite",
-                   "ggplot2",
-                   "plyr",
-                   "dplyr",
-                   "tidyr",
-                   "purrr",
-                   "devtools")
-
-for (package in list_packages){
-     if(! package %in% installed.packages()){
-         install.packages(package, dependencies = TRUE)
-     }
-     library(package, character.only = TRUE)
-}
+Rscript("R_lib/requirements.R")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
 
 ```{r}
-devtools::install_github("hms-dbmi/pic-sure-r-client")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds")
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, ref="353b541957e4bd2f26d0a72024937a1846a94ee0")
 ```
 
 #### Loading user-defined functions
