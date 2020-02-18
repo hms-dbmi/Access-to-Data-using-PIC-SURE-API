@@ -42,7 +42,7 @@ source("R_lib/requirements.R")
 
 ```{r}
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, ref="353b541957e4bd2f26d0a72024937a1846a94ee0")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
 ```
 
 #### Loading user-defined functions
