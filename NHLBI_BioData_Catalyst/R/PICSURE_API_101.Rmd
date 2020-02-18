@@ -87,12 +87,12 @@ token_file = "token.txt"
 ```
 
 ```{r}
-my_token <- scan(token_file, what = "character")
+token <- scan(token_file, what = "character")
 ```
 
 ```{r}
 connection <- picsure::connect(url = PICSURE_network_URL,
-                                 token = my_token)
+                                 token = token)
 ```
 
 ```{r}
