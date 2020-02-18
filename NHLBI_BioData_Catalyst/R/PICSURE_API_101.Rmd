@@ -59,7 +59,7 @@ GitHub repo:
 ### Packages installation
 
 ```{r}
-Rscript("R_lib/requirements.txt")
+source("R_lib/requirements.txt")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github

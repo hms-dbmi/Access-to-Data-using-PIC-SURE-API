@@ -32,7 +32,7 @@ This notebook is an illustration example of how to use the R **PIC-SURE API** to
 ### Packages installation
 
 ```{r jupyter={'outputs_hidden': True}}
-Rscript("R_lib/requirements.R")
+source("R_lib/requirements.R")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
