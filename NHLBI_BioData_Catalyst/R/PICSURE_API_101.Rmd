@@ -65,8 +65,8 @@ Rscript("R_lib/requirements.txt")
 #### Installing latest R PIC-SURE API libraries from github
 
 ```{r}
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T, upgrade="always")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, upgrade="always")
 ```
 
 ##### Loading user-defined functions
