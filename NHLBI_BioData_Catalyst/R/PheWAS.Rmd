@@ -283,7 +283,7 @@ for (independent_varname in independent_varnames) {
 ```{r}
 df_pvalues <- data.frame(
     "df_name" = names(pvalues_list),
-    "pvalues" = simplify(unname(pvalues_list)),
+    "pvalues" = unlist(unname(pvalues_list)),
     stringsAsFactors = F
 )
 ```
