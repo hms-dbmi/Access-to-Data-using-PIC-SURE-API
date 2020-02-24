@@ -81,9 +81,9 @@ source("R_lib/utils.R")
 Several information are needed to get access to data through the PIC-SURE API: a network URL, a resource id, and a user security token which is specific to a given URL + resource.
 
 ```{r}
-PICSURE_network_URL <- "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
-token_file = "token.txt"
+token_file <- "token.txt"
 ```
 
 ```{r}
