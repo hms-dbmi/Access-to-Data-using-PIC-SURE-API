@@ -6,6 +6,7 @@ import PicSureClient
 
 from typing import List
 
+
 def get_multiIndex_variablesDict(variablesDict: pd.DataFrame) -> pd.DataFrame:
 
     def _varName_toMultiIndex(index_varDictionnary: pd.Index) -> pd.MultiIndex:
@@ -25,8 +26,6 @@ def get_multiIndex_variablesDict(variablesDict: pd.DataFrame) -> pd.DataFrame:
                 yield len(elem)
             else:
                 yield np.NaN
-        
-    
     variablesDict = variablesDict.rename_axis("name", axis=0).sort_index()
     multi_index = _varName_toMultiIndex(variablesDict.index)
     last_valid_name_list = _get_simplified_varname(multi_index)
@@ -77,61 +76,3 @@ def joining_variablesDict_onCol(variablesDict: pd.DataFrame,
         .set_index(variablesDict_index_names)
     return variablesDict_joined
 
-
-def get_plt_grid_indices(nb_values: int=None, 
-                         nb_cols  : int=None, 
-                         nb_rows  : int=None) -> List[tuple]:
-    """
-    A utility function to get list of tuples (matplotlib-like grid indices) from given parameters
-    Iterate column first
-    Return 
-    """
-    passed_args = locals()
-    def _check_args(nb_values=None, 
-                   nb_cols=None, 
-                   nb_rows=None):
-        args = locals()
-        args = {k:v for k,v in args.items() if v is not None}
-        if len(args) == 3:
-            assert(args["nb_cols"] * args["nb_rows"] >= args["nb_values"]), "discrepancies in the passed arguments values"
-            assert((max(args["nb_cols"], args["nb_rows"]) - 1) * min(args["nb_cols"], args["nb_rows"]) < args["nb_values"]), "discrepancies in the passed arguments values"
-        elif (len(args) == 1) & ("nb_values" not in args):
-            raise ValueError("Only {0} passed, please pass the complementary\
-            dimension argument, or the nb_values".format(args))
-        elif len(args) == 0:
-            raise ValueError("No arguments passed")
-
-    def _get_complementary_values(nb_values: int=None, 
-                                  nb_cols  : int=None, 
-                                  nb_rows  : int=None) -> tuple:
-        args = locals()
-        args = {k:v for k,v in args.items() if v is not None}
-        if ("nb_values" in args) & (len(args) == 1):
-            nb_cols = np.floor(np.sqrt(nb_values))
-            nb_rows = nb_cols + 1
-            return int(nb_values), int(nb_cols), int(nb_rows)
-        elif ("nb_values" in args) & (len(args) == 2):
-            if "nb_cols" in args:
-                nb_rows = np.ceil(nb_values/nb_cols)
-            elif "nb_rows" in args:
-                nb_cols = np.ceil(nb_values/nb_rows)
-            return int(nb_values), int(nb_cols), int(nb_rows)
-        elif "nb_values" not in args:
-            nb_values = nb_rows * nb_cols
-            return int(nb_values), int(nb_cols), int(nb_rows)
-        else:
-            return nb_values, nb_cols, nb_rows
-    
-    def _get_facet_grid_vec(nb_values, nb_cols, nb_rows):
-        first_dim = np.arange(0, nb_cols)
-        second_dim = np.arange(0, nb_rows)
-        vec_indices = []
-        for ind_col in second_dim:
-            for ind_row in first_dim:
-                vec_indices.append((ind_col, ind_row))
-        return vec_indices[0:nb_values]
-    
-    _check_args(**passed_args)
-    nb_values, nb_cols, nb_rows = _get_complementary_values(**passed_args)
-    vec_indices = _get_facet_grid_vec(nb_values, nb_cols, nb_rows)
-    return vec_indices, (nb_cols, nb_rows)
