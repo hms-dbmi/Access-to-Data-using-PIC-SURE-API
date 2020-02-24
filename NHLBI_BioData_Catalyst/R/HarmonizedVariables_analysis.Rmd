@@ -147,9 +147,13 @@ Retrieving the data:
 
 ```{r pycharm={'is_executing': False}}
 query <- hpds::new.query(resource)
-hpds::query.anyof.add(query, selected_vars)
+hpds::query.select.add(query, selected_vars)
 facts <- hpds::query.run(query, result.type = "dataframe") %>% dplyr::as_tibble()
 facts[["Patient.ID"]] <- NULL
+```
+
+```{r}
+facts <- facts[complete.cases(facts),]
 ```
 
 ```{r}
@@ -233,7 +237,7 @@ count_table <- facts_to_plot %>% dplyr::group_by(Studies) %>%
     mutate(total = sum(n))
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 ggplot(count_table) +
 geom_bar(aes_string(x="Studies", y="freq", fill="Sex"),
          stat="identity",
