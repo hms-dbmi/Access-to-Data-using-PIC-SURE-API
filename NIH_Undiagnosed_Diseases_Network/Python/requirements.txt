@@ -2,6 +2,3 @@ git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git
 git+https://github.com/hms-dbmi/pic-sure-python-client.git 
 pandas==1.0.1
 pprint==0.1
-matplotlib==3.1.3
-numpy==1.18.1
-collections-extended==1.0.3
