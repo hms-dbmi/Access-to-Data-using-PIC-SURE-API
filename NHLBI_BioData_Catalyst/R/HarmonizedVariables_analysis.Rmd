@@ -34,42 +34,42 @@ This tutorial notebook will demonstrate how to query and work with the BioData C
 
 ### Packages installation
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 source("R_lib/requirements.R")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 devtools::install_github("hms-dbmi/pic-sure-r-client", force = T, upgrade = "always")
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force = T, upgrade = "always")
 ```
 
 #### Loading user-defined functions
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 source("R_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE network
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
 token_file <- "token.txt"
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 token <- scan(token_file, what = "character")
 
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 myconnection <- picsure::connect(url = PICSURE_network_URL,
                                  token = token)
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 resource <- hpds::get.resource(myconnection,
                                resourceUUID = resource_id)
 ```
@@ -105,11 +105,11 @@ More information about the variables harmonization process is available at:
 
 Here we retrieve the harmonized variables information by querying the "harmonized" keyword.
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 harmonized_dic <- hpds::find.in.dictionary(resource, "harmonized") %>% hpds::extract.dataframe()
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 # Display the variables tree hierarchy from the variables name
 multiIndexdic <- get_multiIndex_variablesDict(harmonized_dic)
 multiIndexdic_sub <- multiIndexdic[!grepl("(^[Aa]ge)|(SUBJECT_ID)",
@@ -117,7 +117,7 @@ multiIndexdic_sub <- multiIndexdic[!grepl("(^[Aa]ge)|(SUBJECT_ID)",
 dim(multiIndexdic_sub)
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 head(multiIndexdic_sub)
 ```
 
@@ -131,74 +131,74 @@ Let's say we are interested in the subset of Harmonized Variables pertaining to 
 
 Subseting to keep only the phenotypical variables + the "affection status", that will be used as the dependent variable for this illustration use-case.
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 variablesDict <- multiIndexdic_sub[multiIndexdic_sub[[2]] == '01 - Demographics', ]
 ```
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 selected_vars <- variablesDict[["name"]] %>% as.list()
 ```
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 selected_vars
 ```
 
 Retrieving the data:
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 query <- hpds::new.query(resource)
 hpds::query.select.add(query, selected_vars)
 facts <- hpds::query.run(query, result.type = "dataframe") %>% dplyr::as_tibble()
 facts[["Patient.ID"]] <- NULL
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 facts <- facts[complete.cases(facts),]
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 variablesDict[["df_name"]] <- parsing_varNames(variablesDict[["name"]])
 mask_simplified_names <- sapply(names(facts), function(x) which(variablesDict[["df_name"]] ==x)) %>% unname()
 renaming_facts <- variablesDict[mask_simplified_names, ][["simplified_name"]]
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 names(facts) <- renaming_facts
 sex_varname <- "Subject sex  as recorded by the study."
 study_varname <- "A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort."
 race_varname <- "Harmonized race category of participant."
 ```
 
-```{r pycharm={'is_executing': False}}
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 facts[facts[sex_varname] == "", sex_varname] <- NA
 facts <- droplevels(facts)
 ```
 
-```{r pycharm={'is_executing': False, 'name': '#%% \n'}}
+```{r pycharm={'is_executing': False, 'name': '#%% \n'}, jupyter={'outputs_hidden': True}}
 dim(facts)
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 head(facts)
 ```
 
 ## Studying the sex repartion across studies
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 require(RColorBrewer)
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 sex_varname <- "Subject sex  as recorded by the study."
 study_varname <- "A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort."
 race_varname <- "Harmonized race category of participant."
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 facts <- facts[!is.na(facts[[sex_varname]]),]
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 # ggplot options
 options(repr.plot.width=18, repr.plot.height=12)
 
@@ -227,7 +227,7 @@ theme(axis.title.y = element_text(size=15),
 }
 ```
 
-```{r}
+```{r jupyter={'outputs_hidden': True}}
 facts_to_plot <- facts
 names(facts_to_plot)[names(facts_to_plot) == study_varname] <- "Studies"
 names(facts_to_plot)[names(facts_to_plot) == sex_varname] <- "Sex"
@@ -237,7 +237,7 @@ count_table <- facts_to_plot %>% dplyr::group_by(Studies) %>%
     mutate(total = sum(n))
 ```
 
-```{r jupyter={'outputs_hidden': True}}
+```{r}
 ggplot(count_table) +
 geom_bar(aes_string(x="Studies", y="freq", fill="Sex"),
          stat="identity",
