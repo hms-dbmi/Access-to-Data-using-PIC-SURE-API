@@ -7,6 +7,8 @@ list_packages <- c("ggplot2",
 if (grepl("(amzn)|(aws)", Sys.info()[["release"]])) {
     install.packages("cli")
     install.packages("usethis")
+    install.packages("openssl")
+    install.packages("urltools")
     install.packages("devtools")
 }
 
@@ -32,4 +34,5 @@ if (getRversion() < "3.5.0") {
       is.logical(x) && length(x) == 1L && !is.na(x) && x
     }
 }
+
 
