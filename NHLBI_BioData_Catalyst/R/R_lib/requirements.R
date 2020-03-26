@@ -24,3 +24,12 @@ for (package in list_packages){
 for (package in list_packages) {
     library(package, character.only = TRUE)
 }
+if (getRversion() < "3.5.0") {
+    isFALSE = function(x) {
+      is.logical(x) && length(x) == 1L && !is.na(x) && !x
+    }
+    isTRUE = function(x) {
+      is.logical(x) && length(x) == 1L && !is.na(x) && x
+    }
+}
+
