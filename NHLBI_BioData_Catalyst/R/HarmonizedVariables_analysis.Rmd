@@ -148,7 +148,12 @@ Retrieving the data:
 query <- hpds::new.query(resource)
 hpds::query.select.add(query, selected_vars)
 facts <- hpds::query.run(query, result.type = "dataframe") %>% dplyr::as_tibble()
+```
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
 facts[["Patient.ID"]] <- NULL
+facts[["X._Consents.Short.Study.Accession.with.Consent.Code."]] <- NULL
+facts[["X._Study.Accession.with.Patient.ID."]] <- NULL
 ```
 
 ```{r jupyter={'outputs_hidden': True}}
