@@ -13,7 +13,7 @@ As part of the BioData Catalyst Initiative, PIC-SURE development is funded by th
 # PIC-SURE_API BioData Catalyst examples
 This folder contains various PICSURE API use-cases and illustration examples using BioData Catalyst studies. PIC-SURE API is available in two languages --R and python. PIC-SURE API requires R 3.5 or later, or python 3.6 or later.
 
-## Repo organization
+# Repo organization
 
 Several Jupyter/RMarkdown notebooks examples are available for both R and python in the respective subfolders:
   - get_your_token.ipynb: **Start from here if you're using the PIC-SURE API for the first time**. This notebook explain how to get a user specific security token, mandatory to be able to run the other notebooks.
@@ -22,5 +22,5 @@ Several Jupyter/RMarkdown notebooks examples are available for both R and python
   - HarmonizedVariables_analysis.ipynb: An example of how to access and work with the "harmonized variables" across the TOPMed studies.
 
 
-## Contact
+# Contact
 For bug report or additional information, please send an email at this address: [arnaud_serret-larmande@hms.harvard.edu](mailto:arnaud_serret-larmande@hms.harvard.edu)
