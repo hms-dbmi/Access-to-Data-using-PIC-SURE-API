@@ -46,3 +46,7 @@ To actually get the token, process as below:
 <!-- see second answer on https://stackoverflow.com/questions/15557392/how-do-i-display-images-from-google-drive-on-a-website -->
 <img src="https://drive.google.com/uc?id=1sMPtXpffcVOVVIsg8H-dpCm1VP-VcT2q">
 
+
+```{r}
+
+```
