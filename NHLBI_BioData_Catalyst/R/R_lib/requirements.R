@@ -9,7 +9,6 @@ if (grepl("(amzn)|(aws)", Sys.info()[["release"]])) {
     install.packages("cli")
     install.packages("usethis")
     install.packages("openssl")
-    install.packages("devtools")
 }
 
 cat("installing: \n")
