@@ -72,7 +72,7 @@ source("R_lib/requirements.R")
 #### Installing the latest PIC-SURE API library from GitHub
 
 
-Installation of the two components of the PIC-SURE API from GitHub, that is the PIC-SURE adapter and the PICSURE Client.
+Installation of the two components of the PIC-SURE API from GitHub, that is the PIC-SURE adapter and the PIC-SURE Client.
 
 ```{r}
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T, upgrade="always")
