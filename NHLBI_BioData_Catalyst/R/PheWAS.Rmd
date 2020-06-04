@@ -13,7 +13,7 @@ jupyter:
     name: ir
 ---
 
-# PICSURE R API use-case: Phenome-Wide analysis on BioData Catalyst studies
+# PIC-SURE R API use-case: Phenome-Wide analysis on BioData Catalyst studies
 
 
 This notebook is an illustration example about how to query data using the R **PIC-SURE API**. It takes as use-case a simple PheWAS analysis. This notebook is intentionally straightforward, and explanation provided are only aimed at guiding through the PheWAS analysis processus. For a more step-by-step introduction to the R PIC-SURE API, see the `R_PICSURE-API_101_PheWAS_example.ipynb` notebook.
