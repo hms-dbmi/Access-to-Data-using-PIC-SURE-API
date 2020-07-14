@@ -259,6 +259,27 @@ hpds::query.select.add(query = my_query,
                       keys = selected_vars[1:50])
 ```
 
+###$ Selecting Consent Groups
+
+Sometime it can be necessary to limit results to a group of patients that have provided common consent types. By default, PIC-SURE will enforce limits to the consents that each researcher has individually been authorized for, however it may be desirable to further restrict the results. To view the available consent groups, you can use the query.show() function. Look for the list of values under "\_Consents\Short Study Accession with Consent Code\"
+
+```{r}
+hpds::query.show(hpds::new.query(resource = resource))
+```
+
+In order to update the values, the existing list needs to be cleared first, then replaced. (phs000179.c2 is one consent code used in the COPDGene study.)
+
+It is safe to ignore the warning about "the condition has length > 1 ..." because we use a single vector as an argument
+
+```{r}
+hpds::query.filter.delete(query = my_query,
+                      keys = "\\_Consents\\Short Study Accession with Consent Code\\")
+
+hpds::query.filter.add(query = my_query,
+                      keys = "\\_Consents\\Short Study Accession with Consent Code\\",
+                      as.list(c("phs001040.c1", "phs000179.c2")))
+```
+
 ## Retrieving the data
 
 
