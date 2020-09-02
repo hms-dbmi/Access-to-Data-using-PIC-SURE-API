@@ -33,11 +33,10 @@ To get your token, process as follows:
 
 ## Available notebooks
 
-In each R and python folders, three example notebooks are available: 
+In each R and python folders, the example notebooks are available: 
 - 1_PICSURE-API_101.ipynb: an illustration of the main functionalities of the PIC-SURE API.
-- 2_How_to_do_a_PheWAS.ipynb: a straightforward PIC-SURE API use-case, using a PheWAS (Phenome-Wide Association Study) analysis as an illustration example.
-- 3_HarmonizedVariables_analysis.ipynb: An example of how to access and work with the "harmonized variables" across the TOPMed studies.
+
 
 ## Contact
 
-For bug report or additional information, please send an email at this address: [arnaud_serret-larmande@hms.harvard.edu](mailto:arnaud_serret-larmande@hms.harvard.edu)
+For bug report or additional information, please submit a ticket to: http://avillachlabsupport.hms.harvard.edu 
