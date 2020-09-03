@@ -126,7 +126,7 @@ You can get help with PIC-SURE library functions by using the `?` operator
 ?hpds::get.resource()
 ```
 
-## Using the *variables dictionnary*
+## Using the *variables dictionary*
 
 
 Once a connection to the desired resource has been established, we first need to get a knowledge of which variables are available in the database. To this end, we will use the `find.in.dictionary` function.
