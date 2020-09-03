@@ -18,11 +18,24 @@ This folder contains various PIC-SURE API use-cases and illustration examples us
 
 The main goal of the PIC-SURE API is to provide a simple and reliable way to work with restricted-access data studies that are part of CureSC. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE interface](https://curesc.hms.harvard.edu). 
 
+## Setting up your environment
+Prior to exploring the data you will need to set up your local JupyterNotebook. 
+1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
+2. On the user-interface click on ADMIN
+3. On the user-interface click on APPLICATIONS, in the dropdown select JupyterHub. This is your own local instance of JupyterHub. 
+4. On the user-interface click on NEW, in the dropdown select Terminal.  This will open a new window. Copy and paste the below:
+git clone https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API 
+5. Click enter and close the window. 
+6. Access-to-Data-using-PIC-SURE-API folder has been created. Click the folder to open it. Click the Cure_Sickle_Cell folder.
+7. Choose Python or R folder.
+
+Follow the directions below to add your security token. 
+
 ## Get your security token
 
 **In order to be able to run any one of these examples, you'll need to get a personal user security token**. This is the way the API grants access to individual users to protected-access data. **The user token is strictly personal, be careful not to share it with anyone**.
 
-To get your token, process as follows:
+To get your token, follow the process below:
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
 2. On the user-interface click on ADMIN
 3. On the user-interface click on USER PROFILE
