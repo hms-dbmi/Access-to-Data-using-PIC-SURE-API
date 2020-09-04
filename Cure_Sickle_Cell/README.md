@@ -53,8 +53,17 @@ To get your token, follow the process below:
 ## Available notebooks
 
 In each R and python folders, the example notebooks are available: 
-- 1_PICSURE-API_101.ipynb: an illustration of the main functionalities of the PIC-SURE API.
+- PICSURE-API_101.ipynb: an illustration of the main functionalities of the PIC-SURE API.
 
+**R Installation**
+1. In the R folder click the PICSURE-API_101.ipynb folder. There is an overview about the R API and a reminder to set up your security token. Direction are above to retrieve your security token. 
+2. To install R, scroll down to Packages Installation. Click on the grey code box which will place a green square around the code. Click the Run button in the toolbar. A pink box will appear showing the details of the installation. 
+3. Scroll down to Installing latest R PIC-SURE API libraries from github. Click on the code box and click the Run button in the toolbar. 
+4. Scroll down to Loading user defined functions. Click on the code box and click the Run button in the toolbar. 
+5. Scroll down to Connecting to a PIC-SURE Network. The next steps gain access to your security token. Direction are above to retrieve your security token. Click one code box at a time and click the Run button in the toolbar. 
+You are now ready to start exploring the variables dictionary. 
+
+![R Installation](curesc_R.gif)
 
 ## Contact
 
