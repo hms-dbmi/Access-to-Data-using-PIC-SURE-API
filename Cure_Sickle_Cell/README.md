@@ -23,7 +23,7 @@ Prior to exploring the data you will need to set up your local JupyterNotebook.
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
 2. On the user-interface click on ADMIN
 3. On the user-interface click on APPLICATIONS, in the dropdown select JupyterHub. This is your own local instance of JupyterHub. 
-4. On the user-interface click on NEW, in the dropdown select Terminal.  This will open a new window. Copy and paste the below:
+4. On the user-interface click on NEW, in the dropdown select Terminal.  A new tab will open in the browser. Copy and paste the below:
 git clone https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API 
 5. Click enter and close the window. 
 6. Access-to-Data-using-PIC-SURE-API folder has been created. Click the folder to open it. Click the Cure_Sickle_Cell folder.
@@ -43,9 +43,12 @@ To get your token, follow the process below:
 3. On the user-interface click on USER PROFILE
 4. On the pop-up window, click on REFRESH and then COPY
 5. On the user-interface click APPLICATIONS, in the dropdown select JupyterHub.
-5. In your Jupyter environment, python and/or R folders, click NEW, in the dropdown select Text File. Paste your security token into the text file. Click File and in the dropdown select Rename. In the pop-up window name the file `token.txt`. Click File and in the dropdown select Save. 
+6. In your Jupyter environment, click the Access-to-Data-using-PIC-SURE-API folder. Then click the Cure_Sickle_Cell folder.
+7. Select R and/or Python folder. In this example we are selecting R. 
+8. In the right hand corner click NEW, in the dropdown select Text File. A new tab will open in the browser.
+9. Paste your security token into the text file. In the left hand corner click File and in the dropdown select Rename. In the pop-up window name the file `token.txt`. Click the blue OK button. Click File and in the dropdown select Save. Then close the tab. 
 
-
+![Security Token](curesc_security_token.gif)
 
 ## Available notebooks
 
