@@ -1,12 +1,12 @@
 # Cure Sickle Cell
-The Cure Sickle Cell Initiative (CureSCi) was established in 2018 by the National Heart, Lung, and Blood Institute to accelerate the development of treatments aimed at a genetic-based cure for sickle cell disease (SCD).
+The Cure Sickle Cell Initiative (CureSCi) aims to transform the lives of people who have sickle cell disease by creating a collaborative, patient-focused research environment. With new advancements in genetic therapy, the time is right to push toward cures that are more accessible to the approximately 100,000 Americans, and more than 20 million people worldwide, who have sickle cell disease.
 
 http://curesci.azurewebsites.net
 
 Access to data: https://curesc.hms.harvard.edu
 
 # Grant information
-
+The Cure Sickle Cell Initiative (CureSCi) was established in 2018 by the National Heart, Lung, and Blood Institute to accelerate the development of treatments aimed at a genetic-based cure for sickle cell disease (SCD).
 
 
 # PIC-SURE_API Cure Sickle Cell examples
