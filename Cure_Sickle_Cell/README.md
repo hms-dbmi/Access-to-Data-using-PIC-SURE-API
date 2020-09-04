@@ -28,7 +28,7 @@ git clone https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API
 5. Click enter and close the window. 
 6. Access-to-Data-using-PIC-SURE-API folder has been created. Click the folder to open it. Click the Cure_Sickle_Cell folder.
 7. Choose Python or R folder.
-![Get API token](/cure_sc_jh.gif)
+![Set up JupyterHub](/cure_sc_jh.gif)
 
 Follow the directions below to add your security token. 
 
