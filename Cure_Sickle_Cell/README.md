@@ -42,6 +42,7 @@ To get your token, follow the process below:
 2. On the user-interface click on ADMIN
 3. On the user-interface click on USER PROFILE
 4. On the pop-up window, click on REFRESH and then COPY
+5. On the user-interface click APPLICATIONS, in the dropdown select JupyterHub.
 5. In your Jupyter environment, python and/or R folders, click NEW, in the dropdown select Text File. Paste your security token into the text file. Click File and in the dropdown select Rename. In the pop-up window name the file `token.txt`. Click File and in the dropdown select Save. 
 
 
