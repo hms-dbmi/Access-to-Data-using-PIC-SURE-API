@@ -1,7 +1,7 @@
 # Cure Sickle Cell
 The Cure Sickle Cell Initiative (CureSCi) aims to transform the lives of people who have sickle cell disease by creating a collaborative, patient-focused research environment. With new advancements in genetic therapy, the time is right to push toward cures that are more accessible to the approximately 100,000 Americans, and more than 20 million people worldwide, who have sickle cell disease.
 
-http://curesci.azurewebsites.net
+https://curesickle.org
 
 Access to data: https://curesc.hms.harvard.edu
 
