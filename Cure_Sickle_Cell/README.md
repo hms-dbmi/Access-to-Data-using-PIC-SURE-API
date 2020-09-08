@@ -9,7 +9,7 @@ Access to data: https://curesc.hms.harvard.edu
 The Cure Sickle Cell Initiative (CureSCi) was established in 2018 by the National Heart, Lung, and Blood Institute to accelerate the development of treatments aimed at a genetic-based cure for sickle cell disease (SCD).
 
 
-# PIC-SURE_API Cure Sickle Cell examples
+# PIC-SURE API Cure Sickle Cell examples
 
 This folder contains various PIC-SURE API use-cases and illustration examples using Cure Sickle Cell studies. PIC-SURE API is available in two languages --R and python. PIC-SURE API requires R 3.5 or later, or python 3.6 or later.
 
