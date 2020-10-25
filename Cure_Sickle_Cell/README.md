@@ -30,7 +30,7 @@ Prior to exploring the data you will need to set up your local JupyterNotebook.
 8. Click the Cure_Sickle_Cell folder.
 9. Choose Python or R folder.
 
-![Set up JupyterHub](curesc_jupyterhub.gif)
+![Set up JupyterHub](Environment Set Up CureSC.gif)
 
 Follow the directions below to add your security token. 
 
