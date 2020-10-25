@@ -21,7 +21,7 @@ The main goal of the PIC-SURE API is to provide a simple and reliable way to wor
 ## Setting up your environment
 Prior to exploring the data you will need to set up your local JupyterNotebook. 
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
-2. On the user-interface click on ADMIN
+2. On the user-interface click on USER PROFILE or ADMIN
 3. On the user-interface click on APPLICATIONS, in the dropdown select JupyterHub. This is your own local instance of JupyterHub. 
 4. On the user-interface click on NEW, in the dropdown select Terminal.  A new tab will open in the browser. 
 5. Copy and paste into the terminal: git clone https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API 
@@ -40,7 +40,7 @@ Follow the directions below to add your security token.
 
 To get your token, follow the process below:
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
-2. On the user-interface click on ADMIN
+2. On the user-interface click on USER PROFILE or ADMIN
 3. On the user-interface click on USER PROFILE
 4. On the pop-up window, click on REFRESH and then COPY
 5. On the user-interface click APPLICATIONS, in the dropdown select JupyterHub.
@@ -59,11 +59,21 @@ In each R and python folders, the example notebooks are available:
 - PICSURE-API_101.ipynb: an illustration of the main functionalities of the PIC-SURE API.
 
 **R Installation**
-1. In the R folder click the PICSURE-API_101.ipynb folder. There is an overview about the R API and a reminder to set up your security token. Direction are above to retrieve your security token. 
+1. In the R folder click the PICSURE-API_101.ipynb folder. There is an overview about the R API and a reminder to set up your security token. Directions are above to retrieve your security token. 
 2. To install R, scroll down to Packages Installation. Click on the grey code box which will place a green square around the code. Click the Run button in the toolbar. A pink box will appear showing the details of the installation. 
 3. Scroll down to Installing latest R PIC-SURE API libraries from github. Click on the code box and click the Run button in the toolbar. 
 4. Scroll down to Loading user defined functions. Click on the code box and click the Run button in the toolbar. 
-5. Scroll down to Connecting to a PIC-SURE Network. The next steps gain access to your security token. Direction are above to retrieve your security token. Click one code box at a time and click the Run button in the toolbar. 
+5. Scroll down to Connecting to a PIC-SURE Network. The next steps gain access to your security token. Directions are above to retrieve your security token. Click one code box at a time and click the Run button in the toolbar. 
+You are now ready to start exploring the variables dictionary. 
+
+![R Installation](curesc_R.gif)
+
+**Python Installation**
+1. In the Python folder click the PICSURE-API_101.ipynb folder. There is an overview about the Python API and a reminder to set up your security token. Directions are above to retrieve your security token. 
+2. To install Python, scroll down to Packages Installation. Click on the grey code box which will place a green square around the code. Click the Run button in the toolbar. A pink box will appear showing the details of the installation. 
+3. Scroll down to Installing latest Python PIC-SURE API libraries from github. Click on the code box and click the Run button in the toolbar. 
+4. Scroll down to Loading user defined functions. Click on the code box and click the Run button in the toolbar. 
+5. Scroll down to Connecting to a PIC-SURE Network. The next steps gain access to your security token. Directions are above to retrieve your security token. Click one code box at a time and click the Run button in the toolbar. 
 You are now ready to start exploring the variables dictionary. 
 
 ![R Installation](curesc_R.gif)
