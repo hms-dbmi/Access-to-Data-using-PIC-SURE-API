@@ -19,10 +19,10 @@ This folder contains various PIC-SURE API use-cases and illustration examples us
 The main goal of the PIC-SURE API is to provide a simple and reliable way to work with restricted-access data studies that are part of CureSC. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE interface](https://curesc.hms.harvard.edu). 
 
 ## Setting up your environment
-Prior to exploring the data you will need to set up your local JupyterNotebook. 
+Prior to exploring the data you will need to set up your JupyterNotebook server. 
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
 2. On the user-interface click on USER PROFILE or ADMIN
-3. On the user-interface click on APPLICATIONS, in the dropdown select JupyterHub. This is your own local instance of JupyterHub. 
+3. On the user-interface click on APPLICATIONS, in the dropdown select JupyterHub. This instance of JupyterHub is shared between the users of this stack. Each user has their own JupyterNotebook server which is a separate private workspace for them. 
 4. On the user-interface click on NEW, in the dropdown select Terminal.  A new tab will open in the browser. 
 5. Copy and paste into the terminal: git clone https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API 
 6. Click enter, which will install the Access to Data using PIC-SURE API repo, and close the window. 
