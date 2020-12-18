@@ -1,0 +1,801 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# PIC-SURE API use-case: quick analysis on COPDgene data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This is a tutorial notebook, aimed to be quickly up and running with the python PIC-SURE API. It covers the main functionalities of the API."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## PIC-SURE python API \n",
+    "### What is PIC-SURE? \n",
+    "\n",
+    "<!--img src=\"./img/PIC-SURE_logo.png\" width= \"360px\"> -->\n",
+    "\n",
+    "As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI). \n",
+    "\n",
+    "Original data exposed through PIC-SURE API encompass a large heterogeneity of data organization underneath. PIC-SURE hide this complexity and exposes the different studies dataset in a single tabular format. By easing the process of data extraction, it allows investigators to focus on the downstream analyses and facilitate reproducible sciences.\n",
+    "\n",
+    "Currently, only phenotypic variables are accessible through the PIC-SURE API, but access to genomic variables is coming soon.\n",
+    "\n",
+    "### More about PIC-SURE\n",
+    "The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using any of those languages.\n",
+    "\n",
+    "PIC-SURE is a larger project from which the R/python PIC-SURE API is only a brick. Among other things, PIC-SURE also offers a graphical user interface that allows researchers to explore variables across multiple studies, filter patient that match criteria, and create cohort from this interactive exploration.\n",
+    "\n",
+    "The python API is actively developed by the Avillach-Lab at Harvard Medical School.\n",
+    "\n",
+    "PIC-SURE API GitHub repo:\n",
+    "* https://github.com/hms-dbmi/pic-sure-python-adapter-hpds\n",
+    "* https://github.com/hms-dbmi/pic-sure-python-client\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    " -------   "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Getting your own user-specific security token"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Before running this notebook, please be sure to review the `get_your_token.ipynb` notebook. It contains explanation about how to get a security token, mandatory to access the databases.**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Environment set-up"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Pre-requisite\n",
+    "- python 3.6 or later\n",
+    "- pip python package manager, already available in most systems with a python interpreter installed ([pip installation instructions](https://pip.pypa.io/en/stable/installing/))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Packages installation\n",
+    "\n",
+    "Installation of the packages listed in the `requirements.txt` file, as well as the two components of the PIC-SURE API from GitHub, that is the PIC-SURE adapter and the PIC-SURE Client."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!cat requirements.txt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import sys\n",
+    "!{sys.executable} -m pip install -r requirements.txt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!{sys.executable} -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git\n",
+    "!{sys.executable} -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-python-client.git"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Import all the external dependencies, as well as user-defined functions stored in the `python_lib` folder"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "from pprint import pprint\n",
+    "\n",
+    "import pandas as pd\n",
+    "import numpy as np \n",
+    "import matplotlib.pyplot as plt\n",
+    "from scipy import stats\n",
+    "\n",
+    "import PicSureHpdsLib\n",
+    "import PicSureClient\n",
+    "\n",
+    "from python_lib.utils import get_multiIndex_variablesDict, joining_variablesDict_onCol"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "##### Setting the display parameter for tables and plots"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Pandas DataFrame display options\n",
+    "pd.set_option(\"max.rows\", 100)\n",
+    "\n",
+    "# Matplotlib display parameters\n",
+    "plt.rcParams[\"figure.figsize\"] = (14,8)\n",
+    "font = {'weight' : 'bold',\n",
+    "        'size'   : 12}\n",
+    "plt.rc('font', **font)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Connecting to a PIC-SURE resource"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Several information are required to get access to data through the PIC-SURE API: a network URL, a resource id, and a user-specific security token."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "PICSURE_network_URL = \"https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure\"\n",
+    "resource_id = \"02e23f52-f354-4e8b-992c-d37c8b9ba140\"\n",
+    "token_file = \"token.txt\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open(token_file, \"r\") as f:\n",
+    "    my_token = f.read()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "client = PicSureClient.Client()\n",
+    "connection = client.connect(PICSURE_network_URL, my_token, True)\n",
+    "adapter = PicSureHpdsLib.Adapter(connection)\n",
+    "resource = adapter.useResource(resource_id)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Two objects are created here: a `connection` and a `resource` object.\n",
+    "\n",
+    "As we will only be using one single resource, **the `resource` object is actually the only one we will need to proceed with data analysis hereafter**. \n",
+    "\n",
+    "It is connected to the specific data source ID we specified, and enables to query and retrieve data from this database."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Getting help with the PIC-SURE API"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Each object exposed by the PicSureHpdsLib library got a `help()` method. Calling it will without parameters print out an information about functionalities of this object. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "resource.help()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For instance, this output tells us that this `resource` object has 3 methods, and it gives a quick definition of those methods. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Using the *variables dictionnary*"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once a connection to the desired resource has been established, we first need to get a knowledge of which variables are available in the database. To this end, we will use the `dictionary` method of the `resource` object."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A `dictionary` instance enables to retrieve matching records by searching for a specific term, or to retrieve information about all the available variables, using the `find()` method. For instance, looking for variables containing the term `COPD` in their names is done this way: "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dictionary = resource.dictionary()\n",
+    "dictionary_search = dictionary.find(\"COPD\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Subsequently, objects created by the `dictionary.find` method expose the search results via 4 different methods: `.count()`, `.keys()`, `.entries()`, and `.DataFrame()`. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pprint({\"Count\": dictionary_search.count(), \n",
+    "        \"Keys\": dictionary_search.keys()[0:5],\n",
+    "        \"Entries\": dictionary_search.entries()[0:5]})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dictionary_search.DataFrame().head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**The `.DataFrame()` method enables to get the result of the dictionary search in a pandas DataFrame format. This way, it allows to:** \n",
+    "\n",
+    "\n",
+    "* Use the various information exposed in the dictionary (patient count, variable type ...) as criteria for variable selection.\n",
+    "* Use the row names of the DataFrame to get the actual variables names, to be used in the query, as shown below.\n",
+    "\n",
+    "Variable names, aren't very pratical to use right away, for two reasons:\n",
+    "1. Very long\n",
+    "2. Presence of backslashes that prevent from copy-pasting. \n",
+    "\n",
+    "However, retrieving the dictionary search result in the form of a dataframe can help to deal with this, as below:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plain_variablesDict = resource.dictionary().find().DataFrame()\n",
+    "plain_variablesDict.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Indeed, using the `dictionary.find()` function without arguments return every entries, as shown in the help documentation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "resource.dictionary().help()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plain_variablesDict.iloc[10:20,:]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The dictionary currently returned by the API provides information about the variables, such as:\n",
+    "- observationCount: number of entries with non-null value\n",
+    "- categorical: type of the variables, True if strings, False if numerical\n",
+    "- min/max: only provided for numerical variables\n",
+    "- HpdsDataType: 'phenotypes' or 'genotypes'. Currently, the API only expsoses'phenotypes' variables"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Export Full Data Dictionary to CSV"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In order to export the data dictionary first we will create a Pandas dataframe called fullVariableDict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fullVariableDict = resource.dictionary().find().DataFrame()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Check that the fullVariableDict dataframe contains some values."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fullVariableDict.iloc[0:3,:]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fullVariableDict.to_csv('data_dictionary.csv')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "You should now see a data_dictionary.csv in the file explorer."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Variable dictionary + pandas multiIndex"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can use a simple user-defined function (`get_multiIndex_variablesDict`) to add a little more information to the variable dictionary and to simplify working with variables names. It takes advantage of pandas MultiIndex functionality [see pandas official documentation on this topic](https://pandas.pydata.org/pandas-docs/stable/user_guide/advanced.html).\n",
+    "\n",
+    "Although not an official feature of the API, such functionality illustrates how to quickly select groups of related variables.\n",
+    "\n",
+    "Printing the 'multiIndexed' variable Dictionary allows to quickly see the tree-like organisation of the variable names. Moreover, original and simplified variable names are now stored respectively in the \"varName\" and \"simplified_varName\" columns (simplified variable names is simply the last component of the variable name, that is usually the most informative to know what each variable is about)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "variablesDict = get_multiIndex_variablesDict(plain_variablesDict)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "variablesDict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Now that we have seen how our entire dictionnary looked, we limit the number of lines to be displayed for the future outputs\n",
+    "pd.set_option(\"max.rows\", 50)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Below is a simple example to illustrate the simplicity of use a multiIndex dictionary. Let's say we are interested in every variables pertaining to the \"Medical history\" and \"Medication history\" subcategories."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mask_medication = variablesDict.index.get_level_values(2) == \"Medication History\"\n",
+    "mask_medical = variablesDict.index.get_level_values(2) == \"Medical History\"\n",
+    "medication_history_variables = variablesDict.loc[mask_medical | mask_medication,:]\n",
+    "medication_history_variables"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Although pretty simple, it can be easily combined with other filters to quickly select desired group of variables."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Querying and retrieving data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Beside from the dictionary, the second cornerstone of the API is the `query` object. It is the entering point to retrieve data from the resource."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "First, we need to create a query object."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_query = resource.query()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The query object has several methods that enable to build a query."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The `query.select.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all variables included in the list, without any record (ie subjects/rows) subsetting."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The `query.require.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all the variables passed, and only records that do not contain any null values for those variables."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The `query.anyof.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all variables included in the list, and only records that do contain at least one non-null value for those variables."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The `query.filter.add()` method accepts a variable name as argument, plus additional values to filter on that given variable. The query will return this variable and only the records that do match this filter criteria."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "All those 4 methods can be combined when building a query. The record eventually returned by the query have to meet all the different specified filters."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Building the query"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mask = variablesDict[\"simplified_name\"] == \"How old were you when you completely stopped smoking? [Years old]\"\n",
+    "yo_stop_smoking_varname = variablesDict.loc[mask, \"name\"] "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mask_cat = variablesDict[\"categorical\"] == True\n",
+    "mask_count = variablesDict[\"observationCount\"].between(100,2000)\n",
+    "varnames = variablesDict.loc[mask_cat & mask_count, \"name\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_query.filter().add(yo_stop_smoking_varname, min=20, max=70)\n",
+    "my_query.select().add(varnames[:50])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    " ## Selecting Consent Groups"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Sometime it can be necessary to limit results to a group of patients that have provided common consent types. By default, PIC-SURE will enforce limits to the consents that each researcher has individually been authorized for, however it may be desirable to further restrict the results. To view the available consent groups, you can use the query.filter().show() function on a new query. Look for the list of values under \"\\_Consents\\Short Study Accession with Consent Code\\\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "resource.query().filter().show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In order to update the values, the existing list needs to be cleared first, then replaced. (phs000179.c2 is one consent code used in the COPDGene study.)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_query.filter().delete(\"\\\\_Consents\\\\Short Study Accession with Consent Code\\\\\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_query.filter().add(\"\\\\_Consents\\\\Short Study Accession with Consent Code\\\\\", ['phs000179.c2'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Retrieving the data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once our query object is finally built, we use the `getResultsDataFrame` function to retrieve the data corresponding to our query"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_result = my_query.getResultsDataFrame(low_memory=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_result.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_result.tail()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_result[yo_stop_smoking_varname].plot.hist(legend=None, title= \"Age stopping smoking\", bins=15)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Retrieving data from query run through PIC-SURE UI\n",
+    "\n",
+    "It is possible for you to retrieve the results of a query that you have previously run using the PIC-SURE UI. To do this you must \"select data for export\", then select the information that you want the query to return and then click \"prepare data export\". Once the query is finished executing, a group of buttons will be presented.  Click the \"copy query ID to clipboard\" button to copy your unique query identifier so you can paste it into your notebook.\n",
+    "\n",
+    "\n",
+    "Paste your query's ID into your notebook and assign it to a variable.  You then use the `query.getResults(resource, yourQueryUUID)` function with an initialized resource object to retrieve the data from your query as shown below.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The screenshot below shows the button of interest in the PIC-SURE UI. It shows that the previously run query has a DataSetID of `dce08fab-98d3-434a-937a-cb583679efe8`. At this point a copy-paste process is used to provide the DataSetID to the API, as shown in the example code below.  To run this code you must replace the example query ID with a query ID from a query that you have run in the PIC-SURE API."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<img src=\"https://drive.google.com/uc?id=1kxFLxjEdMfkF4HjdWBaNju0PyMrYxGR0\">\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# To run this using your notebook you must replace it with the ID value of a query that you have run.\n",
+    "DataSetID = '<<replace with your QuerySetID>>'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%capture\n",
+    "results = resource.retrieveQueryResults(DataSetID)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from io import StringIO\n",
+    "df_UI = pd.read_csv(StringIO(results), low_memory=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df_UI.head()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
