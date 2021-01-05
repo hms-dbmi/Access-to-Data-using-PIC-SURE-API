@@ -8,8 +8,8 @@ TokenManager <- function(token_file) {
 
 ## Parse variables Dictionary variable names and return a DataFrame with as much columns as their are levels
 get_multiIndex_variablesDict <- function(variablesDict) {
-    splitted <- gsub("^\\\\", "", variablesDict[["name"]]) %>% 
-        strsplit("\\\\") 
+    splitted <- gsub("^\\\\", "", variablesDict[["name"]]) %>%
+      strsplit("\\\\")
     multiIndex <- lapply(splitted, function(x) {
         names(x) <- paste0("level_", 1:length(x) - 1)
         return(x)
@@ -17,11 +17,8 @@ get_multiIndex_variablesDict <- function(variablesDict) {
     multiIndex[["name"]] <- variablesDict[["name"]]
     multiIndex[["simplified_name"]] <- sapply(splitted, function(x) x[length(x)])
     multiIndex <- dplyr::left_join(multiIndex, variablesDict, by="name")
-    multiIndex["nb_modalities"] <- ifelse(sapply(variablesDict[["categoryValues"]], is.na) %>% unname(), 
-              sapply(variablesDict[["categoryValues"]], length) %>% unname(), 
-              NA)
     level_col_names <- names(multiIndex)[grep("^.*level.*$", names(multiIndex))]
-    columns_order <- c(level_col_names, "simplified_name", "name", "observationCount", "categorical", "categoryValues", "nb_modalities", "min", "max", "HpdsDataType")
+    columns_order <- c(level_col_names, "simplified_name", "name", "observationCount", "categorical", "categoryValues", "min", "max", "HpdsDataType")
     return(multiIndex[columns_order])
 }
                                               
