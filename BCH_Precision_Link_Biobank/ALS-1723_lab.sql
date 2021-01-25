@@ -3,7 +3,7 @@
 /*
 root.bch_hpds_data  --Orignal HPDS data extract.
 root.Bch_Hpds_Data_Lab_App_All -- Data uploaded from API extract.
-root.bch_hpds_data_lab -- Lab nodes identified by categorical from the API extract.
+root.bch_hpds_data_lab -- Lab nodes grouped as categorical values from the API extract.
 root.bch_hpds_data_get_list --Has data aggregated at concept_path level 
 root.bch_hpds_data_get_list_func  -- for performance improvement of function created distinct concept_path and categorical values.
 root.bch_hpds_data_get_list_map -- Pre populated categorical_values for all the concept_paths for performance.
@@ -101,8 +101,8 @@ end;
 
 begin
 
---delete from root.bch_hpds_data_get_list where categorical = 'False' ;
---commit ;
+
+
 insert into root.bch_hpds_data_get_list( CONCEPT_PATH ,  patientCount, categorical ,categoryValues , observationCount, HpdsDataType,MIN,MAX)
  ( select 
 	 CONCEPT_PATH , count(distinct patient_num) OVER (PARTITION BY CONCEPT_PATH) AS patientCount, 'False' categorical ,null categoryValues , 
@@ -126,11 +126,16 @@ select distinct l.CONCEPT_PATH  ,l.categoryValues
 from root.bch_hpds_data_get_list l
 where l.categorical = 'True'  ;
 
+truncate table root.bch_hpds_data_get_list_map drop storage ;
+
+
+insert into root.bch_hpds_data_get_list_map ( concept_path )
+select distinct concept_path from  root.bch_hpds_data_get_list_func ;
 
 CREATE OR REPLACE FUNCTION Get_tval_array (P_ConceptPath varchar2)
-   return varchar2
+   return long
 is
-v_str  varchar2(32767);
+v_str  long;
 v_countr number := 0;
 
 begin
@@ -153,18 +158,29 @@ when others then
 end Get_tval_array;
 
 
+DECLARE
+  P_CONCEPTPATH VARCHAR2(200);
+  v_Return LONG;
+BEGIN
 
-create table root.bch_hpds_data_get_list_map (
-concept_path varchar2(4000),
-categoryValues varchar2(4000)) ;
+for r_data in ( select concept_path from root.bch_hpds_data_get_list_map
+ ) loop
 
-insert into root.bch_hpds_data_get_list_map ( concept_path )
-select distinct concept_path from  root.bch_hpds_data_get_list_func ;
+  P_CONCEPTPATH := r_data.concept_path ;
 
-update root.bch_hpds_data_get_list_map
-set categoryValues = get_tval_array(concept_path) ;
+  v_Return := Get_tval_array(
+    P_CONCEPTPATH => P_CONCEPTPATH
+  );
+  update root.bch_hpds_data_get_list_map
+  set categoryValues = v_Return
+  where concept_path = r_data.concept_path ;
 
+DBMS_OUTPUT.PUT_LINE('v_Return = ' || v_Return);
+
+end loop;
 commit;
+END;
+
 
 CREATE OR REPLACE FUNCTION Get_format_min_max (p_value varchar2)
    return varchar2
@@ -197,7 +213,9 @@ end Get_format_min_max;
 	MIN VARCHAR2(4000), 
 	MAX VARCHAR2(4000), 
 	CATEGORYVALUES_1 LONG
-   )
+   );
+   
+--truncate table ROOT.BCH_HPDS_DATA_LAB_EXTRACT  ;
 
 begin
 
@@ -207,14 +225,20 @@ SELECT distinct '"'||CONCEPT_PATH||'"' KEY ,  patientCount patientCount, categor
 from root.bch_hpds_data_get_list where categorical = 'False';
 
 commit;
-insert into root.BCH_HPDS_DATA_LAB_EXTRACT ( KEY ,  patientCount, categorical , categoryValues, observationCount, HpdsDataType ,min ,max )
-select distinct '"'||l.CONCEPT_PATH||'"' ,  l.patientCount, l.categorical ,m.categoryValues , l.observationCount, l.HpdsDataType,l.MIN, l.MAX  
-from root.bch_hpds_data_get_list l, 
-    root.bch_hpds_data_get_list_map m
-where l.concept_path = m.concept_path 
-AND l.categorical = 'True'  ;
+end;
 
+
+begin
+    for r_data in ( select distinct '"'||l.CONCEPT_PATH||'"' concept_path ,  l.patientCount, l.categorical , l.observationCount, l.HpdsDataType,l.MIN, l.MAX  
+from root.bch_hpds_data_get_list l
+where l.categorical = 'True'  ) loop
+           for r_data_map in (  select  * from root.bch_hpds_data_get_list_map m where r_data.concept_path = '"'||m.CONCEPT_PATH||'"' and rownum = 1  )  loop
+              insert into root.BCH_HPDS_DATA_LAB_EXTRACT ( KEY ,  patientCount, categorical , categoryValues, observationCount, HpdsDataType ,min ,max )
+              values ( r_data.concept_path ,   r_data.patientCount,  r_data.categorical ,  r_data_map.categoryValues,  r_data.observationCount,  r_data.HpdsDataType , r_data.min , r_data.max ); 
+           end loop;
+    
+    end loop;
 commit;
 end;
 
---2585 Rows inserted
+
