@@ -40,7 +40,7 @@ Follow the directions below to add your security token.
 
 To get your token, follow the process below:
 1. In a web browser, open the PIC-SURE UI login page: https://curesc.hms.harvard.edu, and login with the authentication provider you have been assigned.
-2. On the user-interface click on USER PROFILE or ADMIN
+2. On the user-interface click on USER PROFILE OR ADMIN
 3. On the user-interface click on USER PROFILE
 4. On the pop-up window, click on REFRESH and then COPY
 5. On the user-interface click APPLICATIONS, in the dropdown select JupyterHub.

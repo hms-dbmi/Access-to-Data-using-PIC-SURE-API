@@ -1,0 +1,5 @@
+KEY,patientCount,categorical,categoryValues,observationCount,HpdsDataType,min,max
+\Demographics\Age\,25000,False,,25000,phenotypes,0,90
+\Demographics\Ethnicity\A-C\,9000,True,"['Abenaki Indian', 'Afghanistani', 'African', 'African American', 'Alaska Indian', 'Alaska Native', 'American', 'American Indian', 'Arab', 'Argentinean', 'Armenian', 'Asian Indian', 'Assyrian', 'Asturian', 'Attacapa Indian', 'Bahamian', 'Bangladeshi', 'Barbadian', 'Belearic Islander', 'Bhutanese', 'Bolivian', 'Brazilian', 'Burmese', 'Cambodian', 'Canadian', 'Canarian', 'Cape Verdean', 'Caribbean Islander', 'Catalonian', 'Central American', 'Central American Indian', 'Chilean', 'Chinese', 'Colombian', 'Costa Rican', 'Cuban']",10000,phenotypes,,
+\Demographics\Gender\,25000,True,"['Female', 'Male', 'Unknown']",25000,phenotypes,,
+
