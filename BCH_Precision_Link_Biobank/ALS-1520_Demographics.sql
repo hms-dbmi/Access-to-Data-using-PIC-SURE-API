@@ -4,10 +4,23 @@
 -- root.bch_hpds_data_get_list
 -- FUNCTION Get_tval_array (P_ConceptPath varchar2)
 -- root.bch_hpds_data_get_list_demo
+--Data extract for Demographics_PICSURE_API_101.ipynb
 
 create table ROOT.bch_hpds_data_demo as
 select * from i2b2_blue.bch_hpds_data
 where concept_path like '\Demographics\%' ;
+
+ create table root.bch_hpds_data_get_list
+   (	concept_path varchar2(4000), 
+	patientcount number, 
+	categorical varchar2(20), 
+	categoryvalues varchar2(2000), 
+	observationcount number, 
+	hpdsdatatype varchar2(20), 
+	min varchar2(20), 
+	max varchar2(20)
+   ) 
+ nocompress logging ;
 
 select * from root.bch_hpds_data_demo ;
 
@@ -132,7 +145,7 @@ when others then
  return  v_str ;
 end Get_tval_array;
 
-create table  root.bch_hpds_data_get_list_demo as select *  from root.bch_hpds_data_get_list ;
+--create table  root.bch_hpds_data_get_list_demo as select *  from root.bch_hpds_data_get_list ;
 --Data extract SQL.
 SELECT distinct CONCEPT_PATH "KEY" ,  patientCount "patientCount", categorical "categorical",get_tval_array(concept_path) "categoryValues" 
  , observationCount "observationCount", HpdsDataType "HpdsDataType",'' as "min" ,'' as "max"
