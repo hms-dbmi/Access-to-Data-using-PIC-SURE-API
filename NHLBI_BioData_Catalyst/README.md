@@ -1,5 +1,5 @@
 # NHLBI BioData Catalyst
-For NHLBI research investigators who need to find, access, share, store, cross-link, and compute on large scale data sets, NHLBI BioData Catalyst will serve as a cloud-based platform providing tools, applications, and workflows to enable these capabilities in secure workspaces. BioData Catalyst is a nationally organized digital environment that will accelerate efficient biomedical research and maximize community engagement and productivity through increased access to NHLBI data sets and innovative data analysis capabilities. By making these data sets accessible and usable to varied users, BioData Catalyst will drive discovery and scientific advancement, leading to novel diagnostic tools, therapeutic options, and prevention strategies for heart, lung, blood, and sleep disorders.
+NHLBI BioData Catalyst is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to NHLBI datasets and innovative data analysis capabilities, BioData Catalyst accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
 
 https://biodatacatalyst.nhlbi.nih.gov/
 
