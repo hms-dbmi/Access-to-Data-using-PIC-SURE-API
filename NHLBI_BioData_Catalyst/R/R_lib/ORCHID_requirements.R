@@ -1,24 +1,29 @@
 required_libraries <- c(
-    "ggplot2",
-    "dplyr",
-    "tidyr",
+    "arsenal",
+    "urltools",
+    "ggtext",
+    "IRdisplay",
+    "DescTools",
+    "quantreg",
+    "SparseM",
+    "MASS",
+    "survminer",
+    "ggpubr",
+    "survival",
     "devtools",
+    "usethis",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse",
     "ggrepel",
-    'tidyverse',
-    'devtools',
-    'hms', # for kableExtra
-    'knitr',
-    #'kableExtra',
-    'survival',
-    #'survminer',
-    'cmprsk',
-    'MASS',
-    'quantreg',
-    'DescTools', 
-    'IRdisplay', 
-    'ggtext',
-    'urltools', 
-    'arsenal')
+    'cmprsk'
+)
 
 for (package in required_libraries) {
   if (!package %in% installed.packages()) {
