@@ -1,37 +1,57 @@
+install.packages("versions", dependencies=TRUE)
+library(versions)
+
+
 required_libraries <- c(
-    "arsenal",
-    "urltools",
+    "arsenal",        
+    "urltools", 
     "ggtext",
     "IRdisplay",
-    "DescTools",
+    "DescTools", 
     "quantreg",
     "SparseM",
-    "MASS",
+    "MASS",  
     "survminer",
-    "ggpubr",
+    "ggpubr",   
     "survival",
+    "kableExtra",
     "devtools",
-    "usethis",
-    "forcats",
+    "usethis", 
+    "forcats", 
     "stringr",
-    "dplyr",
-    "purrr",
-    "readr",
-    "tidyr",
-    "tibble",
-    "ggplot2",
-    "tidyverse",
-    "ggrepel",
-    "cmprsk",
-    "versions"
+    "dplyr",       
+    "purrr",     
+    "readr",     
+    "tidyr",  
+    "tibble", 
+    "ggplot2", 
+    "tidyverse"
 )
 
-for (package in required_libraries) {
-  if (!package %in% installed.packages()) {
-      install.packages(package, dependencies=TRUE)
-      }
-  library(package, character.only = TRUE)
-}
+required_versions <- c(
+    "3.5.0", 
+    "1.7.3",
+    "0.1.1",
+    "1.0", 
+    "0.99.39",
+    "5.82", 
+    "1.78",   
+    "7.3-53",
+    "0.4.8",
+    "0.4.0",
+    "3.2-7",
+    "1.3.1", 
+    "2.3.2",
+    "2.0.0",  
+    "0.5.0",
+    "1.4.0",
+    "1.0.3",
+    "0.3.4", 
+    "1.4.0",
+    "1.1.2", 
+    "3.0.5",
+    "3.3.3",
+    "1.3.0"
+)
 
-install.versions("kableExtra", "1.3.1")
-library(kableExtra)
+install.versions(required_libraries, required_versions)
