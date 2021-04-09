@@ -22,7 +22,8 @@ required_libraries <- c(
     "ggplot2",
     "tidyverse",
     "ggrepel",
-    'cmprsk'
+    "cmprsk",
+    "versions"
 )
 
 for (package in required_libraries) {
@@ -31,3 +32,6 @@ for (package in required_libraries) {
       }
   library(package, character.only = TRUE)
 }
+
+install.versions("kableExtra", "1.3.1")
+library(kableExtra)
