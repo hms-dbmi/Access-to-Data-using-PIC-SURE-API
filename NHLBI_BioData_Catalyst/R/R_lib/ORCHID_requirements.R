@@ -65,3 +65,6 @@ for (package in required_libraries) {
 
 install.packages("DescTools")
 library(DescTools)
+
+install.packages("cmprsk")
+library(cmprsk)
