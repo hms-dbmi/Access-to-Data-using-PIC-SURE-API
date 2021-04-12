@@ -25,7 +25,8 @@ required_libraries <- c(
     "tidyr",  
     "tibble", 
     "ggplot2", 
-    "tidyverse"
+    "tidyverse",
+    "magrittr"
 )
 
 required_versions <- c(
@@ -42,7 +43,7 @@ required_versions <- c(
     "3.2-7",
     "1.3.1", 
     "2.4.0",
-    "2.0.0",  
+    "2.0.1",  
     "0.5.0",
     "1.4.0",
     "1.0.3",
@@ -51,8 +52,16 @@ required_versions <- c(
     "1.1.2", 
     "3.0.5",
     "3.3.3",
-    "1.3.0"
+    "1.3.0",
+    "2.0.1"
 )
 
 install.versions(required_libraries, required_versions)
+
+for (package in required_libraries) {
+    library(package, character.only = TRUE)
+}
+
+
 install.packages("DescTools")
+library(DescTools)
