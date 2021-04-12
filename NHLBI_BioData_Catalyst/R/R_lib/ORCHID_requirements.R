@@ -7,7 +7,7 @@ required_libraries <- c(
     "urltools", 
     "ggtext",
     "IRdisplay",
-    "DescTools", 
+    #"DescTools", 
     "quantreg",
     "SparseM",
     "MASS",  
@@ -33,7 +33,7 @@ required_versions <- c(
     "1.7.3",
     "0.1.1",
     "1.0", 
-    "0.99.39",
+    #"0.99.40",
     "5.82", 
     "1.78",   
     "7.3-53",
@@ -41,7 +41,7 @@ required_versions <- c(
     "0.4.0",
     "3.2-7",
     "1.3.1", 
-    "2.3.2",
+    "2.4.0",
     "2.0.0",  
     "0.5.0",
     "1.4.0",
@@ -55,3 +55,4 @@ required_versions <- c(
 )
 
 install.versions(required_libraries, required_versions)
+install.packages("DescTools")
