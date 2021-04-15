@@ -7,7 +7,6 @@ required_libraries <- c(
     "urltools", 
     "ggtext",
     "IRdisplay",
-    #"DescTools", 
     "quantreg",
     "SparseM",
     "MASS",  
@@ -26,7 +25,9 @@ required_libraries <- c(
     "tibble", 
     "ggplot2", 
     "tidyverse",
-    "magrittr"
+    "magrittr",
+    "DescTools",
+    "cmprsk"
 )
 
 required_versions <- c(
@@ -34,7 +35,6 @@ required_versions <- c(
     "1.7.3",
     "0.1.1",
     "1.0", 
-    #"0.99.40",
     "5.82", 
     "1.78",   
     "7.3-53",
@@ -53,7 +53,9 @@ required_versions <- c(
     "3.0.5",
     "3.3.3",
     "1.3.0",
-    "2.0.1"
+    "2.0.1",
+    "0.99.40",
+    "2.2-10"
 )
 
 install.versions(required_libraries, required_versions)
@@ -63,8 +65,8 @@ for (package in required_libraries) {
 }
 
 
-install.packages("DescTools")
-library(DescTools)
+#install.packages("DescTools")
+#library(DescTools)
 
-install.packages("cmprsk")
-library(cmprsk)
+#install.packages("cmprsk")
+#library(cmprsk)
