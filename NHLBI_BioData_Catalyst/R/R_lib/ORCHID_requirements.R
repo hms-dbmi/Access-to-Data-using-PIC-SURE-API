@@ -63,10 +63,3 @@ install.versions(required_libraries, required_versions)
 for (package in required_libraries) {
     library(package, character.only = TRUE)
 }
-
-
-#install.packages("DescTools")
-#library(DescTools)
-
-#install.packages("cmprsk")
-#library(cmprsk)
