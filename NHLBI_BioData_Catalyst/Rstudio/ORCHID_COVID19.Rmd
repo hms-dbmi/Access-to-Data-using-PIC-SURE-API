@@ -85,10 +85,6 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 source("Rstudio_lib/ORCHID_requirements.R", echo = FALSE, print.eval = FALSE, verbose = FALSE)
 ```
 
-```{r}
-# try stkipping; dimanesions optimized for jupyter notebook
-#options(repr.plot.width=18, repr.plot.height=9)
-```
 
 ```{r}
 options(unzip = "internal")
