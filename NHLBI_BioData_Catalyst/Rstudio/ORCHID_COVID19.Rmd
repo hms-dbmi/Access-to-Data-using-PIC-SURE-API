@@ -484,30 +484,7 @@ table1_df[, c('Hydroxychloroquine', 'Placebo')] <- apply(table1_df[, c('Hydroxyc
 indices_cat <- which(table1_df['Hydroxychloroquine'] == '')
 indices_results <- which(table1_df['Hydroxychloroquine'] != '')
 
-kbl(table1_df, caption = "Table 1: Description of the population") %>%
-kable_minimal() %>% kable_styling(bootstrap_options = c("striped"), 
-                                  full_width = FALSE,
-                                  position = "left", 
-                                 font_size = 12) %>%
-  column_spec(1, width = "20em") %>%
-  column_spec(2, width = "10em") %>% 
-  column_spec(3, width = "10em") %>% 
-add_header_above(c(" ", "No. (%)" = 2), align = 'left') %>%
-row_spec(0, bold = TRUE, extra_css = "font-size: medium") %>%
-row_spec(indices_cat, underline = FALSE, bold = TRUE, align = 'left') %>%
-column_spec(1, background = 'FDEBD0') %>%
-kableExtra:::add_indent_html(positions = indices_results) %>%
-pack_rows('Demographics', 1, 20, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-pack_rows('COVID-19 Symptoms', 20, 42, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-pack_rows('Comorbidities', 43, 52, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-as.character() %>%
-str_replace_all(c("Comorbidities"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Demographics"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("COVID-19 Symptoms"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-display_html()
+table1_df
 ```
 
 # Outcome Analysis
