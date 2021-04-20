@@ -398,10 +398,10 @@ orchid_gg_theme <-  function(...) {
         panel.spacing = grid::unit(c(0), "lines"),
         axis.line = element_line(colour = "black"),
         panel.grid.major = element_blank(),
-        text = element_text(size=20),
-        plot.title = element_text(size = 20, face = 'bold'),
+        #text = element_text(size=20),
+        #plot.title = element_text(size = 20, face = 'bold'),
         axis.text.x = element_text(angle=0, hjust=0.5),
-        legend.key.height = unit(.8, "cm"),
+        #legend.key.height = unit(.8, "cm"),
         panel.border = element_blank(),
         panel.background = element_blank(),
         strip.background = element_rect(colour = "white", fill = "white")) +
