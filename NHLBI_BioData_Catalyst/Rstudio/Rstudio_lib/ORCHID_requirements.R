@@ -41,7 +41,7 @@ required_versions <- c(
     "1.4-1"
 )
 
-install.versions(required_libraries, required_versions)
+install.versions(required_libraries, required_versions, verbose = FALSE, quiet = TRUE)
 
 for (package in required_libraries) {
     library(package, character.only = TRUE)
