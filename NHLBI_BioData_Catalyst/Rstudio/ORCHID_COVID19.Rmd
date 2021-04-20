@@ -851,30 +851,8 @@ table_results_outcomes <- data_manage_table(outcome_comparison)
 ```
 
 ```{r}
-table_results <- table_results_outcomes %>%
-  kable(caption="Effect of Hydroxychloroquine on COVID Outcomes Scale") %>%
-  kable_minimal() %>%
-  pack_rows('Primary Outcome', 1, 1, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  pack_rows('Secondary Outcomes', 2, 2, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  pack_rows('COVID Outcomes Scale score, median (IQR)', 2, 4, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('Support-free days through day 28, median (IQR)', 6, 10, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('All-cause, all-location death, No. (%)', 11, 12, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('Systematically collected safety events, No. (%)', 14, 19, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  as.character() %>%
-str_replace_all(c("Primary Outcome"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Secondary Outcomes"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Systematically collected safety events, No\\. \\(\\%\\)"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace("Placebo \\(n = 237\\)",
-            replacement = "Placebo <br>(n = 237)") %>%
-str_replace("Hydroxychloroquine \\(n = 242\\)",
-            replacement = "Hydroxychloroquine <br>(n = 242)") %>%
-str_replace("COVID Outcomes Scale score, median \\(IQR\\) at Day 14",
-            replacement = "<b>Outcomes Scale score, median (IQR) at Day 14</b>") %>%
-  as.character() %>%
-  IRdisplay::display_html()  
+
+table_results_outcomes
 ```
 
 ```{r}
