@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/ORCHID_COVID19.ipynb"
+title: An R Markdown document converted from "Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/ORCHID_COVID19.ipynb"
 output: html_document
 ---
 
@@ -13,67 +13,34 @@ The clinical trial has been conducted between April and July 2020, and stopped b
 
 ## Requirements
 
-*This notebook has been tested to work with R version 4.0.3*. Below is the output of the sessionInfo() function:
+*This notebook has been tested to work with R version 4.0.0*. Below is the output of the sessionInfo() function:
 ```
-R version 4.0.3 (2020-10-10)
-Platform: x86_64-apple-darwin17.0 (64-bit)
-Running under: macOS Catalina 10.15.7
+R version 4.0.0 (2020-04-24)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 18.04.4 LTS
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRblas.dylib
-LAPACK: /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRlapack.dylib
+BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/libopenblasp-r0.2.20.so
 
 locale:
-[1] C/UTF-8/C/C/C/C
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
-[1] stats     graphics  grDevices datasets  utils     methods   base     
+[1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] arsenal_3.5.0     urltools_1.7.3    ggtext_0.1.1      IRdisplay_1.0    
- [5] DescTools_0.99.39 quantreg_5.82     SparseM_1.78      MASS_7.3-53      
- [9] survminer_0.4.8   ggpubr_0.4.0      survival_3.2-7    kableExtra_1.3.1 
-[13] devtools_2.3.2    usethis_2.0.0     forcats_0.5.0     stringr_1.4.0    
-[17] dplyr_1.0.3       purrr_0.3.4       readr_1.4.0       tidyr_1.1.2      
-[21] tibble_3.0.5      ggplot2_3.3.3     tidyverse_1.3.0  
+[1] BiocManager_1.30.10
 
 loaded via a namespace (and not attached):
-  [1] colorspace_2.0-0   ggsignif_0.6.0     class_7.3-17      
-  [4] ellipsis_0.3.1     rio_0.5.16         rprojroot_2.0.2   
-  [7] base64enc_0.1-3    fs_1.5.0           gridtext_0.1.4    
- [10] gld_2.6.2          rstudioapi_0.13    MatrixModels_0.4-1
- [13] remotes_2.2.0      hash_2.2.6.1       picsure_0.1.0     
- [16] mvtnorm_1.1-1      fansi_0.4.2        lubridate_1.7.9.2 
- [19] xml2_1.3.2         splines_4.0.3      rootSolve_1.8.2.1 
- [22] knitr_1.30         pkgload_1.1.0      IRkernel_1.1.1    
- [25] jsonlite_1.7.2     broom_0.7.3        km.ci_0.5-2       
- [28] dbplyr_2.0.0       hpds_0.1.0         compiler_4.0.3    
- [31] httr_1.4.2         backports_1.2.1    assertthat_0.2.1  
- [34] Matrix_1.3-2       cli_2.2.0          htmltools_0.5.1   
- [37] prettyunits_1.1.1  tools_4.0.3        lmom_2.8          
- [40] gtable_0.3.0       glue_1.4.2         Rcpp_1.0.6        
- [43] carData_3.0-4      cellranger_1.1.0   vctrs_0.3.6       
- [46] conquer_1.0.2      xfun_0.20          ps_1.5.0          
- [49] openxlsx_4.2.3     testthat_3.0.1     rvest_0.3.6       
- [52] lifecycle_0.2.0    renv_0.12.5        rstatix_0.6.0     
- [55] zoo_1.8-8          scales_1.1.1       hms_1.0.0         
- [58] expm_0.999-6       Exact_2.1          curl_4.3          
- [61] memoise_1.1.0      gridExtra_2.3      KMsurv_0.1-5      
- [64] triebeard_0.3.0    stringi_1.5.3      desc_1.2.0        
- [67] e1071_1.7-4        boot_1.3-25        pkgbuild_1.2.0    
- [70] zip_2.1.1          repr_1.1.3         matrixStats_0.57.0
- [73] rlang_0.4.10       pkgconfig_2.0.3    evaluate_0.14     
- [76] lattice_0.20-41    processx_3.4.5     tidyselect_1.1.0  
- [79] magrittr_2.0.1     R6_2.5.0           generics_0.1.0    
- [82] pbdZMQ_0.3-4       DBI_1.1.1          pillar_1.4.7      
- [85] haven_2.3.1        foreign_0.8-81     withr_2.4.0       
- [88] abind_1.4-5        modelr_0.1.8       crayon_1.3.4      
- [91] car_3.0-10         survMisc_0.5.5     uuid_0.1-4        
- [94] rmarkdown_2.6      grid_4.0.3         readxl_1.3.1      
- [97] data.table_1.13.6  callr_3.5.1        bdc_0.1.0         
-[100] reprex_0.3.0       digest_0.6.27      webshot_0.5.2     
-[103] xtable_1.8-4       munsell_0.5.0      viridisLite_0.3.0 
-[106] sessioninfo_1.1.1 
+ [1] tidyselect_1.1.0  xfun_0.22         repr_1.1.3        remotes_2.3.0     purrr_0.3.4       lattice_0.20-41   splines_4.0.0     picsure_0.1.0     vctrs_0.3.6      
+[10] generics_0.0.2    testthat_3.0.2    usethis_2.0.1     htmltools_0.5.1.1 base64enc_0.1-3   hash_2.2.6.1      yaml_2.2.1        survival_3.2-10   utf8_1.1.4       
+[19] rlang_0.4.10      pkgbuild_1.2.0    pillar_1.6.0      glue_1.4.2        withr_2.4.1       DBI_1.1.0         sessioninfo_1.1.1 lifecycle_1.0.0   stringr_1.4.0    
+[28] devtools_2.4.0    memoise_2.0.0     evaluate_0.14     knitr_1.31        callr_3.6.0       fastmap_1.1.0     ps_1.6.0          fansi_0.4.1       hpds_0.1.0       
+[37] IRdisplay_1.0     backports_1.1.6   cachem_1.0.4      desc_1.3.0        pkgload_1.2.1     cmprsk_2.2-10     jsonlite_1.7.2    fs_1.5.0          digest_0.6.25    
+[46] stringi_1.5.3     processx_3.5.1    dplyr_1.0.5       rprojroot_1.3-2   grid_4.0.0        cli_2.4.0         tools_4.0.0       magrittr_2.0.1    tibble_3.1.1     
+[55] crayon_1.4.1      pkgconfig_2.0.3   Matrix_1.2-18     ellipsis_0.3.1    MASS_7.3-53.1     prettyunits_1.1.1 assertthat_0.2.1  rmarkdown_2.2     httr_1.4.2       
+[64] bdc_0.1.0         R6_2.5.0          compiler_4.0.0   
 ```
 
 # Data Access using PIC-SURE API
@@ -138,7 +105,7 @@ token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 httr::set_config(httr::config(ssl_verifypeer=0L, ssl_verifyhost=0L))
 myconnection <- picsure::connect(url = PICSURE_network_URL, token = token)
-resource_id <- picsure::list.resources(myconnection)[1] # select first resource id? 
+resource_id <- picsure::list.resources(myconnection)[1] # select first resource id 
 resource <- bdc::get.resource(myconnection, resourceUUID = resource_id)
 ```
 
