@@ -43,24 +43,6 @@ required_versions <- c(
 
 install.versions(required_libraries, required_versions)
 
-
-### test versions command
-
-#install.packages(required_libraries)
-
-#for (pkg in required_libraries) {
-#    print(paste0(pkg, ': ', packageVersion(pkg)))
-#}
-
-#for (i in c(1:length(required_libraries))) {
-#    install.versions(required_libraries[i], required_versions[i])
-#}
-
-###
-
-#install.packages('tibble')
-#library(tibble)
-
 for (package in required_libraries) {
     library(package, character.only = TRUE)
 }
