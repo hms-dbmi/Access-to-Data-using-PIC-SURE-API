@@ -114,12 +114,13 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 
 # Packages Installation 
 
-```{r}
-source("R_lib/ORCHID_requirements.R")
+```{r results = 'hide'}
+source("Rstudio_lib/ORCHID_requirements.R")
 ```
 
 ```{r}
-options(repr.plot.width=18, repr.plot.height=9)
+# try stkipping; dimanesions optimized for jupyter notebook
+#options(repr.plot.width=18, repr.plot.height=9)
 ```
 
 ```{r}
@@ -137,7 +138,7 @@ token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 httr::set_config(httr::config(ssl_verifypeer=0L, ssl_verifyhost=0L))
 myconnection <- picsure::connect(url = PICSURE_network_URL, token = token)
-resource_id <- picsure::list.resources(myconnection)
+resource_id <- picsure::list.resources(myconnection)[1] # select first resource id? 
 resource <- bdc::get.resource(myconnection, resourceUUID = resource_id)
 ```
 
