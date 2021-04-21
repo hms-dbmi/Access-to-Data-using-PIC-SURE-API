@@ -42,8 +42,13 @@ required_versions <- c(
 )
 
 install.versions(required_libraries, required_versions, verbose = FALSE, quiet = TRUE)
+
+# the following packages do not install correctly in all environments when controlling version
 install.packages('cmprsk')
 library(cmprsk)
+install.packages('ggpubr')
+library(ggpubr)
+
 for (package in required_libraries) {
     library(package, character.only = TRUE)
 }
