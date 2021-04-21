@@ -18,7 +18,7 @@ required_libraries <- c(
     "usethis", # many imports
     #"magrittr", # imported by kableExtra
     "DescTools", # imports MASS and others
-    "cmprsk", #depeds on survival
+    #"cmprsk", #depeds on survival
     'coin'
 )
 
@@ -37,12 +37,13 @@ required_versions <- c(
     "2.4.0",
     "2.0.1",
     "0.99.41",
-    "2.2-10",
+    #"2.2-10",
     "1.4-1"
 )
 
 install.versions(required_libraries, required_versions, verbose = FALSE, quiet = TRUE)
-
+install.packages('cmprsk')
+library(cmprsk)
 for (package in required_libraries) {
     library(package, character.only = TRUE)
 }

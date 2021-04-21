@@ -82,7 +82,7 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 # Packages Installation 
 
 ```{r}
-source("Rstudio_lib/ORCHID_requirements.R", echo = FALSE, print.eval = FALSE, verbose = FALSE)
+source("Rstudio_lib/ORCHID_requirements.R")
 ```
 
 
