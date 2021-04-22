@@ -42,6 +42,7 @@ loaded via a namespace (and not attached):
 [55] crayon_1.4.1      pkgconfig_2.0.3   Matrix_1.2-18     ellipsis_0.3.1    MASS_7.3-53.1     prettyunits_1.1.1 assertthat_0.2.1  rmarkdown_2.2     httr_1.4.2       
 [64] bdc_0.1.0         R6_2.5.0          compiler_4.0.0   
 ```
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Data Access using PIC-SURE API
 
@@ -1022,3 +1023,6 @@ ggsurvplot(
 )
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
