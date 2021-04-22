@@ -17,11 +17,7 @@ get_multiIndex_variablesDict <- function(variablesDict) {
     multiIndex[["name"]] <- variablesDict[["name"]]
     multiIndex[["simplified_name"]] <- sapply(splitted, function(x) x[length(x)])
     multiIndex <- dplyr::left_join(multiIndex, variablesDict, by="name")
-#    multiIndex["nb_modalities"] <- ifelse(sapply(variablesDict[["categoryValues"]], is.na) %>% unname(), 
-#              sapply(variablesDict[["categoryValues"]], length) %>% unname(), 
-#              NA)
     level_col_names <- names(multiIndex)[grep("^.*level.*$", names(multiIndex))]
-#    columns_order <- c(level_col_names, "simplified_name", "name", "observationCount", "categorical", "categoryValues", "nb_modalities", "min", "max", "HpdsDataType")
     columns_order <- c(level_col_names, "simplified_name", "name", "observationCount", "categorical", "categoryValues", "min", "max", "HpdsDataType")
     return(multiIndex[columns_order])
 }
