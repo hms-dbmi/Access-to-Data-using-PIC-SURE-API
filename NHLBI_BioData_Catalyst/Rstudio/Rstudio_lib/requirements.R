@@ -1,10 +1,9 @@
-list_packages <- c("ggplot2",
+list_packages <- c("devtools",
+                   "ggplot2",
                    "dplyr",
                    "tidyr",
                    "urltools",
-                   "devtools",
                    "ggrepel")
-
 install.packages("cli")
 install.packages("usethis")
 install.packages("openssl")
