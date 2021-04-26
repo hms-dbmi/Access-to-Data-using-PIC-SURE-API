@@ -47,7 +47,7 @@ Install the following:
     - PIC-SURE Client
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 ```{r}
@@ -65,7 +65,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 ##### Loading user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE resource
@@ -187,7 +187,7 @@ saveDictFrame <- fullVariablesDict[ , c("name", "patientCount", "min", "categori
 write.csv(saveDictFrame, dataDictFile, row.names = FALSE)
 ```
 
-You should now see a data_dictionary.csv in the Jupyter Hub file explorer.
+You should now see a data_dictionary.csv in the RStudio file explorer.
 
 ### Parsing variable names
 
@@ -250,7 +250,7 @@ All 4 methods can be combined when building a query. The record eventually retur
 
 *To answer this, we will first build a query to return data associated with patients in the COPDGene study who completely stopped smoking between the ages of 20 and 70 years. For these entries, we will pull the age that they stopped smoking along with any other categorical variables which have more than 4000 entries.*
 
-First, we create a mask `yo_stop_smoking_varnme` to isolate the variable pertaining to the following text:
+First, we create a mask `yo_stop_smoking_varname` to isolate the variable pertaining to the following text:
 
 `How old were you when you completely stopped smoking? [Years old]`
 
