@@ -191,7 +191,7 @@ You should now see a data_dictionary.csv in the RStudio file explorer.
 
 ### Parsing variable names
 
-We can use a simple function, `get_multiIndex_variablesDict`, defined in `R_lib/utils.R` to add a little more information to the variable dictionary and to simplify working with variables names.
+We can use a simple function, `get_multiIndex_variablesDict`, defined in `Rstudio_lib/utils.R` to add a little more information to the variable dictionary and to simplify working with variables names.
 
 Although not an official feature of the API, such functionality illustrates how to quickly select groups of related variables.
 
@@ -233,12 +233,18 @@ my_query <- bdc::new.query(resource = resource)
 
 The query object has several methods that enable to build a query.
 
-| Method | Arguments / Input | Output|
-|--------|-------------------|-------|
-| bdc::query.select.add() | variable names (string) or list of strings | all variables included in the list (no record subsetting)|
-| bdc::query.require.add() | variable names (string) or list of strings | all variables; only records that do not contain null values for input variables |
-| bdc::query.anyof.add() | variable names (string) or list of strings | all variables; only records that contain at least one non-null value for input variables |
-| bdc::query.filter.add() | variable name and additional filtering values | input variable; only records that match filter criteria |
+* bdc::query.select.add() 
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables included in the list (no record subsetting)
+* bdc::query.require.add()
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables; only records that do not contain null values for input variables |
+* bdc::query.anyof.add()
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables; only records that contain at least one non-null value for input variables
+* bdc::query.filter.add()
+    Arguments/input: variable name and additional filtering values
+    Outpu: input variable; only records that match filter criteria
 
 All 4 methods can be combined when building a query. The record eventually returned by the query have to meet all the different specified filters.
 
