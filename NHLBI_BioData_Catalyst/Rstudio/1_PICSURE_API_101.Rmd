@@ -10,18 +10,13 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 ## PIC-SURE R API
 ### What is PIC-SURE?
 
-<!--img src="./img/PIC-SURE_logo.png" width= "360px"> -->
-
 As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
 
 Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible sciences.
 
 
 ### More about PIC-SURE
-The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language.
-
-
-PIC-SURE is a larger project from which the R/python PIC-SURE API is only a brick. Among other things, PIC-SURE also offers a graphical user interface that allows researchers to explore variables across multiple studies, filter patients that match criteria, and create cohorts from this interactive exploration.
+The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. The R/python PIC-SURE API is a small part of the entire PIC-SURE platform. 
 
 The R API is actively developed by the Avillach Lab at Harvard Medical School.
 
