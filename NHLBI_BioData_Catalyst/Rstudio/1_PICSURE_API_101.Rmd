@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/1_PICSURE_API_101.ipynb"
+title: PIC-SURE R API in R Markdown
 output: html_document
 ---
 
