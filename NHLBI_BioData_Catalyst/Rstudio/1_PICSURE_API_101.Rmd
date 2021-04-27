@@ -28,6 +28,7 @@ PIC-SURE API GitHub repo:
 
 
  -------
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Getting your own user-specific security token
 
@@ -403,3 +404,6 @@ dim(my_df)
 head(my_df)
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
