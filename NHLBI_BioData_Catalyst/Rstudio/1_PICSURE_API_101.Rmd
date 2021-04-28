@@ -1,0 +1,409 @@
+---
+title: PIC-SURE R API in R Markdown
+output: html_document
+---
+
+# PIC-SURE API use-case: quick analysis on BioDataCatalyst data
+
+This is a tutorial notebook aimed to get the user quickly up and running with the R PIC-SURE API. It covers the main functionalities of the API.
+
+## PIC-SURE R API
+### What is PIC-SURE?
+
+As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
+
+Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible sciences.
+
+
+### More about PIC-SURE
+The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. The R/python PIC-SURE API is a small part of the entire PIC-SURE platform. 
+
+The R API is actively developed by the Avillach Lab at Harvard Medical School.
+
+PIC-SURE API GitHub repo:
+* https://github.com/hms-dbmi/pic-sure-r-adapter-hpds
+* https://github.com/hms-dbmi/pic-sure-r-client
+* https://github.com/hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds
+
+
+
+ -------
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
+
+# Getting your own user-specific security token
+
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+
+# Environment set-up
+
+### Pre-requisites
+- R 3.4 or later
+
+### Install packages
+
+Install the following:
+- packages listed in the `requirements.R` file
+- PIC-SURE API components (from Github)
+    - PIC-SURE Adapter
+    - PIC-SURE Client
+
+```{r}
+source("Rstudio_lib/requirements.R")
+```
+
+```{r}
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/R6_2.5.0.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
+install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+```
+
+##### Loading user-defined functions
+
+```{r}
+source("Rstudio_lib/utils.R")
+```
+
+## Connecting to a PIC-SURE resource
+
+The following is required to get access to data through the PIC-SURE API: 
+- Network URL
+- Resource id
+- User-specific security token
+
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
+
+```{r}
+# Set required information as variables
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+```
+
+```{r}
+token <- scan(token_file, what = "character")
+```
+
+```{r}
+# Establish connection to PIC-SURE
+connection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+```
+
+```{r}
+# it may take several minutes to connect and download the initialization data
+resource <- bdc::get.resource(connection,
+                               resourceUUID = resource_id)
+```
+
+Two objects are created here: a `connection` and a `resource` object.
+
+Since we will only be using a single resource, **the `resource` object is actually the only one we will need to proceed with data analysis hereafter**.
+
+It is connected to the specific data source ID we specified and enables us to query and retrieve data from this database.
+
+## Getting help with the PIC-SURE API
+
+You can get help with PIC-SURE library functions by using the `?` operator
+
+```{r}
+?bdc::get.resource()
+```
+
+## Using the *variables dictionary*
+
+Once a connection to the desired resource has been established, we first need to understand which variables are available in the database. To this end, we will use the `find.in.dictionary` function.
+
+For instance, looking for variables containing the term `COPD` is done this way:
+
+```{r}
+dictionary_search <- bdc::find.in.dictionary(resource, "COPD")
+```
+
+Four different functions can be used to retrieve results from a dictionary search: `extract.count()`, `extract.keys()`, `extract.entries()`, and `extract.dataframe()`.
+
+```{r, results="hide"}
+print(list("Count"   = bdc::extract.count(dictionary_search), # How many dictionary entries contained "COPD"? 
+           "Keys"    = bdc::extract.keys(dictionary_search)[1:3], # Show the first three unique dictionary keys that contain "COPD"
+           "Entries" = bdc::extract.entries(dictionary_search)[1:3,])) # Show the first three entries that contain "COPD"
+```
+
+```{r}
+# Save the entries from the "COPD" search to 'df_dictionary_copd'
+df_dictionary_copd <- bdc::extract.entries(dictionary_search)
+```
+
+**`bdc::extract.dataframe()` retrieves the result of the dictionary search in a data.frame format. This way, it enables us to:**
+
+* Use the various information exposed in the dictionary (patientCount, variable type ...) as criteria for variable selection.
+* Use the row names of the DataFrame to get the actual variables names, to be used in the query, as shown below.
+
+Variable names, as currently implemented in the API, aren't very practical to use right away for two reasons:
+1. Very long
+2. Presence of backslashes that requires modification right after copy-pasting.
+
+However, using the dictionary to select variables can help access the variable names. Let's say we want to retrieve every variable from the COPDGene study. One way to proceed is to retrieve the whole dictionary for those variables in the form of a data.frame, as below:
+
+```{r}
+plain_variablesDict <- bdc::find.in.dictionary(resource, "COPDGene") %>% # Search for "COPDGene"
+    bdc::extract.entries() # Retrieve unique entries from the search
+```
+
+```{r, results="hide"}
+plain_variablesDict[10:20,] # Display entries 10 through 20
+```
+
+The dictionary currently returned by the API provides information about the variables, such as:
+- observationCount: number of entries with non-null value
+- categorical: type of the variables, True if strings, False if numerical
+- min/max: only provided for numerical variables
+- HpdsDataType: 'phenotypes' or 'genotypes'. Currently, the API only exposes 'phenotypes' variables
+
+### Extract full data dictionary to CSV
+
+Using the `bdc::find.in.dictionary` we can extact the entire data dictionary by performing an empty search and saving it to `fullVariablesDict`:
+
+```{r}
+fullVariablesDict <- bdc::find.in.dictionary(resource, "") %>% # Search for '', or get entire dictionary
+    bdc::extract.entries() # Extract unique entries
+dim(fullVariablesDict) # Print the dimensions of fullVariablesDict (rows, columns)
+```
+
+Check that the `fullVariablesDict` dataframe contains some values.
+
+```{r}
+fullVariablesDict[0:5,]
+```
+
+We can than write the data frame that contains the full data dictionary to a CSV file.
+
+```{r}
+dataDictFile <- "data_dictionary.csv" # Name of output file
+saveDictFrame <- fullVariablesDict[ , c("name", "patientCount", "min", "categorical", "observationCount", "max", "HpdsDataType", "description")]
+write.csv(saveDictFrame, dataDictFile, row.names = FALSE)
+```
+
+You should now see a data_dictionary.csv in the RStudio file explorer.
+
+### Parsing variable names
+
+We can use a simple function, `get_multiIndex_variablesDict`, defined in `Rstudio_lib/utils.R` to add a little more information to the variable dictionary and to simplify working with variables names.
+
+Although not an official feature of the API, such functionality illustrates how to quickly select groups of related variables.
+
+Printing part of the parsed names dictionary allows us to quickly see the tree-like organization of the variable names. Moreover, original and simplified variable names are now stored respectively in the `varName` and `simplified_varName` columns (simplified variable names is simply the last component of the variable name, that is usually the most informative to know what each variable is about).
+
+```{r}
+# Display the variables tree hierarchy from the variables name
+variablesDict <- get_multiIndex_variablesDict(plain_variablesDict)
+head(variablesDict) # Show first few rows of variablesDict
+```
+
+Below is a simple example to illustrate the simplicity of using a multiIndex dictionary. Let's say we are interested in every variable pertaining to the terms "asthma" and "smoking".
+
+```{r, results="hide"}
+asthma <- str_detect(variablesDict$level_2, 'asthma') # Does the level_2 variable name contain "asthma"?
+mask_asthma <- variablesDict$level_2[!is.na(asthma) & asthma] # All level_2 variable names not NA and containing "asthma"
+smoking <- str_detect(variablesDict$level_2, 'smoking') # Does the level_2 variable name contain "smoking"?
+mask_smoking <- variablesDict$level_2[!is.na(smoking) & smoking] # All level_2 variable names not NA and containing "smoking"
+# Subsetting variablesDict to only level_2 variable names not NA and containing "asthma" or "smoking"
+asthma_and_smoking_variables <- variablesDict[!is.na(variablesDict$level_2) & variablesDict$level_2 %in% c(mask_asthma, mask_smoking), ]
+```
+
+```{r}
+# View the new subsetted dataframe
+asthma_and_smoking_variables
+```
+
+Although pretty simple, it can be easily combined with other filters to quickly select one or more desired groups of variables.
+
+## Querying and retrieving data
+
+The second cornerstone of the API are the `query` functions (`bdc::query.anyof`, `bdc::query.select`, `bdc::query.filter`, `bdc::query.require`). They are the entering point to retrieve data from the resource.
+
+First, we need to create a query object.
+
+```{r}
+my_query <- bdc::new.query(resource = resource)
+```
+
+The query object has several methods that enable to build a query.
+
+* bdc::query.select.add() 
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables included in the list (no record subsetting)
+* bdc::query.require.add()
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables; only records that do not contain null values for input variables |
+* bdc::query.anyof.add()
+    Arguments/input: variable names (string) or list of strings
+    Output: all variables; only records that contain at least one non-null value for input variables
+* bdc::query.filter.add()
+    Arguments/input: variable name and additional filtering values
+    Outpu: input variable; only records that match filter criteria
+
+All 4 methods can be combined when building a query. The record eventually returned by the query have to meet all the different specified filters.
+
+#### Building the query
+
+*In the following example, we are going to answer the following research question:*
+
+*What is the age distribution of patients that stopped smoking between 20 and 70 years in the COPDGene study?*
+
+*To answer this, we will first build a query to return data associated with patients in the COPDGene study who completely stopped smoking between the ages of 20 and 70 years. For these entries, we will pull the age that they stopped smoking along with any other categorical variables which have more than 4000 entries.*
+
+First, we create a mask `yo_stop_smoking_varname` to isolate the variable pertaining to the following text:
+
+`How old were you when you completely stopped smoking? [Years old]`
+
+```{r}
+# Peek at the filtered dataframe
+fullVariablesDict[str_detect(fullVariablesDict$name, "How old were you when you completely stopped smoking"), ]
+```
+
+```{r}
+# Create 'mask' where simplified_name is variable of interest
+mask <- variablesDict["simplified_name"] == "How old were you when you completely stopped smoking? [Years old]"
+# Apply mask to variablesDict and retrieve "name" info
+yo_stop_smoking_varname <- variablesDict[mask, "name"] %>%
+    unlist() %>% 
+    unname()
+yo_stop_smoking_varname <- as.character(yo_stop_smoking_varname)
+```
+
+```{r}
+mask_cat <- plain_variablesDict["categorical"] == TRUE # Get all categorical variables
+mask_count <- plain_variablesDict["observationCount"] > 4000 # Get all variables with 4000+ entries
+selected_vars <- plain_variablesDict[mask_cat & mask_count, "name"] %>% 
+    as.list()
+selected_vars <- lapply(selected_vars, as.character)
+```
+
+```{r}
+bdc::query.filter.add(query = my_query,
+                      keys = yo_stop_smoking_varname,
+                      min=20,
+                      max=70)
+bdc::query.select.add(query = my_query,
+                      keys = selected_vars[1:50])
+```
+
+ ## Selecting consent groups
+
+PIC-SURE will limit results based on which study and/or patient consent groups for which the researcher has been individually authorized to use. 
+
+However, sometimes you might need to limit your results further to only contain a subset of the groups.
+
+To view the available consent groups, you can use the `query.show()` function. Look for the list of values under `query > categoryFilters > \\_consents\\`.
+
+```{r}
+bdc::query.show(bdc::new.query(resource = resource))
+```
+
+In order to update the values, the existing list needs to be cleared first, then replaced.  (phs000179.c2 is one consent code used in the COPDGene study.)
+
+It is safe to ignore the warning about "the condition has length > 1 ..." because we use a single vector as an argument.
+
+```{r}
+# Delete current consents
+bdc::query.filter.delete(query = my_query,
+                      keys = "\\_consents\\")
+```
+
+```{r}
+bdc::query.filter.add(query = my_query,
+                      keys = "\\_consents\\",
+                      as.list(c("phs000179.c2")))
+```
+
+*Note that trying to manually add a consent group which you are not authorized to access will result in errors downstream.*
+
+## Retrieving the data
+
+Once our query object is finally built, we use the `query.run` function to retrieve the data corresponding to our query.
+
+```{r}
+my_df <- bdc::query.run(my_query, result.type = "dataframe")
+```
+
+```{r}
+dim(my_df) # Dimensions of the new dataframe
+```
+
+```{r}
+head(my_df) # Show first few rows
+```
+
+From this point, we can proceed with the data management and analysis using any other R function or libraries.
+
+Remember our original question: what is the distribution of the age that patients stopped smoking between 20 and 70 years old in the COPDGene study?
+
+To investigate this, we can narrow the new dataframe to the column saved before in `yo_stop_smoking_varname`.
+
+```{r}
+parsed_data <- my_df[yo_stop_smoking_varname] # Select only data from column saved before
+names(parsed_data)[1] <- 'age_stopped_smoking' # Rename long column to age_stopped_smoking
+```
+
+Now we can visualize our results with `ggplot` or other plotting tools in R.
+
+```{r}
+ggplot(data = parsed_data) +
+    geom_histogram(mapping = aes(x=age_stopped_smoking), bins=15) +
+    labs(x = "Age stopped smoking, years old", y = "Count") +
+    theme_bw()
+```
+
+## Retrieving data from query run through PIC-SURE UI
+
+It is possible for you to retrieve the results of a query that you have previously run using the PIC-SURE UI. To do this you must "select data for export", then select the information that you want the query to return and then click "prepare data export". Once the query is finished executing, a group of buttons will be presented.  Click the "copy query ID to clipboard" button to copy your unique query identifier so you can paste it into your notebook.
+
+
+Paste your query's ID into your notebook and assign it to a variable.  You then use the `bdc::query.getResults(yourResource, yourQueryUUID)` function using an initialized resource object to retrieve the data from your query as shown below.
+
+The screenshot below shows the button of interest in the PIC-SURE UI. It shows that the previously run query has a Query ID of `bf3ddba5-de5f-460b-bcbc-ff56410d3075`. At this point a copy-paste process is used to provide the Query ID to the API, as shown in the example code below.  To run this code you must replace the example query ID with a query ID from a query that you have run in the PIC-SURE API.
+
+Note that query IDs are not permanent and will expire.
+
+<img src="https://drive.google.com/uc?id=1e38XT07bJ-JiO8oqbM5SydvVEozYavOm">
+
+```{r}
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+token <- scan(token_file, what = "character")
+```
+
+```{r}
+connection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+resource <- bdc::get.resource(connection,
+                               resourceUUID = resource_id)
+```
+
+```{r}
+# To run this using your notebook you must replace it with the ID value of a query that you have run.
+DataSetID <- '02e23f52-f354-4e8b-992c-d37c8b9ba140'
+```
+
+```{r}
+my_csv_str <- bdc::query.getResults(resource, DataSetID)
+my_df <- read.table(textConnection(my_csv_str), sep = ",")
+```
+
+```{r}
+dim(my_df)
+```
+
+```{r}
+head(my_df)
+```
+
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
