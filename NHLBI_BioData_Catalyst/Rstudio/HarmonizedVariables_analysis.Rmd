@@ -1,0 +1,260 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.3.2
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# Accessing BioData Catalyst Harmonized variables using R PIC-SURE API
+
+
+This tutorial notebook will demonstrate how to query and work with the BioData Catalyst cross-studies harmonized variables using R PIC-SURE API. For a more step-by-step introduction to the R PIC-SURE API, see the `PICSURE-API_101.ipynb` notebook.
+
+
+**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the `get_your_token.ipynb` notebook**
+
+
+ -------   
+
+
+# Environment set-up
+
+
+### System requirements
+- R 3.4 or later
+
+
+### Packages installation
+
+```{r}
+source("R_lib/requirements.R")
+```
+
+#### Installing latest R PIC-SURE API libraries from github
+
+```{r}
+devtools::install_github("hms-dbmi/pic-sure-r-client", force = T, upgrade = "always")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force = T, upgrade = "always")
+```
+
+#### Loading user-defined functions
+
+```{r}
+source("R_lib/utils.R")
+```
+
+## Connecting to a PIC-SURE network
+
+```{r}
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+```
+
+```{r}
+token <- scan(token_file, what = "character")
+
+```
+
+```{r}
+myconnection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+```
+
+```{r}
+resource <- hpds::get.resource(myconnection,
+                               resourceUUID = resource_id)
+```
+
+## Harmonized Variables
+
+
+
+Data Harmonization effort aims at producing "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with Working Group members and phenotype experts on this endeavour. So far, 44 harmonized variables are accessible through PICS-SURE API (as well as, for each variable, the age at which the variable value as been collected for a given subject).
+
+Which phenotypes caracteristics are included the harmonized variables?
+
+- Key NHLBI phenotypes    
+    - Blood cell counts
+    - VTE
+    - Atherosclerosis-related phenotypes
+    - Lipids
+    - Blood pressure
+􏰀
+- Common covariates
+    - Height
+    - Weight
+    - BMI
+    - Smoking status
+    - Race/ethnicity
+
+More information about the variables harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
+
+
+### 1. Retrieving variables dictionary from HPDS Database
+
+
+Here we retrieve the harmonized variables information by searching for the "harmonized" keyword.
+
+```{r pycharm={'is_executing': False}}
+harmonized_dic <- hpds::find.in.dictionary(resource, "harmonized") %>% hpds::extract.dataframe()
+```
+
+```{r}
+# Display the variables tree hierarchy from the variables name
+multiIndexdic <- get_multiIndex_variablesDict(harmonized_dic)
+multiIndexdic_sub <- multiIndexdic[!grepl("(^[Aa]ge)|(SUBJECT_ID)",
+                                         multiIndexdic[["simplified_name"]], perl = T),]
+dim(multiIndexdic_sub)
+```
+
+```{r}
+head(multiIndexdic_sub)
+```
+
+Overall, there is 82 harmonized variables. After discarding "subject ID" and the variables only indicating age of the subject at which a given harmonized variable has been measured, 43 remain.
+
+
+### 2. Selecting variables and retrieving data from the database
+
+
+Let's say we are interested in the subset of Harmonized Variables pertaining to the demographics. 
+
+Subseting to keep only the phenotypical variables + the "affection status", that will be used as the dependent variable for this illustration use-case.
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+variablesDict <- multiIndexdic_sub[multiIndexdic_sub[[2]] == '01 - Demographics', ]
+```
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+selected_vars <- variablesDict[["name"]] %>% as.list()
+```
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+selected_vars
+```
+
+Retrieving the data:
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+query <- hpds::new.query(resource)
+hpds::query.select.add(query, selected_vars)
+facts <- hpds::query.run(query, result.type = "dataframe") %>% dplyr::as_tibble()
+```
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+facts[["Patient.ID"]] <- NULL
+facts[["X._Consents.Short.Study.Accession.with.Consent.Code."]] <- NULL
+facts[["X._Study.Accession.with.Patient.ID."]] <- NULL
+```
+
+```{r jupyter={'outputs_hidden': True}}
+facts <- facts[complete.cases(facts),]
+```
+
+```{r jupyter={'outputs_hidden': True}}
+variablesDict[["df_name"]] <- parsing_varNames(variablesDict[["name"]])
+mask_simplified_names <- sapply(names(facts), function(x) which(variablesDict[["df_name"]] ==x)) %>% unname()
+renaming_facts <- variablesDict[mask_simplified_names, ][["simplified_name"]]
+```
+
+```{r jupyter={'outputs_hidden': True}}
+names(facts) <- renaming_facts
+sex_varname <- "Subject sex  as recorded by the study."
+study_varname <- "A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort."
+race_varname <- "Harmonized race category of participant."
+```
+
+```{r pycharm={'is_executing': False}, jupyter={'outputs_hidden': True}}
+facts[facts[sex_varname] == "", sex_varname] <- NA
+facts <- droplevels(facts)
+```
+
+```{r pycharm={'is_executing': False, 'name': '#%% \n'}, jupyter={'outputs_hidden': True}}
+dim(facts)
+```
+
+```{r jupyter={'outputs_hidden': True}}
+head(facts)
+```
+
+## Studying the sex repartion across studies
+
+```{r jupyter={'outputs_hidden': True}}
+require(RColorBrewer)
+```
+
+```{r jupyter={'outputs_hidden': True}}
+sex_varname <- "Subject sex  as recorded by the study."
+study_varname <- "A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort."
+race_varname <- "Harmonized race category of participant."
+```
+
+```{r jupyter={'outputs_hidden': True}}
+facts <- facts[!is.na(facts[[sex_varname]]),]
+```
+
+```{r jupyter={'outputs_hidden': True}}
+# ggplot options
+options(repr.plot.width=18, repr.plot.height=12)
+
+# ggplot options
+options(repr.plot.width=18, repr.plot.height=12)
+if (names(dev.cur()) %in% c("RStudioGD", "null device")) {
+  my_theme <- theme_bw() +
+theme(axis.title.y = element_text(size=12),
+      title = element_text(size=10),
+      axis.title.x = element_text(size=12),
+      axis.text.y = element_text(size=7),
+      axis.text.x = element_text(size=12),
+      legend.text = element_text(size=10),
+      panel.grid.major.x = element_blank()
+      )
+} else {
+    my_theme <- theme_bw() +
+theme(axis.title.y = element_text(size=15),
+      title = element_text(size=20),
+      axis.title.x = element_text(size=20),
+      axis.text.y = element_text(size=15),
+      axis.text.x = element_text(size=15),
+      legend.text = element_text(size=15),
+      panel.grid.major.x = element_blank()
+      )
+}
+```
+
+```{r jupyter={'outputs_hidden': True}}
+facts_to_plot <- facts
+names(facts_to_plot)[names(facts_to_plot) == study_varname] <- "Studies"
+names(facts_to_plot)[names(facts_to_plot) == sex_varname] <- "Sex"
+count_table <- facts_to_plot %>% dplyr::group_by(Studies) %>%
+    count(Sex) %>%
+    mutate(freq = n / sum(n)) %>%
+    mutate(total = sum(n))
+```
+
+```{r}
+ggplot(count_table) +
+geom_bar(aes_string(x="Studies", y="freq", fill="Sex"),
+         stat="identity",
+         position="dodge") +
+  geom_label(aes(x=Studies, y=max(freq) + 0.1, label=paste(total, "subjects")), 
+#            position = position_dodge(0.9),
+            size=4,
+            show.legend=F
+           ) + 
+coord_flip() +
+scale_fill_brewer(palette = "Paired") +
+labs(title="Sex-Ratio across harmonized studies",
+    x="Studies", y="Ratio") +
+scale_y_continuous(limits=c(0, 1.15), breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1)) + 
+my_theme
+```

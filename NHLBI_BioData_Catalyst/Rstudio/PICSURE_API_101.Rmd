@@ -1,0 +1,310 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.3.2
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# PIC-SURE API use-case: quick analysis on BioDataCatalyst data
+
+
+This is a tutorial notebook, aimed to be quickly up and running with the R PIC-SURE API. It covers the main functionalities of the API.
+
+<!-- #region -->
+## PIC-SURE R API 
+### What is PIC-SURE? 
+
+<!--img src="./img/PIC-SURE_logo.png" width= "360px"> -->
+
+As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI). 
+
+Original data exposed through PIC-SURE API encompass a large heterogeneity of data organization underneath. PIC-SURE hide this complexity and exposes the different studies dataset in a single tabular format. By easing the process of data extraction, it allows investigators to focus on the downstream analyses and facilitate reproducible sciences.
+
+Currently, only phenotypic variables are accessible through the PIC-SURE API, but access to genomic variables is coming soon.
+
+
+### More about PIC-SURE
+The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using any of those languages.
+
+
+PIC-SURE is a larger project from which the R/python PIC-SURE API is only a brick. Among other things, PIC-SURE also offers a graphical user interface that allows researchers to explore variables across multiple studies, filter patient that match criteria, and create cohort from this interactive exploration.
+
+The python API is actively developed by the Avillach-Lab at Harvard Medical School.
+
+PIC-SURE API GitHub repo:
+* https://github.com/hms-dbmi/pic-sure-python-adapter-hpds
+* https://github.com/hms-dbmi/pic-sure-python-client
+
+
+
+<!-- #endregion -->
+
+ -------   
+
+
+# Getting your own user-specific security token
+
+
+**Before running this notebook, please be sure to review the `get_your_token.ipynb` notebook. It contains explanation about how to get a security token, mandatory to access the databases.**
+
+
+# Environment set-up
+
+
+### Pre-requisite
+- R 3.4 or later
+
+
+### Packages installation
+
+```{r}
+source("R_lib/requirements.R")
+```
+
+#### Installing the latest PIC-SURE API library from GitHub
+
+
+Installation of the two components of the PIC-SURE API from GitHub, that is the PIC-SURE adapter and the PIC-SURE Client.
+
+```{r}
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T, upgrade="always")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, upgrade="always")
+```
+
+##### Loading user-defined functions
+
+```{r}
+source("R_lib/utils.R")
+```
+
+## Connecting to a PIC-SURE resource
+
+
+Several information are required to get access to data through the PIC-SURE API: a network URL, a resource id, and a user-specific security token.
+
+```{r}
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+```
+
+```{r}
+token <- scan(token_file, what = "character")
+```
+
+```{r}
+connection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+```
+
+```{r}
+resource <- hpds::get.resource(connection,
+                               resourceUUID = resource_id)
+```
+
+Two objects are created here: a `connection` and a `resource` object.
+
+As we will only be using one single resource, **the `resource` object is actually the only one we will need to proceed with data analysis hereafter**. 
+
+It is connected to the specific data source ID we specified, and enables to query and retrieve data from this database.
+
+
+## Getting help with the PIC-SURE API
+
+
+You can get help with PIC-SURE library functions by using the `?` operator
+
+```{r}
+?hpds::get.resource()
+```
+
+## Using the *variables dictionary*
+
+
+Once a connection to the desired resource has been established, we first need to get a knowledge of which variables are available in the database. To this end, we will use the `find.in.dictionary` function.
+
+
+For instance, looking for variables containing the term `COPD` in thein names is done this way: 
+
+```{r}
+dictionary_search <- hpds::find.in.dictionary(resource, "COPD")
+```
+
+Four different functions can be used to retrieve results from a dictionary search: `extract.count()`, `extract.keys()`, `extract.entries()`, and `extract.dataframe()`. 
+
+```{r jupyter={'outputs_hidden': True}}
+print(list("Count"   = hpds::extract.count(dictionary_search), 
+           "Keys"    = hpds::extract.keys(dictionary_search)[1:3],
+           "Entries" = hpds::extract.entries(dictionary_search)[1:3]))
+```
+
+```{r}
+df_dictionary_copd <- hpds::extract.dataframe(dictionary_search) 
+```
+
+<!-- #region jupyter={"source_hidden": true} -->
+**`hpds::extract.dataframe()` enables to get the result of the dictionary search in a data.frame format. This way, it enables to:** 
+
+* Use the various criteria exposed in the dictionary (patientCount, variable type ...) as criteria for variable selection.
+* Use the row names of the DataFrame to get the actual variables names, to be used in the query, as shown below.
+
+Variable names, as currently implemented in the API, aren't handy to use right away.
+1. Very long
+2. Presence of backslashes that requires modification right after copy-pasting. 
+
+However, using the dictionary to select variables can help to deal with this. Let's say we want to retrieve every variable from the COPDGene study. Hence, one way to proceed is to retrieve the whole dictionary for those variables in the form of a data.frame, as below:
+<!-- #endregion -->
+
+```{r}
+plain_variablesDict <- hpds::find.in.dictionary(resource, "COPDGene") %>% hpds::extract.dataframe()
+```
+
+Moreover, using the `hpds::find.in.dictionary` function without arguments return every entries, as shown in the help documentation. *As for now, this takes a long time in the R PIC-SURE API implementation, and will be fixed in later version of the API*
+
+```{r jupyter={'outputs_hidden': True}}
+plain_variablesDict[10:20,]
+```
+
+The dictionary currently returned by the API provides information about the variables, such as:
+- observationCount: number of entries with non-null value
+- categorical: type of the variables, True if strings, False if numerical
+- min/max: only provided for numerical variables
+- HpdsDataType: 'phenotypes' or 'genotypes'. Currently, the API only expsoses'phenotypes' variables
+
+
+### Parsing variable names
+
+
+Though helpful, we can use a simple function, `get_multiIndex_variablesDict`, defined in `R_lib/utils.R` to add a little more information to the variable dictionary and to simplify working with variables names.
+
+Although not an official feature of the API, such functionality illustrates how to quickly select groups of related variables.
+
+Printing part of the "parsed names" Dictionary allows to quickly see the tree-like organisation of the variable names. Moreover, original and simplified variable names are now stored respectively in the "varName" and "simplified_varName" columns (simplified variable names is simply the last component of the variable name, that is usually the most informative to know what each variable is about).
+
+```{r}
+# Display the variables tree hierarchy from the variables name
+variablesDict <- get_multiIndex_variablesDict(plain_variablesDict)
+head(variablesDict)
+```
+
+Below is a simple example to illustrate the simplicity of use a parsed dictionary. Let's say we are interested in every variables pertaining to the "Medical history" and "Medication history" subcategories.
+
+```{r jupyter={'outputs_hidden': True}}
+mask_medication <- variablesDict[,3] == "Medication History"
+mask_medical <- variablesDict[,3] == "Medical History"
+medication_history_variables <- variablesDict[mask_medical | mask_medication,]
+medication_history_variables
+```
+
+Although pretty simple, it can be easily combined with other filters to quickly select desired group of variables.
+
+
+## Querying and retrieving data
+
+
+Beside from the dictionary, the second cornerstone of the API are the `query` functions (`hpds::query.anyof`, `hpds::query.select`, `hpds::query.filter`, `hpds::query.require`). They are the entering point to retrieve data from the resource.
+
+
+First, we need to create a query object.
+
+```{r}
+my_query <- hpds::new.query(resource = resource)
+```
+
+The query object created will be then be passed to the different query functions to build the query: `hpds::query.anyof`, `hpds::query.select`, `hpds::query.filter`, `hpds::query.require`. Each of these methods accept a query object, a list of variable names, and eventual additional parameters as arguments.
+
+
+- The `query.select.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all variables included in the list, without any record (ie subjects/rows) subsetting.
+
+
+- The `query.require.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all the variables passed, and only records that do not contain any null values for those variables.
+
+
+- The `query.anyof.add()` method accepts variable names as string or list of strings as argument, and will allow the query to return all variables included in the list, and only records that do contain at least one non-null value for those variables.
+
+
+- The `query.filter.add()` method accepts variable name as argument, plus additional values to filter on that given variable. The query will return this variable and only the records that do match this filter criteria.
+
+
+All those 4 methods can be combined when building a query. The record eventually returned by the query have to meet all the different specified filters.
+
+
+#### Building the query
+
+```{r}
+mask <- variablesDict["simplified_name"] == "How old were you when you completely stopped smoking? [Years old]"
+yo_stop_smoking_varname <- variablesDict[mask, "name"] %>%unlist() %>% unname()
+```
+
+```{r}
+mask_cat <- plain_variablesDict["categorical"] == TRUE
+mask_count <- plain_variablesDict["observationCount"] > 4000
+selected_vars <- plain_variablesDict[mask_cat & mask_count, "name"] %>% as.list()
+```
+
+```{r}
+hpds::query.filter.add(query = my_query, 
+                      keys = yo_stop_smoking_varname, 
+                      min=20, 
+                      max=70)
+hpds::query.select.add(query = my_query, 
+                      keys = selected_vars[1:50])
+```
+
+###$ Selecting Consent Groups
+
+Sometime it can be necessary to limit results to a group of patients that have provided common consent types. By default, PIC-SURE will enforce limits to the consents that each researcher has individually been authorized for, however it may be desirable to further restrict the results. To view the available consent groups, you can use the query.show() function. Look for the list of values under "\_Consents\Short Study Accession with Consent Code\"
+
+```{r}
+hpds::query.show(hpds::new.query(resource = resource))
+```
+
+In order to update the values, the existing list needs to be cleared first, then replaced. (phs000179.c2 is one consent code used in the COPDGene study.)
+
+It is safe to ignore the warning about "the condition has length > 1 ..." because we use a single vector as an argument
+
+```{r}
+hpds::query.filter.delete(query = my_query,
+                      keys = "\\_Consents\\Short Study Accession with Consent Code\\")
+
+hpds::query.filter.add(query = my_query,
+                      keys = "\\_Consents\\Short Study Accession with Consent Code\\",
+                      as.list(c("phs001040.c1", "phs000179.c2")))
+```
+
+## Retrieving the data
+
+
+Once our query object is finally built, we use the `query.run` function to retrieve the data corresponding to our query
+
+```{r}
+my_df <- hpds::query.run(my_query, result.type = "dataframe")
+```
+
+```{r}
+dim(my_df)
+```
+
+```{r}
+head(my_df)
+```
+
+From this point, we can proceed with the data management and analysis using any other R function or libraries.
+
+```{r}
+parsed <- parsing_varNames(yo_stop_smoking_varname)
+```
+
+```{r}
+ggplot(my_df) + geom_histogram(aes_string(x=parsed), bins=15) +
+labs(x="Age stopping smoking", y= "count") +
+theme_bw()
+```

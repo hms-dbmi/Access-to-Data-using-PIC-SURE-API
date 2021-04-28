@@ -42,6 +42,7 @@ loaded via a namespace (and not attached):
 [55] crayon_1.4.1      pkgconfig_2.0.3   Matrix_1.2-18     ellipsis_0.3.1    MASS_7.3-53.1     prettyunits_1.1.1 assertthat_0.2.1  rmarkdown_2.2     httr_1.4.2       
 [64] bdc_0.1.0         R6_2.5.0          compiler_4.0.0   
 ```
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Data Access using PIC-SURE API
 
@@ -82,13 +83,9 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 # Packages Installation 
 
 ```{r}
-source("Rstudio_lib/ORCHID_requirements.R", echo = FALSE, print.eval = FALSE, verbose = FALSE)
+source("Rstudio_lib/ORCHID_requirements.R")
 ```
 
-```{r}
-# try stkipping; dimanesions optimized for jupyter notebook
-#options(repr.plot.width=18, repr.plot.height=9)
-```
 
 ```{r}
 options(unzip = "internal")
@@ -872,7 +869,8 @@ ggplot(aes(x = outcome, y = OR, ymin = `2.5%`, ymax = `97.5%`)) +
   scale_x_discrete(labels=outcomes_labels) +
   # scale_y_continuous(labels=c(0, 1, 2, 4, 6, 8)) +
   orchid_gg_theme(panel.spacing = unit(2, "lines"), 
-                 axis.text.y = element_markdown()) + 
+                 axis.text.y = element_markdown(),
+                 text = element_text(size=8),) + 
   labs(title = 'Hydroxychloroquine adjusted effects on the outcomes', 
       x = '', 
       y = 'Odds Ratio')
@@ -936,7 +934,7 @@ death_plot <- ggsurvplot(survfit_death,
            legend.labs =c("Placebo", "Hydroxychloroquine"),
            risk.table.height = 0.25,
            ggtheme = theme_bw() +  theme(
-        text = element_text(size=20),
+        #text = element_text(size=20),
         axis.text.x = element_text(angle=0, hjust=0.5)),
            combine = TRUE,
            keep_data = TRUE,
@@ -1014,7 +1012,7 @@ ggsurvplot(
   legend.labs = c("Hydroxychloroquine", "Placebo"),
   risk.table.height = 0.25,
   ggtheme = theme_bw() +  theme(
-  text = element_text(size=20),
+  #text = element_text(size=20),
   axis.text.x = element_text(angle=0, hjust=0.5)),
   combine = TRUE,
   keep_data = TRUE,
@@ -1025,3 +1023,6 @@ ggsurvplot(
 )
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
