@@ -230,3 +230,6 @@ scale_y_continuous(limits=c(0, 1.15), breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1)) +
 my_theme
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
