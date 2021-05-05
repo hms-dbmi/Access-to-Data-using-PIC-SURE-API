@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/2_HarmonizedVariables_analysis.ipynb"
+title: Harmonized Variables Example in R Markdown
 output: html_document
 ---
 
@@ -19,7 +19,7 @@ This tutorial notebook will demonstrate how to query and work with the BioData C
 ### Packages installation
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
