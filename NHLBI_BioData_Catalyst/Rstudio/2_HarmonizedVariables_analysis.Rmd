@@ -229,6 +229,8 @@ labs(title="Sex-Ratio across harmonized studies",
 scale_y_continuous(limits=c(0, 1.15), breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1)) +
 my_theme
 ```
+Note that the WHI studies only have female participants, so the "Female" bar is the only one displayed and the bar is thicker. Other studies also have an additional category where the participant chose not to disclose their sex, as indicated by the category with a blank label in the legend. These studies will show thinner bars.
+
 
 # Troubleshooting
 If you experience trouble during package installation / loading, try restarting your R environment.
