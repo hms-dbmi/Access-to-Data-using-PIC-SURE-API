@@ -39,7 +39,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 #### Loading user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE network
