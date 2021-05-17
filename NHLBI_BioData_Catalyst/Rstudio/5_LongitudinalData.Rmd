@@ -24,7 +24,7 @@ R >= 3.4
 ### Install Packages
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 Install latest R PIC-SURE API libraries from github
@@ -44,7 +44,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 Load user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE Network
