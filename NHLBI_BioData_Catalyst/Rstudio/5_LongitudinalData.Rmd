@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/5_LongitudinalData.ipynb"
+title: Longitudinal Data Example in Rstudio
 output: html_document
 ---
 
