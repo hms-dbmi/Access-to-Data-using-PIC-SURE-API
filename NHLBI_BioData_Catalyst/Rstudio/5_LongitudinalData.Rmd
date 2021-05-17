@@ -205,3 +205,6 @@ Our dataframe contains each exam / visit for the longitudinal variable of intere
 my_df
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
