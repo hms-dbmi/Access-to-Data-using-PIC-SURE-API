@@ -147,8 +147,8 @@ keywords
 ```
 
 ```{r}
-# Filter the multiindex to get query variables
-query_vars <- multiindex %>%
+# Filter the lipid_vars to get query variables
+query_vars <- lipid_vars %>%
                 mutate(new_name = tolower(str_replace_all(name, '[[:punct:]]', '')), # Get rid of punctuation from concept path and make lowercase
                        test_val = sapply(keywords, # For each string in keywords,
                                          grepl, # see if it is in...
