@@ -74,18 +74,16 @@ resource <- bdc::get.resource(myconnection,
 Example showing how to extract lipid measurements from multiple visits for different cohorts
 
 ### Access the data
-First, we will create a multiIndex variable dictionary of all variables we have access to.
+First, we will create multiIndex variable dictionaries of all variables that contain 'lipid' or 'triglyceride'. We will then combine these multiIndex variable dictionaries into `lipid_vars`.
 
 ```{r}
-varDict <- bdc::find.in.dictionary(resource) %>% bdc::extract.entries() # all variables
-multiindex <- get_multiIndex_variablesDict(varDict) # get multiindex table of all variables
-```
+lipid_varDict <- bdc::find.in.dictionary(resource, 'lipid') %>% bdc::extract.entries()
+triglyceride_varDict <- bdc::find.in.dictionary(resource, 'triglyceride') %>% bdc::extract.entries()
 
-In this example, we are interested in variables related to lipids. We can find all variables related to the search terms 'lipid' and 'triglyceride' through applying the following filter on the multiIndex dictionary:
+lipid_multiindex <- get_multiIndex_variablesDict(lipid_varDict)
+triglyceride_multiindex <- get_multiIndex_variablesDict(triglyceride_varDict)
 
-```{r}
-lipid_vars <- multiindex %>% filter(grepl('triglyceride', name, ignore.case = TRUE) |
-                                   grepl('lipid', name, ignore.case = TRUE))
+lipid_vars <- rbind(lipid_multiindex, triglyceride_multiindex)
 lipid_vars
 ```
 
