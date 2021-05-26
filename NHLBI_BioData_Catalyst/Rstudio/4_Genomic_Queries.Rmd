@@ -69,6 +69,10 @@ library(stringr)
 library(dplyr)
 ```
 
+```{r}
+source("R_lib/utils.R")
+```
+
 ## Connecting to a PIC-SURE resource
 
 The following is required to get access to data through the PIC-SURE API: 
@@ -103,11 +107,11 @@ Two objects are created here: a `connection` and a `resource` object.
 
 Since we will only be using a single resource, **the `resource` object is the only one we will need to proceed with the data analysis**.
 
-It is connected to the specific resource ID we supplied and enables us to query and retrieve data from this database.
+It is connected to the specific resource we supplied and enables us to query and retrieve data from this database.
 
 ## Building the query with the PIC-SURE API
 
-We are going to create a new query request from the PIC-SURE resource that was specified above.  We will limit the query to a single study, a single phenotype (gender and age range) and two genomic filters.
+We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single study, a single phenotype (gender and age range), and two genomic filters.
 
 First, we will create a new query instance.
 
@@ -118,7 +122,7 @@ my_query <- bdc::new.query(resource=resource)
 
 #### Limiting the query to a single study
 
-By default, new query objects are automatically populated with all the consent groups for which you are authorized to access.  For this example, we are going to clear the existing consents and specify a single consent group that represents accessing only the NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) study.
+By default, new query objects are automatically populated with all the consent groups for which you are authorized to access.  For this example we are going to clear the existing consents and specify a single consent group that represents accessing only the NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) study.
 
 ```{r}
 # Here we show all the studies that you have access to
@@ -134,7 +138,7 @@ bdc::query.filter.delete(my_query, "\\_consents\\")
 # Here we show that we have only selected a single study
 bdc::query.filter.add(query = my_query,
                       keys = "\\_consents\\",
-                      as.list(c("phs000179.c2")))
+                      as.list(c("phs000921.c2")))
 ```
 
 *Note that trying to manually add a consent group which you are not authorized to access will result in errors downstream.*
@@ -185,7 +189,7 @@ bdc::query.show(my_query)
 
 #### Add continous phenotypic variable (age) to the query
 
-Following the data dictionary search pattern just shown, we can search for the SAGE study variables related to "Subject Age".
+Following the data dictionary search pattern just shown, we can search for the SAGE study variables related to `Subject Age`.
 
 ```{r}
 # View information about the "subject age" variable
@@ -195,7 +199,7 @@ found_terms_df <- bdc::extract.entries(found_terms)
 found_terms_df[stringr::str_detect(found_terms_df$name, "(SAGE)"), ]
 ```
 
-The dictionary entry in the output above shows the age range of data available for `SUBJECT AGE`.  
+The dictionary entry in the output above shows the age range of data available for `Subject Age`.  
 
 For this example, let's limit our search to a minimum age of 8 and maximum age of 35.
 
@@ -251,27 +255,23 @@ Next we will take this query and retreve the data for patients with matching cri
 
 ## Retrieving data from the query
 
+#### Getting query count
+
 We have now built a query called `my_query` which contains the search criteria we are interested in.
 
 Next, we will run a count query to find the number of matching participants.
 
 Finally, we will run a data query to download the data.
 
-#### Getting query count
-
 ```{r}
 my_query_count <- bdc::query.run(query = my_query,
                                   result.type = "count")
 print(my_query_count)
-##### should be 215 ####
 ```
 
 #### Getting query data
 
-Once our query object is finally built, we set `result.type = "dataframe"` to retrieve the data corresponding to our query
-
-Once our query object is finally built, we use the `getResultsDataFrame` function to retrieve the data corresponding to our query.  But first, we want to also know whether the participants that match the previously defined criteria have asthma or not. To select variables to return in the query we can use the data dictionary to search for `Case or Control status for asthma` and add it to our query's selection list.
-
+Once our query object is finally built, we set `result.type = "dataframe"` to retrieve the data corresponding to our query.
 
 ```{r}
 my_query_df <- bdc::query.run(query = my_query,
@@ -284,5 +284,75 @@ dim(my_query_df)
 
 ```{r}
 head(my_query_df, n=5)
+```
+
+# Data analysis example: *SERPINA1* gene and COPD
+
+In this example, we will create a query to explore the relationship between the COPD phenotype and variants in the SERPINA1 gene. Variations of the SERPINA1 gene have been found to be a strong risk factor for COPD, which you can read more about [here](https://pubmed.ncbi.nlm.nih.gov/31661293/).
+
+To explore this relationship, we will narrow the cohort down to participants that meet the following criteria:
+* participated in the COPDgene study
+* have had COPD
+* have a *SERPINA1* gene variant with moderate severity
+
+#### Initialize the query
+Let's start by creating a new query and finding the variables pertaining to the COPDgene study using a dictionary.
+
+```{r}
+copd_query <- bdc::new.query(resource=resource)
+copd_dictionary <- bdc::find.in.dictionary(resource = resource,
+                                           term = "COPDGene") %>% bdc::extract.entries()
+copdDict <- get_multiIndex_variablesDict(copd_dictionary)
+```
+
+**Add phenotypic variable (COPD: have you ever had COPD) to the query**
+
+Next we will find the full variable name for "COPD: have you ever had COPD" using the `simplified_name` column and filter to this data.
+
+```{r}
+mask_copd <- copdDict['simplified_name'] == 'COPD: have you ever had COPD'
+copd_varname <- copdDict[mask_copd, 'name'] %>%
+    unlist() %>%
+    unname()
+copd_varname <- as.character(copd_varname)
+bdc::query.filter.add(query=copd_query, keys=copd_varname, value='Yes')
+```
+
+**Add genomic variable (Gene_with_variant) to the query**
+
+To add the genomic filter, we can use a dictionary to find the variable `Gene_with_variant` and filter to the `SERPINA1` gene.
+
+```{r}
+copd_dictionary <- bdc::new.query(resource=resource)
+gene_dictionary <- bdc::find.in.dictionary(resource=resource,
+                                           term="Gene_with_variant") %>% bdc::extract.entries()
+gene_varname <- gene_dictionary$name
+bdc::query.filter.add(query=copd_query, keys=gene_varname, value='SERPINA1')
+```
+
+#### Add genomic variable (Variant_severity) to the query
+Finally, we can filter our results to include only variants of the *SERPINA1* gene with moderate severity.
+
+```{r}
+severity_dictionary <- bdc::find.in.dictionary(resource=resource,
+                                              term = 'Variant_severity') %>% bdc::extract.entries()
+severity_varname <- severity_dictionary$name
+bdc::query.filter.add(query=copd_query, keys=severity_varname, value="MODERATE")
+```
+
+#### Retrieve data from the query
+
+Now that the filtering is complete, we can use this final query to get counts and perform analysis on the data.
+
+```{r}
+copd_results <- bdc::query.run(copd_query, result.type='dataframe')
+```
+
+```{r}
+dim(copd_results)
+```
+
+```{r}
+head(copd_results)
 ```
 
