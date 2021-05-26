@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/4_Genomic_Queries.ipynb"
+title: Genomic Query example in R Studio
 output: html_document
 ---
 
@@ -9,8 +9,6 @@ This is a tutorial notebook, aimed to be quickly up and running with the R PIC-S
 
 ## PIC-SURE R API 
 ### What is PIC-SURE? 
-
-<!--img src="./img/PIC-SURE_logo.png" width= "360px"> -->
 
 As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI). 
 
@@ -32,6 +30,7 @@ PIC-SURE API R Library GitHub repos:
 
 
  -------
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Getting your own user-specific security token
 
@@ -356,3 +355,6 @@ dim(copd_results)
 head(copd_results)
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
