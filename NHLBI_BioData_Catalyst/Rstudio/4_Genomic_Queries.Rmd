@@ -44,7 +44,7 @@ PIC-SURE API R Library GitHub repos:
 ### Install packages
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 #### Installing the latest PIC-SURE API library from GitHub
@@ -69,7 +69,7 @@ library(dplyr)
 ```
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE resource
