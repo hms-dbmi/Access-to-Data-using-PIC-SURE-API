@@ -292,7 +292,7 @@ In this example, we will create a query to explore the relationship between the 
 To explore this relationship, we will narrow the cohort down to participants that meet the following criteria:
 * participated in the COPDgene study
 * have had COPD
-* have a *SERPINA1* gene variant with moderate severity
+* have a *SERPINA1* gene variant with high or moderate severity
 
 #### Initialize the query
 Let's start by creating a new query and finding the variables pertaining to the COPDgene study using a dictionary.
@@ -330,13 +330,13 @@ bdc::query.filter.add(query=copd_query, keys=gene_varname, value='SERPINA1')
 ```
 
 #### Add genomic variable (Variant_severity) to the query
-Finally, we can filter our results to include only variants of the *SERPINA1* gene with moderate severity.
+Finally, we can filter our results to include only variants of the *SERPINA1* gene with high or moderate severity.
 
 ```{r}
 severity_dictionary <- bdc::find.in.dictionary(resource=resource,
                                               term = 'Variant_severity') %>% bdc::extract.entries()
 severity_varname <- severity_dictionary$name
-bdc::query.filter.add(query=copd_query, keys=severity_varname, value="MODERATE")
+bdc::query.filter.add(query=copd_query, keys=severity_varname, value=list("HIGH","MODERATE"))
 ```
 
 #### Retrieve data from the query
