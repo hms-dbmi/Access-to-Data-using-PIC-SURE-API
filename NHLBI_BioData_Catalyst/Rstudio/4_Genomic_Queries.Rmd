@@ -216,7 +216,7 @@ To start adding genomic filters to our query, we first need to understand which 
 # extract the genotypic vars for SAGE
 geno_vars <- filter(fullVariablesDict, HpdsDataType == "info")
 
-geno_vars$categoryValues[geno_vars$name == "Gene_with_variant"] <- '<<<FULL GENE LIST REMOVED. TO VIEW, PRINT "gene_list">>>'
+geno_vars$categoryValues[geno_vars$name == "Gene_with_variant"] <- '<<<FULL GENE LIST REMOVED.>>>'
 # display genotypic vars
 geno_vars
 ```
@@ -233,7 +233,7 @@ Let's use `Gene_with_variant` to view a list of genes and get more information a
 found_terms <- bdc::find.in.dictionary(resource = resource,
                                         term = "Gene_with_variant") %>% bdc::extract.entries()
 gene_list <- found_terms$categoryValues[found_terms$name == "Gene_with_variant"]
-print(gene_list[[1]])
+print(sort(gene_list[[1]]))
 ```
 
 The output shown above provides a list of values that can be used for this variable, in this case genes affected by a variant. Let's narrow our query to include the CHD8 gene.
