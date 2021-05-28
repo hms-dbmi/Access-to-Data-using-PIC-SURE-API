@@ -216,20 +216,24 @@ To start adding genomic filters to our query, we first need to understand which 
 # extract the genotypic vars for SAGE
 geno_vars <- filter(fullVariablesDict, HpdsDataType == "info")
 
+geno_vars$categoryValues[geno_vars$name == "Gene_with_variant"] <- '<<<FULL GENE LIST REMOVED. TO VIEW, PRINT "gene_list">>>'
 # display genotypic vars
-head(geno_vars)
+geno_vars
 ```
 
 As shown in the output above, some genomic variables that can be used in queries include `Gene_with_variant`, `Variant_class`, and `Variant_severity`.
+
+Note that, for printing purposes, the full list of genes in `Gene_with_variant` row and `categoryValues` column was removed. This is to provide a simpler preview of the genomic variables and to avoid printing thousands of gene names in the dataframe.
 
 #### Add genotypic variable (Gene_with_variant) to the query
 Let's use `Gene_with_variant` to view a list of genes and get more information about this variable.
 
 ```{r}
-# View information about "Gene_with_variant" variable
+# View gene list from the "Gene_with_variant" variable
 found_terms <- bdc::find.in.dictionary(resource = resource,
-                                        term = "Gene_with_variant")
-bdc::extract.entries(found_terms)
+                                        term = "Gene_with_variant") %>% bdc::extract.entries()
+gene_list <- found_terms$categoryValues[found_terms$name == "Gene_with_variant"]
+print(gene_list[[1]])
 ```
 
 The output shown above provides a list of values that can be used for this variable, in this case genes affected by a variant. Let's narrow our query to include the CHD8 gene.
