@@ -50,7 +50,7 @@ source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE Network
-**Again, before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/harmonized_lipid_measurements_example/NHLBI_BioData_Catalyst#get-your-security-token).**
+**Again, before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token).**
 
 ```{r}
 PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
