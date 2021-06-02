@@ -14,7 +14,9 @@ In this example, we will find the patient level data for a lipid-related longitu
 
 For a more basic introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
-**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/harmonized_lipid_measurements_example/NHLBI_BioData_Catalyst#get-your-security-token).**
+# Getting your own user-specific security token
+
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
 
 ## Environment Set-Up
 
