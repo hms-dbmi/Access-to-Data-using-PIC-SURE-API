@@ -323,7 +323,7 @@ bdc::query.filter.add(query=copd_query, keys=copd_varname, value='Yes')
 
 **Add genomic variable (Gene_with_variant) to the query**
 
-To add the genomic filter, we can use a dictionary to find the variable `Gene_with_variant` and filter to the `SERPINA1` gene.
+To add the genomic filter, we can use a dictionary to find the variable `Gene_with_variant` and filter to the *SERPINA1* gene.
 
 ```{r}
 copd_dictionary <- bdc::new.query(resource=resource)
