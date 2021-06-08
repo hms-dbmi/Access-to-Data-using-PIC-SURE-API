@@ -4,3 +4,5 @@
 .idea
 .project
 *data_dictionary.csv*
+*.DS_Store*
+*.gitignore*
