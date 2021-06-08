@@ -1,4 +1,4 @@
-##### Access-to-Data-using-PIC-SURE-API ( BCH_Precision_Link_Biobank )
+# Access-to-Data-using-PIC-SURE-API: BCH_Precision_Link_Biobank
 
 ## Get your security token
 
