@@ -34,17 +34,16 @@ To get your token, process as follows:
 
 ## Available notebooks
 
-In each R and python folders, three example notebooks are available: 
-- 1_PICSURE-API_101.ipynb: An illustration of the main functionalities of the PIC-SURE API.
-- 2_How_to_do_a_PheWAS.ipynb: A straightforward PIC-SURE API use-case, using a PheWAS (Phenome-Wide Association Study) analysis as an illustration example.
-- 3_HarmonizedVariables_analysis.ipynb: An example of how to access and work with the "harmonized variables" across the TOPMed studies.
-- 4_Genomic_Queries.ipynb: An example of how to search using a variant numeric filter and variant categorical filter. 
+Example Jupyter notebooks are available in python and R. Additionally, R Markdown examples are available for RStudio environments. In the R, python, and RStudio folders, five notebooks are available:
+- 1_PICSURE_API_101: An illustration of the main functionalities of the PIC-SURE API.
+- 2_PheWAS: A straightforward PIC-SURE API use-case, using a PheWAS (Phenome-Wide Association Study) analysis as an illustration example.
+- 3_HarmonizedVariables_analysis: An example of how to access and work with the "harmonized variables" across the TOPMed studies.
+- 4_Genomic_Queries: An example of how to filter partipants using categorical variant filters. 
+- 5_LongitudinalData: An example of how to find longitudinal variables in the data dictionary, use these variables to extract data, and perform analysis. 
+
+The Sickle_Cell folder contains Jupyter notebook python and R examples on how to search and query the Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) dataset.
 
 ## Contact
 
 For bug report or additional information, please visit: https://biodatacatalyst.nhlbi.nih.gov/contact
-
-
-
-
 
