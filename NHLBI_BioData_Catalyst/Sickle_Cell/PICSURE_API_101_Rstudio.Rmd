@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/Sickle_Cell/PICSURE_API_101_R.ipynb"
+title: PIC-SURE API use-case: quick analysis on Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) data
 output: html_document
 ---
 
@@ -50,7 +50,7 @@ Install the following:
     - PIC-SURE Client
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 ```{r}
@@ -66,7 +66,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 ##### Loading user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE resource
