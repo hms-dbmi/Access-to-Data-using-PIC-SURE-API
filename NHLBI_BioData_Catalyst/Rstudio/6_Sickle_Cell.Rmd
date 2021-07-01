@@ -81,7 +81,8 @@ If you have not already retrieved your user-specific token, please refer to the 
 
 ```{r}
 # Set required information as variables
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+#PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL <- "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
 resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
 token_file <- "token.txt"
 ```
@@ -92,6 +93,7 @@ token <- scan(token_file, what = "character")
 
 ```{r}
 # Establish connection to PIC-SURE
+httr::set_config(httr::config(ssl_verifypeer = 0L))
 connection <- picsure::connect(url = PICSURE_network_URL,
                                  token = token)
 ```
@@ -126,19 +128,28 @@ For instance, looking for variables containing the term `Sickle Cell` is done th
 dictionary_search <- bdc::find.in.dictionary(resource, "Sickle Cell")
 ```
 
-Four different functions can be used to retrieve results from a dictionary search: `extract.count()`, `extract.keys()`, `extract.entries()`, and `extract.dataframe()`.
+Three different functions can be used to retrieve results from a dictionary search: `extract.count()`, `extract.keys()`, and `extract.entries()`.
 
 ```{r}
 print(list("Count"   = bdc::extract.count(dictionary_search), 
-           "Keys"    = bdc::extract.keys(dictionary_search)[1:2], # Show first two keys
-           "Entries" = bdc::extract.entries(dictionary_search)[1:2])) # Show first two entries
+           "Keys"    = bdc::extract.keys(dictionary_search)[1:2])) # Show first two keys
 ```
 
 ```{r}
 bdc::extract.entries(dictionary_search) %>% tail() #View last entries as a dataframe
 ```
 
-**`bdc::extract.dataframe()` retrieves the result of the dictionary search in a data.frame format. This way, it enables us to:**
+To view the list in the `categoryValues` column, we can use simple R code to manipulate the dataframe.
+
+```{r}
+bdc::extract.entries(dictionary_search) %>%
+    tail(2) %>%
+    select(name, categoryValues) %>%
+    unnest(categoryValues)
+```
+
+
+**`bdc::extract.entries()` retrieves the result of the dictionary search in a data.frame format. This way, it enables us to:**
 
 * Use the various information exposed in the dictionary (patientCount, variable type ...) as criteria for variable selection.
 * Use the row names of the DataFrame to get the actual variables names, to be used in the query, as shown below.
@@ -182,12 +193,12 @@ fullVariablesDict[0:5,] # View first five rows
 We can then write the data frame that contains the full HCT for SCD data dictionary to a csv file.
 
 ```{r}
-dataDictFile <- "data_dictionary_R.csv" # Name of output file
+dataDictFile <- "data_dictionary_Rstudio.csv" # Name of output file
 saveDictFrame <- fullVariablesDict[ , c("name", "patientCount", "min", "categorical", "observationCount", "max", "HpdsDataType", "description")]
 write.csv(saveDictFrame, dataDictFile, row.names = FALSE)
 ```
 
-You should now see a `data_dictionary_R.csv` in the Jupyter Hub file explorer, in the same folder as this notebook.
+You should now see a `data_dictionary_Rstudio.csv` in the Jupyter Hub file explorer, in the same folder as this notebook.
 
 ### Parsing variable names
 
