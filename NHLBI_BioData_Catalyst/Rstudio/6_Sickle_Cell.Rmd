@@ -81,8 +81,7 @@ If you have not already retrieved your user-specific token, please refer to the 
 
 ```{r}
 # Set required information as variables
-#PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-PICSURE_network_URL <- "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
 token_file <- "token.txt"
 ```
@@ -93,7 +92,6 @@ token <- scan(token_file, what = "character")
 
 ```{r}
 # Establish connection to PIC-SURE
-httr::set_config(httr::config(ssl_verifypeer = 0L))
 connection <- picsure::connect(url = PICSURE_network_URL,
                                  token = token)
 ```
