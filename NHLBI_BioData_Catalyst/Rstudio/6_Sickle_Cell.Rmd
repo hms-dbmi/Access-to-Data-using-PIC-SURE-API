@@ -1,5 +1,6 @@
 ---
-title: PIC-SURE API use-case: quick analysis on Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) data
+title: PIC-SURE API use-case
+subtitle: Quick analysis on Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) data
 output: html_document
 ---
 
