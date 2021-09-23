@@ -10,6 +10,7 @@ This tutorial notebook will demonstrate how to query and work with the BioData C
 **Before running this notebook, please be sure to review the \"Get your security token\" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
 
 -----
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Environment set-up
 
@@ -548,3 +549,6 @@ sub <- as.matrix(final_df[, c('Pneumonia', 'Orthopnea')])
 vennDiagram(vennCounts(sub), main='Harmonized')
 ```
 
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
