@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "R/7_Harmonization_with_PICSURE.ipynb"
+title: Harmonization across studies with PIC-SURE
 output: html_document
 ---
 
