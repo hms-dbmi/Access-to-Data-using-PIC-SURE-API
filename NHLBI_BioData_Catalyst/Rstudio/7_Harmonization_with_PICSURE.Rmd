@@ -1,0 +1,548 @@
+---
+title: An R Markdown document converted from "R/7_Harmonization_with_PICSURE.ipynb"
+output: html_document
+---
+
+# Harmonization across studies with PIC-SURE
+
+This tutorial notebook will demonstrate how to query and work with the BioData Catalyst studies, particularly cross-study harmonization. For a more step-by-step introduction to the python PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
+
+**Before running this notebook, please be sure to review the \"Get your security token\" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+
+-----
+
+# Environment set-up
+
+### Pre-requisites
+- R 3.4 or later
+
+
+### Install packages
+Install the following:
+- packages listed in the `requirements.R` file
+- PIC-SURE API components (from Github)
+    - PIC-SURE Adapter
+    - PIC-SURE Client
+
+```{r}
+source("R_lib/requirements.R")
+```
+
+```{r}
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
+install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+```
+
+##### Loading user-defined functions
+
+```{r}
+source("R_lib/utils.R")
+```
+
+## Connecting to a PIC-SURE resource
+
+```{r}
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+```
+
+```{r}
+token <- scan(token_file, what = "character")
+```
+
+```{r}
+connection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+resource <- bdc::get.resource(connection,
+                               resourceUUID = resource_id)
+```
+
+-----
+
+## Harmonizing variables with PIC-SURE
+One of the key challenges to conducting analyses with several studies is ensuring correct data harmonization, or combining of data from different sources. There are many harmonization techniques, but this notebook will demonstrate how to find and extract similar variables from different studies in PIC-SURE. Two examples of this will be shown:
+1. Retrieving variables for *sex and gender* across studies with BMI
+2. Harmonizing the variable *"orthopnea"* across studies with age
+
+
+*For more information about the TOPMed DCC Harmonized Data Set in PIC-SURE, please refer to the [`2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb`](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/blob/master/NHLBI_BioData_Catalyst/R/2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb) notebook*
+
+-----
+
+### Sex and gender variables across studies
+
+Let's start by doing separate searches for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms.
+
+```{r}
+full_dict <- bdc::find.in.dictionary(resource) %>%
+    bdc::extract.entries()
+full_multiindex_dict <- get_multiIndex_variablesDict(full_dict)
+```
+
+```{r}
+sex_mask <- full_multiindex_dict$simplified_name[str_detect(full_multiindex_dict$simplified_name, 'sex')]
+sex <- full_multiindex_dict[full_multiindex_dict$simplified_name %in% sex_mask,]
+gender_mask <- full_multiindex_dict$simplified_name[str_detect(full_multiindex_dict$simplified_name, 'gender')]
+gender <- full_multiindex_dict[full_multiindex_dict$simplified_name %in% gender_mask,]
+```
+
+```{r}
+# Uncomment the following lines of code to preview the filtered dataframes
+#head(sex)
+#head(gender)
+```
+
+After reviewing the variables using the dataframe (or the [user interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login)), let's say we are interested in sex/gender variables from the following studies:
+- TOPMed Harmonized data set
+- ECLIPSE (Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints)
+- EOCOPD (Early Onset of COPD)
+
+However, these concept paths are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To acccount for these differences, we need to develop a way to search for multiple keywords at once.
+
+First, let's get all of the concept paths associated with each study.
+
+```{r}
+topmed_harmonized <- bdc::find.in.dictionary(resource, 'DCC Harmonized data set') %>%
+    bdc::extract.entries()
+eclipse <- bdc::find.in.dictionary(resource, 'Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints (ECLIPSE)') %>%
+    bdc::extract.entries()
+eocopd <- bdc::find.in.dictionary(resource, 'NHLBI TOPMed: Boston Early-Onset COPD Study') %>%
+    bdc::extract.entries()
+```
+
+Now we will search for the terms of interest (`sex` and `gender`) and filter out these concept paths.
+
+Below is a simple user-defined function that you could use to accomplish this.
+
+```{r}
+# Function that filters out variables from a dataframe (df) that contain any of the terms (list_of_terms)
+find_vars <- function(df, list_of_terms){
+    if(length(list_of_terms)>1){
+        pattern <- paste(list_of_terms, collapse='|')
+    } else {
+        pattern <- list_of_terms
+    }
+    pattern <- paste(c('(', pattern, ')'), collapse = '')
+    df_filtered <- df %>%
+        filter(grepl(pattern, name, ignore.case=TRUE))
+    vars_list <- list(df_filtered$name)[[1]]
+    return(vars_list)
+}
+```
+
+```{r}
+# Search for 'sex' and 'gender' variables in TOPMed Harmonized dataset
+topmed_var <- find_vars(topmed_harmonized, c('sex', 'gender'))
+print(c("Concept path from TOPMed Harmonized data set:", topmed_var))
+```
+
+```{r}
+# Search for 'sex' and 'gender' variables in ECLIPSE dataset
+eclipse_var <- find_vars(eclipse, c('sex', 'gender'))
+print(c("Concept path from ECLIPSE data set:", eclipse_var))
+```
+
+```{r}
+# Search for 'sex' and 'gender' variables in EOCOPD dataset
+eocopd_vars <- find_vars(eocopd, c('sex', 'gender'))
+print(c("Number of concept paths from EOCOPD data set:", length(eocopd_vars)))
+```
+
+Since there are multiple concept paths that are contain either `gender` or `sex` in the EOCOPD dataset, we can investigate these concept paths to determine the true variable of interest.
+
+```{r}
+# Uncomment the following line to see full list of sex/gender variables in EOCOPD
+#print(c("Full list of variables", eocopd_vars))
+
+# Based on this, we can see that the variable we want for this analysis is the last in the list: Gender of participant
+eocopd_var <- find_vars(eocopd, c('gender of participant'))
+print(c("Concept path from EOCOPD data set:", eocopd_var))
+```
+
+As part of our research, let's also say we are interested in body mass index (BMI) measurements across these studies. Let's save these concept paths to use in our queries as well.
+
+```{r}
+topmed_bmi <- find_vars(topmed_harmonized, c('body mass index'))
+print(topmed_bmi)
+eclipse_bmi <- find_vars(eclipse, c('body mass index'))
+print(eclipse_bmi)
+eocopd_bmi <- find_vars(eocopd, c('body mass index'))
+print(eocopd_bmi)
+```
+
+Now that we know and have saved our concept paths of interest, we can use these to build our query. 
+
+**Note: queries with the TOPMed DCC Harmonized data set cannot be combined with concept paths from other datasets. Because of this, we will run separate queries and combine the dataframes.**
+
+```{r}
+# Initialize a query
+eclipse_query <- bdc::new.query(resource = resource)
+# Build query using these concept paths
+bdc::query.anyof.add(query = eclipse_query,
+                     keys = eclipse_var)
+bdc::query.anyof.add(query = eclipse_query,
+                     keys = eclipse_bmi)
+```
+
+```{r}
+# Check results
+eclipse_results <- bdc::query.run(eclipse_query, result.type = 'dataframe')
+head(eclipse_results)
+```
+
+```{r}
+# Initialize a query
+eocopd_query <- bdc::new.query(resource = resource)
+# Build query using these concept paths
+bdc::query.anyof.add(query = eocopd_query,
+                     keys = eocopd_var)
+bdc::query.anyof.add(query = eocopd_query,
+                     keys = eocopd_bmi)
+```
+
+```{r}
+# Check results
+eocopd_results <- bdc::query.run(eocopd_query, result.type = 'dataframe')
+head(eocopd_results)
+```
+
+```{r}
+# Initialize a query
+dcc_harmonized_query <- bdc::new.query(resource = resource)
+# Build query using these concept paths
+bdc::query.anyof.add(query = dcc_harmonized_query,
+                     keys =  topmed_var)
+bdc::query.anyof.add(query = dcc_harmonized_query,
+                     keys = topmed_bmi)
+```
+
+```{r}
+# Check results
+dcc_harmonized_results <- bdc::query.run(dcc_harmonized_query, result.type = 'dataframe')
+head(dcc_harmonized_results)
+```
+
+Now that we have our patient-level dataframes, we can combine them into a single, cohesive dataframe.
+
+The following function accomplishes three main tasks:
+1. Removes extra columns, such as consent information
+2. Renames the BMI and Sex columns
+3. Adds the Dataset column, which corresponds to the study
+
+```{r}
+clean_up_df <- function(df, study){
+    columns_to_drop <- c('\\_Parent Study Accession with Subject ID\\', '\\_Topmed Study Accession with Subject ID\\', '\\_consents\\', '\\_harmonized_consent\\')
+    df1 <- df[,!(names(df) %in% columns_to_drop)]
+    if(grepl('body mass index', names(df1)[2], ignore.case=TRUE)){
+        names(df1)[2] <- 'BMI'
+        names(df1)[3] <- 'Sex'
+    } else {
+        names(df1)[2] <- "Sex"
+        names(df1)[3] <- "BMI"
+    }
+    df2 <- na.omit(df1)
+    df2$Dataset <- study
+    return(df2)
+}
+```
+
+```{r}
+clean_eclipse <- clean_up_df(eclipse_results, 'ECLIPSE')
+clean_eocopd <- clean_up_df(eocopd_results, "EOCOPD")
+clean_dcc <- clean_up_df(dcc_harmonized_results, "TOPMed Harmonized")
+```
+
+The datasets have been prepped. We can now merge them and begin our analysis.
+
+```{r}
+# Combine individual dataframes
+final_df <- rbind(clean_eclipse, clean_eocopd, clean_dcc)
+```
+
+```{r}
+# Comparison of the datasets and sample harmonization
+separate <- final_df %>%
+    select(-c('Patient ID')) %>%
+    group_by(Dataset, Sex) %>%
+    summarise(mean_BMI = mean(BMI))
+print(separate)
+
+harmonized <- final_df %>%
+    select(-c('Patient ID', 'Dataset')) %>%
+    group_by(Sex) %>%
+    summarise(mean_BMI = mean(BMI))
+print(harmonized)
+```
+
+```{r}
+# Make lists of male and female mean BMI for plotting
+male_means <- c(separate$mean_BMI[separate$Sex == 'Male'], harmonized$mean_BMI[harmonized$Sex == 'Male'])
+female_means <-  c(separate$mean_BMI[separate$Sex == 'Female'], harmonized$mean_BMI[harmonized$Sex == 'Female'])
+```
+
+```{r}
+studies <- rep(c('ECLIPSE', "EOCOPD", 'TOPMed Harmonized', "Combined"), 2)
+sex <- c(rep('Male', 4), rep('Female', 4))
+total_means <- c(male_means, female_means)
+to_plot <- data.frame(total_means, sex, studies)
+```
+
+```{r}
+ggplot(data = to_plot, aes(fill=studies, y=total_means, x=sex)) + 
+    geom_bar(position="dodge", stat="identity") +
+    labs(title = "Average Body Mass Index by Sex and Dataset",
+         x = "Sex", y = "Body Mass Index (BMI)",
+         fill = "Dataset")
+```
+
+-----
+
+### Orthopnea variables across studies
+In this example, we will be harmonizing variables related to `orthopnea`. Orthopnea is shortness of breath that occurs when individuals lie flat. Because of this, people with orthopnea have to sleep propped up in bed or sitting in a chair. You can read more about this condition [here](https://www.sleepfoundation.org/sleep-apnea/orthopnea).
+
+Let's start by doing a search in PIC-SURE for concept paths containing `orthopnea`.
+
+```{r}
+ortho_dict <- bdc::find.in.dictionary(resource, "orthopnea") %>%
+    bdc::extract.entries()
+head(ortho_dict)
+```
+
+As shown in the resulting dataframe, orthopnea is often recorded as a something like `sleep on two or more pillows to help you breathe?`
+
+Let's do a search for `pillows` in PIC-SURE to explore those concept paths.
+
+```{r}
+pillow_dict <- bdc::find.in.dictionary(resource, "pillows") %>%
+    bdc::extract.entries()
+tail(pillow_dict)
+```
+
+As shown in the resulting dataframe, there are some concept paths related to orthopnea that were not captured by the previous `orthopnea` search, such as `Do you sleep on 2 or more pillows to improve your breathing?` from the Jackson Heart Study (JHS) Cohort (phs000286). In fact, the JHS dataset was not returned at all when we searched for `orthopnea`. 
+
+This is problematic for researchers studying these types of variables, since the concept paths of interest may not always be captured by a single search term. To account for this, researchers must conduct exploratory searches to determine potential search terms.
+
+Let's say we want to harmonize orthopnea variables from the following datasets: FHS, MESA, and WHI. We can first get all concept paths in each study and then search for our terms of interest (`orthopnea` or `pillows`) to retrieve the concept paths of interest.
+
+```{r}
+# Function that filters out variabels from a dataframe (df) that contain any of the terms (list_of_terms)
+find_concept_paths <- function(study_name, list_of_terms){
+    df <- bdc::find.in.dictionary(resource, study_name) %>%
+        bdc::extract.entries()
+    if(length(list_of_terms)>1){
+        pattern <- paste(list_of_terms, collapse='|')
+    } else {
+        pattern <- list_of_terms
+    }
+    pattern <- paste(c('(', pattern, ')'), collapse = '')
+    df_filtered <- df %>%
+        filter(grepl(pattern, name, ignore.case=TRUE))
+    vars_list <- list(df_filtered$name)[[1]]
+    return(vars_list)
+}
+```
+
+```{r}
+ortho_terms = c('orthopnea', 'pillows')
+```
+
+```{r}
+mesa <- find_concept_paths('Multi-Ethnic Study of Atherosclerosis (MESA) SHARe ( phs000209 )', ortho_terms)
+#mesa # Uncomment to view full results list
+mesa_var <- mesa[1]
+mesa_var
+```
+
+```{r}
+whi <- find_concept_paths("Women's Health Initiative Clinical Trial and Observational Study ( phs000200 )", ortho_terms)
+#whi # Uncomment to view full results list
+whi_var <- whi[1]
+whi_var
+```
+
+```{r}
+fhs <- find_concept_paths("Framingham Cohort ( phs000007 )", ortho_terms)
+#fhs # Uncomment to view full results list
+fhs_var <- fhs[38]
+fhs_var
+```
+
+As part of our research, let's say we are interested in exploring the relationship between pneumonia and orthopnea. Let's save concept paths related to `pneumonia` as well. 
+
+```{r}
+mesa_pneu <- find_concept_paths('Multi-Ethnic Study of Atherosclerosis (MESA) SHARe ( phs000209 )', c('pneumonia'))
+#mesa_pneu # Uncomment to view full results list
+mesa_pneu_var <- mesa_pneu[5]
+mesa_pneu_var
+```
+
+```{r}
+whi_pneu <- find_concept_paths("Women's Health Initiative Clinical Trial and Observational Study ( phs000200 )", c('pneumonia'))
+# whi_pneu # Uncomment to view full results list
+whi_pneu_var <- whi_pneu[1]
+whi_pneu_var
+```
+
+```{r}
+fhs_pneu <- find_concept_paths("Framingham Cohort ( phs000007 )", c('pneumonia'))
+# fhs_pneu # Uncomment to view full results
+fhs_pneu_var <- fhs_pneu[27]
+fhs_pneu_var
+```
+
+Now that we know and have saved our concept paths of interest, we can use these to build our queries and obtain our dataframes. 
+
+```{r}
+mesa_query <- bdc::new.query(resource = resource)
+bdc::query.anyof.add(query = mesa_query,
+                     keys =  mesa_var)
+bdc::query.require.add(query = mesa_query,
+                     keys =  mesa_pneu_var)
+mesa_results <- bdc::query.run(mesa_query, result.type = 'dataframe')
+```
+
+```{r}
+fhs_query <- bdc::new.query(resource = resource)
+bdc::query.anyof.add(query = fhs_query,
+                     keys =  fhs_var)
+bdc::query.require.add(query = fhs_query,
+                     keys =  fhs_pneu_var)
+fhs_results <- bdc::query.run(fhs_query, result.type = 'dataframe')
+```
+
+```{r}
+whi_query <- bdc::new.query(resource = resource)
+bdc::query.anyof.add(query = whi_query,
+                     keys =  whi_var)
+bdc::query.require.add(query = whi_query,
+                     keys =  whi_pneu_var)
+whi_results <- bdc::query.run(whi_query, result.type = 'dataframe')
+```
+
+Now that we have our patient-level dataframes, we can combine them into a single, cohesive dataframe.
+
+The following function accomplishes three main tasks:
+1. Removes extra columns, such as consent information
+2. Renames the Pneumonia and Orthopnea columns
+3. Adds the Dataset column, which corresponds to the study
+
+```{r}
+clean_up_df2 <- function(df, study){
+    columns_to_drop <- c('\\_Parent Study Accession with Subject ID\\', '\\_Topmed Study Accession with Subject ID\\', '\\_consents\\', '\\_harmonized_consent\\')
+    df1 <- df[,!(names(df) %in% columns_to_drop)]
+    if(grepl('pneumonia', names(df1)[2], ignore.case=TRUE)){
+        names(df1)[2] <- 'Pneumonia'
+        names(df1)[3] <- 'Orthopnea'
+    } else {
+        names(df1)[2] <- "Orthopnea"
+        names(df1)[3] <- "Pneumonia"
+    }
+    df1$Dataset <- study
+    return(df1)
+}
+```
+
+```{r}
+clean_fhs <- clean_up_df2(fhs_results, 'FHS')
+clean_whi <- clean_up_df2(whi_results, 'WHI')
+clean_mesa <- clean_up_df2(mesa_results, 'MESA')
+```
+
+As you may have noticed, the orthopnea and pneumonia variables are encoded differently between these studies. Specifically:
+- In FHS, pneumonia is recorded as "NO", "MAYBE", or "YES"
+- In MESA, pneumonia is recorded as "Yes", "No", or "Don't know / Not sure"
+- In WHI, pneumonia is recoded as a value, or the number of times a participant has been diagnosed with pneumonia
+
+To harmonize these variables, we need to create a consistent encoding across these studies. 
+
+```{r}
+# Combine results for the pneumonia and orthopnea variables
+pneumonia_results <- c(unique(clean_fhs$Pneumonia), 
+                       unique(clean_whi$Pneumonia),
+                       unique(clean_mesa$Pneumonia))
+orthopnea_results <- c(unique(clean_fhs$Orthopnea), 
+                       unique(clean_whi$Orthopnea),
+                       unique(clean_mesa$Orthopnea))
+raw <- c(pneumonia_results, orthopnea_results)
+#pneumonia_results # Uncomment to view values
+#orthopnea_results # Uncomment to view values
+```
+
+The following code creates these mappings:
+
+|Raw value|Harmonized value|
+|---|---|
+|No|0|
+|NO|0|
+|No/Not recorded|0|
+|Numeric value equal to 0|0|
+|MAYBE|2|
+|Don't know / Not sure|2|
+|DO NOT KNOW|2|
+|YES|1|
+|Yes|1|
+|Numeric value greater than 0|1|
+
+```{r}
+# Function to create mapping
+create_mappings <- function(raw){
+    if_else(raw %in% c("NO", "no", "No", "No/Not Recorded"), 0,
+            if_else(raw %in% c("YES", "Yes", "yes"), 1,
+                    if_else(raw %in% c("MAYBE", 'DO NOT KNOW', "Don\'t know / Not sure"), 2,
+                            if_else(raw == 0, 0, 1))))
+}
+```
+
+```{r}
+final_df <- rbind(clean_whi, clean_mesa, clean_fhs) %>%
+    mutate(Pneumonia = create_mappings(Pneumonia),
+           Orthopnea = create_mappings(Orthopnea)) %>%
+    subset(Pneumonia != 2) %>% # Remove "2" values since they will not be used in the figures
+    subset(Orthopnea != 2)
+head(final_df)
+```
+
+Now that the variables have been encoded in the same way, we can use this dataframe for analysis and visualizations. 
+
+```{r}
+#library
+install.packages("BiocManager")
+BiocManager::install("limma")
+library(limma)
+```
+
+```{r}
+# Filters to apply to the final_df to create figure
+fhs <- final_df$Dataset == "FHS"
+mesa <- final_df$Dataset == 'MESA'
+whi <- final_df$Dataset == "WHI"
+```
+
+```{r}
+fhs_subset <- as.matrix(final_df[fhs, c('Pneumonia', 'Orthopnea')])
+vennDiagram(vennCounts(fhs_subset), main='FHS Dataset')
+```
+
+```{r}
+mesa_subset <- as.matrix(final_df[mesa, c('Pneumonia', 'Orthopnea')])
+vennDiagram(vennCounts(mesa_subset), main="MESA Dataset")
+```
+
+```{r}
+whi_subset <- as.matrix(final_df[whi, c('Pneumonia', 'Orthopnea')])
+vennDiagram(vennCounts(whi_subset), main='WHI Dataset')
+```
+
+```{r}
+sub <- as.matrix(final_df[, c('Pneumonia', 'Orthopnea')])
+vennDiagram(vennCounts(sub), main='Harmonized')
+```
+
