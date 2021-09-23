@@ -25,7 +25,7 @@ Install the following:
     - PIC-SURE Client
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 ```{r}
@@ -43,7 +43,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 ##### Loading user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE resource
@@ -73,7 +73,7 @@ One of the key challenges to conducting analyses with several studies is ensurin
 2. Harmonizing the variable *"orthopnea"* across studies with age
 
 
-*For more information about the TOPMed DCC Harmonized Data Set in PIC-SURE, please refer to the [`2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb`](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/blob/master/NHLBI_BioData_Catalyst/R/2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb) notebook*
+*For more information about the TOPMed DCC Harmonized Data Set in PIC-SURE, please refer to the [`2_TOPMed_DCC_Harmonized_Variables_analysis.Rmd`](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/blob/master/NHLBI_BioData_Catalyst/Rstudio/2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb) notebook*
 
 -----
 
@@ -296,6 +296,7 @@ to_plot <- data.frame(total_means, sex, studies)
 ```
 
 ```{r}
+library(ggplot2)
 ggplot(data = to_plot, aes(fill=studies, y=total_means, x=sex)) + 
     geom_bar(position="dodge", stat="identity") +
     labs(title = "Average Body Mass Index by Sex and Dataset",
@@ -517,6 +518,7 @@ Now that the variables have been encoded in the same way, we can use this datafr
 install.packages("BiocManager")
 BiocManager::install("limma")
 library(limma)
+# If there is an option to "Update all/some/none? [a/s/n]:" we recommend typing "n"
 ```
 
 ```{r}
