@@ -26,6 +26,7 @@ Install the following:
     - PIC-SURE Client
 
 ```{r}
+install.packages('Rcpp')
 source("Rstudio_lib/requirements.R")
 ```
 
