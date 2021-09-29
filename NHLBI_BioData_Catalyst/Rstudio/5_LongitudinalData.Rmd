@@ -1,0 +1,210 @@
+---
+title: Longitudinal Data Example in Rstudio
+output: html_document
+---
+
+# Identifying and Extracting Longitudinal Variables using R PIC-SURE API
+
+This tutorial notebook will demonstrate how to identify and extract longitudinal variables using the R PIC-SURE API. Longitudinal variables are defined as containing multiple 'Exam' or 'Visit' descriptions within their concept path. 
+
+In this example, we will find the patient level data for a lipid-related longitudinal variable within the Framingham Heart study. We will:
+1. Identify what longitudinal variables are associated with the keywords of interest (lipid, triglyceride), and how many exams / visits are associated with each one
+2. Select a longitudinal variable of interest from a specific study (Framingham heart study)
+3. Extract patient level data into a dataframe where each rows represent patients and columns represent visits
+
+For a more basic introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
+
+# Getting your own user-specific security token
+
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+
+## Environment Set-Up
+
+### System Requirements
+R >= 3.4
+
+### Install Packages
+
+```{r}
+source("Rstudio_lib/requirements.R")
+```
+
+Install latest R PIC-SURE API libraries from github
+
+```{r}
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/R6_2.5.0.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
+install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
+devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+```
+
+Load user-defined functions
+
+```{r}
+source("Rstudio_lib/utils.R")
+```
+
+## Connecting to a PIC-SURE Network
+**Again, before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token).**
+
+```{r}
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+token_file <- "token.txt"
+```
+
+```{r}
+token <- scan(token_file, what = "character")
+```
+
+```{r}
+myconnection <- picsure::connect(url = PICSURE_network_URL,
+                                 token = token)
+```
+
+```{r}
+resource <- bdc::get.resource(myconnection,
+                               resourceUUID = resource_id)
+```
+
+## Longitudinal Lipid Variable Example
+Example showing how to extract lipid measurements from multiple visits for different cohorts
+
+### Access the data
+First, we will create multiIndex variable dictionaries of all variables that contain 'lipid' or 'triglyceride'. We will then combine these multiIndex variable dictionaries into `lipid_vars`.
+
+```{r}
+lipid_varDict <- bdc::find.in.dictionary(resource, 'lipid') %>% bdc::extract.entries()
+triglyceride_varDict <- bdc::find.in.dictionary(resource, 'triglyceride') %>% bdc::extract.entries()
+
+lipid_multiindex <- get_multiIndex_variablesDict(lipid_varDict)
+triglyceride_multiindex <- get_multiIndex_variablesDict(triglyceride_varDict)
+
+lipid_vars <- rbind(lipid_multiindex, triglyceride_multiindex)
+lipid_vars
+```
+
+### Identify the longitudinal lipid variables
+This block of code does the following:
+- uses the multiindex dataframe containing variables which are related to 'lipid' or 'triglyceride'
+- filters for variables with keywords 'exam #' or 'visit #'
+- extracts the exam number of each variable into column `exam_number`
+- groups variables by study (`level_0`) and longitudinal variable (`longvar`)
+- returns a table showing the variables that have more than one exam recorded
+
+```{r}
+longitudinal_lipid_vars <- lipid_vars %>%
+    # Filter to variables containing exam # or visit #
+    filter((grepl('exam \\d+', name, ignore.case=TRUE) |
+          grepl('visit \\d+', name, ignore.case=TRUE))) %>%
+    # Save exam # as exam_number and variable without exam # info as longvar
+    mutate(exam_number = str_extract(name, regex("(exam \\d+)|(visit \\d+)", ignore_case=T)),
+          longvar =  tolower(str_replace_all(name, regex('(exam|visit) \\d+', ignore_case = T), 'exam'))) %>%
+    # Group by level_0 (study) and longvar
+    group_by(level_0, longvar) %>%
+    # Count number of exams for each longvar
+    summarise(n_exams = n_distinct(exam_number)) %>%
+    # Find longvars with 2+ exams (longitudinal variables)
+    filter(n_exams > 1) %>% 
+    arrange(desc(n_exams))
+    
+longitudinal_lipid_vars
+```
+
+*Note: Some variables have capitalization differences, which is why* `longvar` *has been changed to lowercase.*
+
+Now that we know which longitudinal variables are available to us, we can choose a variable of interest and extract the patient and visit level data associated with it.
+
+However, note that the `longvar` we extracted is not equivalent to the actual PIC-SURE concept path needed to query for this variable. 
+
+*Now we can filter for specific studies and extract the longitudinal variable names. Note that* `longvar` *is not equivalent to the actual PIC-SURE concept path, we will need to use the original name from* `multiindex`*. You will not be able to use only the table above to get the variables of interest.*
+
+### Isolate variables of interest
+
+In this example, we will choose to further investigate the first longitudinal variable in the `longitudinal_lipid_vars` dataframe we generated above.
+
+```{r}
+my_variable <- longitudinal_lipid_vars$longvar[1]
+print(my_variable)
+```
+
+To add the longitudinal variable of interest to our PIC-SURE query, we will need to search for our variable within the overall multiindex data dictionary we created before (`multiindex`)
+
+*Note: There are some variables that have minor text differences. The workaround here is to separate the variable into parts. Here, we separate* `longvar` *where it says "exam" or "visit" into the variable* `keywords`*. Then we check to see if each of these parts are in the variable name.*
+
+*This workaround does not work for every variable, so be sure to double check that you are selecting all longitudinal variables of interest.*
+
+```{r}
+# Getting rid of punctuation that gives R trouble
+fixed_my_variable <- str_replace_all(my_variable, '[[:punct:]]', '')
+# Split the fixed_my_variable into separate strings wherever 'exam' or 'visit' is
+keywords <- unlist(strsplit(fixed_my_variable, c('exam','visit')))
+
+keywords
+```
+
+```{r}
+# Filter the lipid_vars to get query variables
+query_vars <- lipid_vars %>%
+                mutate(new_name = tolower(str_replace_all(name, '[[:punct:]]', '')), # Get rid of punctuation from concept path and make lowercase
+                       test_val = sapply(keywords, # For each string in keywords,
+                                         grepl, # see if it is in...
+                                         new_name, # the concept path
+                                         ignore.case=TRUE),
+                      other = apply(test_val, 1, sum)) %>% # Count the number of "TRUE", or times that theres a keywords & new_name match
+                filter(other == length(keywords)) %>% # Keep only rows where all keywords matched new_name
+                pull(name) # Return only full concept paths
+query_vars
+```
+
+The resulting `query_vars` variable contains the variables we will want to add to our query. 
+
+### Create & run query
+First, we will create a new query object.
+
+```{r}
+my_query <- bdc::new.query(resource = resource)
+```
+
+We will use the `bdc::query.anyof.add()` method. This will allow us to include all input variables, but only patient records that contain at least one non-null value for those variables in the output. See the `1_PICSURE_API_101.ipynb` notebook for a more in depth explanation of query methods.
+
+```{r}
+bdc::query.anyof.add(query = my_query,
+                      keys = lapply(query_vars, as.character))
+```
+
+#### Update consent codes if necessary
+Uncomment this code below and run as necessary to restrict your query to certain consent codes.
+In the current example, the query is restricted to the 'phs000179.c2' consent code.
+
+```{r}
+# Delete current consents
+#bdc::query.filter.delete(query = my_query,
+#                      keys = "\\_consents\\")
+
+# Add in consents
+#bdc::query.filter.add(query = my_query,
+#                      keys = "\\_consents\\",
+#                      as.list(c("phs000179.c2")))
+```
+
+We can now run our query:
+
+```{r}
+my_df <- bdc::query.run(my_query, result.type = "dataframe")
+```
+
+Our dataframe contains each exam / visit for the longitudinal variable of interest, with each row representing a patient. In order to be included in the output, each patient must have at least one reported value for one of the exams / visits for the variable of interest
+
+```{r}
+my_df
+```
+
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
