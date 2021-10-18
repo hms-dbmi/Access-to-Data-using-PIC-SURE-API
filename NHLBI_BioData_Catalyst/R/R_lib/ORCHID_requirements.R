@@ -40,7 +40,15 @@ required_versions <- c(
     "1.4-1",
     "1.0"
 )
-install.versions(required_libraries, required_versions)
+
+required_packages_versions <- paste(required_libraries, required_versions)
+installed_version <- installed.packages()[, "Version"]
+installed_packages_version <- paste(names(installed_version), installed_version)
+missing_packages <- !required_packages_versions %in% installed_packages_version
+if(any(missing_packages)) {
+  install.versions(required_libraries[missing_packages], required_versions[missing_packages])  
+} 
+
 for (package in required_libraries) {
     library(package, character.only = TRUE)
 }
