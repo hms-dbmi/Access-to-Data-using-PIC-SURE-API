@@ -41,6 +41,7 @@ Example Jupyter notebooks are available in python and R. Additionally, R Markdow
 - 4_Genomic_Queries: An example of how to filter partipants using categorical variant filters. 
 - 5_LongitudinalData: An example of how to find longitudinal variables in the data dictionary, use these variables to extract data, and perform analysis. 
 - 6_Sickle_Cell: An example on how to search and query the Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) dataset.
+- 7_Harmonization_with_PICSURE: Examples of harmonization across studies using (1) sex and BMI variables (including TOPMed Harmonized dataset and others) and (2) orthopnea and pneumonia variables.
 
 ## Contact
 

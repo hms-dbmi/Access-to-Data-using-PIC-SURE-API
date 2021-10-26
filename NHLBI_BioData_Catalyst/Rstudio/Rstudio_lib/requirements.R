@@ -1,4 +1,5 @@
-list_packages <- c("devtools",
+list_packages <- c("Rcpp",
+                   "devtools",
                    "ggplot2",
                    "dplyr",
                    "tidyr",
