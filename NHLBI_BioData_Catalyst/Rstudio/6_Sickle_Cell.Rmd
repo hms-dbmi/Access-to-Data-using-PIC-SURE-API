@@ -58,7 +58,7 @@ source("Rstudio_lib/requirements.R")
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.0.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
 install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
