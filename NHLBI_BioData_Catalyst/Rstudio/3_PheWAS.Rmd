@@ -1,5 +1,6 @@
 ---
-title: An R Markdown document converted from "/home/ec2-user/SageMaker/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/3_PheWAS.ipynb"
+title: PIC-SURE R API use-case 
+subtitle: Phenome-Wide analysis on BioData Catalyst studies
 output: html_document
 ---
 
