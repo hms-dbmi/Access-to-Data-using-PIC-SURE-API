@@ -35,7 +35,7 @@ Install latest R PIC-SURE API libraries from github
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
 install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.0.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
 install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
 install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
