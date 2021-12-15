@@ -17,20 +17,14 @@ This notebook is an illustration example about how to query data using the R **P
 ### Packages installation
 
 ```{r}
-source("R_lib/requirements.R")
+source("Rstudio_lib/requirements.R")
 ```
 
 #### Installing latest R PIC-SURE API libraries from github
 
 ```{r}
-### SWB ONLY CELL
-library('devtools', lib.loc = '~/studies/avillachlab-picsure-libraries-all/lib/')
-```
-
-```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-#install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
 install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
 install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
 install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
@@ -42,7 +36,7 @@ devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", for
 #### Loading user-defined functions
 
 ```{r}
-source("R_lib/utils.R")
+source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE network
@@ -400,16 +394,16 @@ plot_df[plot_df$top5pbystudy,]$graph_labels <- plot_df[plot_df$top5pbystudy, ]$s
 The x axis represents each of the phenotypes tested, and the y axis represents their associated -log10 p value. 
 
 ```{r}
-options(repr.plot.width=25, repr.plot.height=20)
+options(repr.plot.width=10, repr.plot.height=10)
 library(ggplot2)
 library(ggrepel)
 my_theme <- theme_bw() +
-theme(axis.title.y = element_text(face="italic", size=30),
-      title = element_text(size=35),
-      axis.title.x = element_text(size=30),
+theme(axis.title.y = element_text(face="italic", size=10),
+      title = element_text(size=10),
+      axis.title.x = element_text(size=10),
       axis.text.x = element_blank(),
       panel.grid.major.x = element_blank(),
-      strip.text = element_text(size=25)
+      strip.text = element_text(size=5)
       )
 ```
 
@@ -419,10 +413,10 @@ ggplot(data=plot_df, aes(x=concept_code, y=log_adj_pvalues,
                          shape=sex, color=category, label=graph_labels)) +
 geom_jitter(alpha=1, 
            width=0.5,
-           size=5) +
+           size=2) +
 geom_hline(yintercept=adjusted_alpha, linetype="dashed", color = 'red') +
 scale_y_continuous(expand = c(0, 20) ) +
-geom_text_repel(size=6)+
+geom_text_repel(size=3)+
 labs(title="Association between phenotypic variables and cholesterol level status",
     x="Phenotype",
     y="- log10(p-values)",
