@@ -20,6 +20,24 @@ This folder contains various PIC-SURE API use-cases and illustration examples us
 
 The main goal of the PIC-SURE API is to provide a simple and reliable way to work with restricted-access data from TOPMed and TOPMed related studies that are part of BioData Catalyst. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE interface](https://picsure.biodatacatalyst.nhlbi.nih.gov). Finally, 43 specific phenotype variables that have been harmonized across multiple TOPMed studies are also accessible directly through the PIC-SURE API. 
 
+### What is PIC-SURE? 
+
+As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets funded by the National Heart Lung and Blood Institute (NHLBI). 
+
+Original data exposed through the PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on downstream analysis and to facilitate reproducible sciences.
+
+The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. It is actively developed by the Avillach Lab at Harvard Medical School.
+
+The API is only a small part of the PIC-SURE project. Among other things, PIC-SURE also offers a graphical user interface that allows researchers to explore variables across multiple studies, filter patients that match criteria, and create cohorts from this interactive exploration.
+
+
+PIC-SURE API GitHub repo:
+* https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds
+* https://github.com/hms-dbmi/pic-sure-python-adapter-hpds
+* https://github.com/hms-dbmi/pic-sure-python-client
+
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+
 ## Get your security token
 
 **In order to be able to run any one of these examples, you'll need to get a personal user security token**. This is the way the API grants access to individual users to protected-access data. **The user token is strictly personal, be careful not to share it with anyone**.
