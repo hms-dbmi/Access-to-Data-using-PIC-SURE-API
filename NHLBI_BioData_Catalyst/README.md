@@ -48,7 +48,7 @@ To get your token, process as follows:
 3. On the pop-up window, click on REFRESH and then COPY
 4. Back into your Jupyter environment, create a text file called `token.txt` into the python and/or R folders and paste the token into it.
 
-![Get API token](imgs/get_your_token.gif)
+<img src="https://drive.google.com/uc?id=1XD3L0obdgQZ3GgO2Xu-sxhMxzzXgqofL">
 
 ## Available notebooks
 
