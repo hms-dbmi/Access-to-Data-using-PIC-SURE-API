@@ -1,5 +1,5 @@
 ---
-title: Harmonized Variables Example in R Markdown
+title: An R Markdown document converted from "2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb"
 output: html_document
 ---
 
@@ -7,77 +7,73 @@ output: html_document
 
 This tutorial notebook will demonstrate how to query and work with the BioData Catalyst cross-studies harmonized variables using R PIC-SURE API. For a more step-by-step introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
-**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/harmonized_lipid_measurements_example/NHLBI_BioData_Catalyst#get-your-security-token).**
+**Before running this notebook, please be sure to review the \"Get your security token\" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
 
  -------
 
 # Environment set-up
 
-### System requirements
+## System requirements
 - R 3.4 or later
 
-### Packages installation
+## Install Packages
 
 ```{r}
-source("Rstudio_lib/requirements.R")
+install.packages('devtools')
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
+library(hpds)
 ```
 
-#### Installing latest R PIC-SURE API libraries from github
-
 ```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
-install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
-install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+### SEVEN BRIDGES USERS ONLY RUN THIS CODE
+# Are you using a Seven Bridges analysis workspace? Uncomment this code to install your R packages.
+#install.packages('dplyr')
+#remove.packages("rlang")
+#install.packages("https://cran.r-project.org/src/contrib/Archive/rlang/rlang_1.0.2.tar.gz", repo=NULL, type="source")
 ```
 
-#### Loading user-defined functions
-
 ```{r}
-source("Rstudio_lib/utils.R")
+### SEVEN BRIDGES USERS ONLY: RESTART YOUR KERNEL BEFORE RUNNING THIS CODE
+#library(rlang)
+#library(dplyr)
+#library(ggplot2)
 ```
 
-## Connecting to a PIC-SURE network
+```{r}
+### RUN THIS CODE IF YOU ARE NOT USING SEVEN BRIDGES
+install.packages(c('dplyr', 'ggplot2'))
+library(dplyr)
+library(ggplot2)
+```
+
+## Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+# Uncomment production URL when testing in production
+# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
 token_file <- "token.txt"
-```
-
-```{r}
 token <- scan(token_file, what = "character")
+connection <- picsure::connect(PICSURE_network_URL, token)
+authPicSure = bdc::use.authPicSure(connection)
 ```
 
-```{r}
-myconnection <- picsure::connect(url = PICSURE_network_URL,
-                                 token = token)
-```
+## About Harmonized Variables
 
-```{r}
-resource <- bdc::get.resource(myconnection,
-                               resourceUUID = resource_id)
-```
+The data harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with Working Group members and phenotype experts on this endeavor. So far, 44 harmonized variables are accessible through PIC-SURE API (in addition to the age at which each variable value as been collected for a given subject).
 
-## Harmonized Variables
+The following phenotypes are included as harmonized variables:
 
-The Data Harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with Working Group members and phenotype experts on this endeavour. So far, 44 harmonized variables are accessible through PIC-SURE API (in addition to the age at which each variable value has been collected for a given subject).
-
-Which phenotypic characteristics are included in the harmonized variables?
-
-- Key NHLBI phenotypes
+- Key NHLBI phenotypes    
     - Blood cell counts
     - VTE
     - Atherosclerosis-related phenotypes
     - Lipids
     - Blood pressure
-    
-    
+
+
 - Common covariates
     - Height
     - Weight
@@ -87,151 +83,120 @@ Which phenotypic characteristics are included in the harmonized variables?
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-### 1. Retrieving variables dictionary from HPDS Database
-
-Here we retrieve the harmonized variables information by searching for the `harmonized` keyword.
+# Working with the DCC Harmonized Variables in PIC-SURE
+## 1. Identifying harmonized variables of interest
+First, let's explore what harmonized variables are available in PIC-SURE by searching for the keyword `harmonized`.
 
 ```{r}
-harmonized_dic <- bdc::find.in.dictionary(resource, "harmonized") %>% bdc::extract.entries()
+dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
+harmonized_dic <- bdc::find.in.dictionary(dictionary, "harmonized")
+harmonized_df <- bdc::extract.dataframe(harmonized_dic)
+head(harmonized_df)
+```
+
+We can see that these variables are all part of the unique study ID pertaining to the DCC Harmonized dataset.
+
+```{r}
+unique(harmonized_df$study_id)
+```
+
+We can also see that although there are only 44 DCC Harmonized variables, we have found 125 'harmonized' variables in PIC-SURE. This is because our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
+
+```{r}
+dim(harmonized_df)
 ```
 
 ```{r}
-# Display the variables tree hierarchy from the variables name
-multiIndexdic <- get_multiIndex_variablesDict(harmonized_dic)
-dim(multiIndexdic)
+# Discarding "subject ID",
+# the variables which only indicate age of the subject at which a given harmonized variable was been measured,
+# and variables which indicate the units of a given harmonized variable
+harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+dim(harmonized_df)
+head(harmonized_df[,c('var_name', 'var_description', 'HPDS_PATH', 'study_id')])
+```
 
-# Discard variables related to subject ID and age; save in subsetted dictionary
-multiIndexdic_sub <- multiIndexdic[!grepl("(^[Aa]ge)|(SUBJECT_ID)",
-                                         multiIndexdic[["simplified_name"]], perl = T),]
-dim(multiIndexdic_sub)
+We can now see our 44 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
+
+## 2. Selecting variables and retrieving data from the database
+
+Let's say we are interested in the subset of Harmonized Variables pertaining to patient demographics. 
+
+We might do this by selecting variables based on what **datatable** or **variable group** the variables belong to. 
+
+We will do this by filtering on the `group_id` column. We can see the values of this column and how many variables are in each group:
+
+```{r}
+table(harmonized_df$group_id)
+```
+
+Since we are interested in patient demographics, we filter our dataframe to include all harmonized variables which are part of the `demographic` variable group or data table. 
+
+```{r}
+demographic_df <- harmonized_df[grepl('demographic', harmonized_df$group_id),]
+demographic_df[,c('var_name', 'var_description', 'HPDS_PATH', 'study_id')]
+vars_of_interest <- demographic_df$HPDS_PATH
+```
+
+## Query PIC-SURE for participant-level data for harmonized variables of interest
+
+```{r}
+demographic_query <- bdc::new.query(authPicSure) # Start a new query
+vars_of_interest <- c(vars_of_interest, '\\DCC Harmonized data set\\demographic\\race_1\\')
+invisible(lapply(vars_of_interest, bdc::query.anyof.add, query = demographic_query))
+demographic_results <- bdc::query.run(demographic_query)
+head(demographic_results)
+```
+
+## Visualizing our sex and race harmonized variables across study cohorts
+### Male:Female ratio across study cohorts
+
+Below, we wrangle the data to calculate the male/female sex ratio per study cohort and prepare our data for plotting.
+
+```{r}
+mf_df <- demographic_results %>%
+    select(grep('sex|subcohort', colnames(demographic_results)))
+colnames(mf_df) <- c('sex', 'subcohort')
+mf_df <- mf_df %>%
+    group_by(subcohort) %>%
+    filter(subcohort != '') %>% #filter out empty subcohorts
+    summarise(female = sum(sex == 'Female'),
+              male = sum(sex == 'Male')) %>%
+    mutate(mf_ratio = male / female)
+
+head(mf_df)
 ```
 
 ```{r}
-head(multiIndexdic_sub)
+options(repr.plot.width=16, repr.plot.height=12)
+mf_df %>%
+ggplot(aes(x = subcohort, y = mf_ratio)) + 
+    geom_col() + 
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 12)) +
+    labs(x = 'Study Cohort', y = 'Male/Female ratio', title = 'Male/Female ratio across study cohorts')
+    
 ```
 
-Overall, there are 81 harmonized variables. After discarding "subject ID" and the variables which indicate age of the subject at which a given harmonized variable has been measured, 44 harmonized variables remain.
-
-### 2. Selecting variables and retrieving data from the database
-
-Let's say we are interested in the subset of Harmonized Variables pertaining to patient demographics.
-
-We will subset the data to keep only the phenotypic variables and the "affection status", which will be used as the dependent variable for this use-case.
+### Participant race percentages across study cohorts
+Below, we wrangle the data to calculate the percentage of participants in given racial categories per study cohort and prepare out data for plotting.
 
 ```{r}
-variablesDict <- multiIndexdic_sub[multiIndexdic_sub[[2]] == '01 - Demographics', ]
-variablesDict <- variablesDict[!is.na(variablesDict$name),]
-```
-
-```{r}
-selected_vars <- lapply(variablesDict[["name"]] %>% as.list(), as.character)
-```
-
-```{r}
-selected_vars
-```
-
-Retrieving the data:
-
-```{r}
-query <- bdc::new.query(resource)
-bdc::query.select.add(query, selected_vars)
-facts <- bdc::query.run(query, result.type = "dataframe") %>% dplyr::as_tibble()
+race_df <- demographic_results %>%
+    select(grep('race|subcohort', colnames(demographic_results)))
+colnames(race_df) <- c('race', 'subcohort')
+race_df <- race_df %>%
+    filter(subcohort != '', race != '') %>% # filter out blanks
+    group_by(subcohort, race) %>%
+    summarise(n = n())
+head(race_df)
 ```
 
 ```{r}
-facts[['Patient ID']] <- NULL
-facts[['\\_Topmed Study Accession with Subject ID\\']] <- NULL
-facts[['\\_Parent Study Accession with Subject ID\\']] <- NULL
+ggplot(race_df, aes(fill=race, y=n, x=subcohort)) + 
+    geom_bar(position="fill", stat="identity") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 12)) +
+    labs(x = 'Study Cohort', y = 'Race percentage', title = 'Race percentage distribution across study cohorts')
+    
 ```
 
-```{r}
-facts <- facts[complete.cases(facts),]
-```
-
-```{r}
-dim(facts)
-```
-
-```{r}
-head(facts)
-```
-
-## Studying the sex distribution across studies
-
-```{r}
-require(RColorBrewer)
-```
-
-```{r}
-sex_varname <- '\\DCC Harmonized data set\\01 - Demographics\\Subject sex  as recorded by the study.\\'
-study_varname <- '\\DCC Harmonized data set\\01 - Demographics\\A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort.\\'
-race_varname <- '\\DCC Harmonized data set\\01 - Demographics\\Harmonized race category of participant.\\'
-```
-
-```{r}
-facts <- facts[!is.na(facts[[sex_varname]]),]
-```
-
-```{r}
-# ggplot options
-options(repr.plot.width=18, repr.plot.height=12)
-
-# ggplot options
-options(repr.plot.width=18, repr.plot.height=12)
-if (names(dev.cur()) %in% c("RStudioGD", "null device")) {
-  my_theme <- theme_bw() +
-theme(axis.title.y = element_text(size=12),
-      title = element_text(size=10),
-      axis.title.x = element_text(size=12),
-      axis.text.y = element_text(size=7),
-      axis.text.x = element_text(size=12),
-      legend.text = element_text(size=10),
-      panel.grid.major.x = element_blank()
-      )
-} else {
-    my_theme <- theme_bw() +
-theme(axis.title.y = element_text(size=15),
-      title = element_text(size=20),
-      axis.title.x = element_text(size=20),
-      axis.text.y = element_text(size=15),
-      axis.text.x = element_text(size=15),
-      legend.text = element_text(size=15),
-      panel.grid.major.x = element_blank()
-      )
-}
-```
-
-```{r}
-facts_to_plot <- facts
-names(facts_to_plot)[names(facts_to_plot) == study_varname] <- "Studies"
-names(facts_to_plot)[names(facts_to_plot) == sex_varname] <- "Sex"
-count_table <- facts_to_plot %>% dplyr::group_by(Studies) %>%
-    count(Sex) %>%
-    mutate(freq = n / sum(n)) %>%
-    mutate(total = sum(n))
-```
-
-```{r}
-ggplot(count_table) +
-geom_bar(aes_string(x="Studies", y="freq", fill="Sex"),
-         stat="identity",
-         position="dodge") +
-  geom_label(aes(x=Studies, y=max(freq) + 0.1, label=paste(total, "subjects")),
-#            position = position_dodge(0.9),
-            size=4,
-            show.legend=F
-           ) +
-coord_flip() +
-scale_fill_brewer(palette = "Paired") +
-labs(title="Sex-Ratio across harmonized studies",
-    x="Studies", y="Ratio") +
-scale_y_continuous(limits=c(0, 1.15), breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1)) +
-my_theme
-```
-Note that the WHI studies only have female participants, so the "Female" bar is the only one displayed and the bar is thicker. Other studies also have an additional category where the participant chose not to disclose their sex, as indicated by the category with a blank label in the legend. These studies will show thinner bars.
-
-
-# Troubleshooting
-If you experience trouble during package installation / loading, try restarting your R environment.
-You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.

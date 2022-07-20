@@ -1,0 +1,83 @@
+---
+title: An R Markdown document converted from "0_Export_from_UI.ipynb"
+output: html_document
+---
+
+# Export data from User Interface (UI) to analysis workspace
+This is a tutorial notebook that walks through the process of exporting selected data from the BioData Catalyst Powered by PIC-SURE User Interface, or UI, into an analysis workspace. This is done using the PIC-SURE Application Programming Interface, or API.
+
+------- 
+ 
+## Introduction to exporting data into an analysis workspace with PIC-SURE
+
+Two things are needed to export data into an analysis workspace:
+1. Personalized access token: a user-specific token that tells PIC-SURE which studies a user is authorized to access
+2. Query ID: a token that describes the specific query that was built in the UI, for example, if a user has selected females with body mass index between 18 and 30 from the ARIC study
+
+Using these two components, the API can be used to export the selected data into the analysis workspace (in this case, where this Jupyter Notebook is being run). 
+
+## Step 1: Getting your user-specific security token
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+
+## Step 2: Setting up your notebook
+
+### Pre-requisites for the notebook
+* python 3.6 or later
+* pip python package manager, already available in most systems with a python interpreter installed (link to pip)
+
+### Install packages to connect to the PIC-SURE API
+The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
+* PIC-SURE Client
+* PIC-SURE Adapter
+* BioData Catalyst PIC-SURE Adapter
+
+```{r}
+install.packages('devtools')
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
+library(hpds)
+```
+
+## Connecting to a PIC-SURE resource
+The following is required to get access to data through the PIC-SURE API: 
+- Network URL
+- User-specific security token
+
+The following code specifies the network URL as the BioData Catalyst Powered by PIC-SURE URL and references the user-specific token saved as `token.txt`.
+
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
+
+```{r}
+# Uncomment production URL when testing in production
+# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
+token_file <- "token.txt"
+token <- scan(token_file, what = "character")
+connection <- picsure::connect(PICSURE_network_URL, token)
+authPicSure = bdc::use.authPicSure(connection)
+```
+
+## Step 3: Export data from a query built in the PIC-SURE UI using the Query ID
+
+You are able to retrieve the results of a query that you have previously built using the [PIC-SURE Authorized Access UI](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/). After you have built your query and filtered to your cohort of interest, open the **Select and Package Data** tool in the Tool Suite. This will allow you to copy your query ID and bring it in to a Jupyter notebook. **Note that query IDs are not permanent and may expire.**
+
+<img src="https://drive.google.com/uc?id=1XD3L0obdgQZ3GgO2Xu-sxhMxzzXgqofL">
+
+```{r}
+# To run this using your notebook you must replace it with the ID value of a query that you have run.
+queryID <- '<<<Paste your Query ID here>>>'
+```
+
+```{r}
+# save the data as a dataframe
+results <- bdc::query.getResults(authPicSure, queryID)
+results <- read.delim(textConnection(results), sep = ",")
+colnames(results) <- results[1,]
+
+# view the first few records
+head(results)
+```
+
+The data has now been exported as a dataframe saved as `results` and is ready for analysis.
+
