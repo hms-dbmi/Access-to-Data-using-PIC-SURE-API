@@ -72,7 +72,7 @@ resource <- bdc::get.resource(myconnection,
 *Note: This example is not meant to be publication-ready, but rather serve as a guide or starting point to perform PheWAS.*
 
 This PheWAS analysis focuses on the TopMed DCC Harmonized Variables. 
-We leverage the harmonized variables to provide an example PheWAS focused on total cholesterol in two studies: ARIC and FHS.
+We leverage the harmonized variables to provide an example PheWAS focused on total cholesterol in FHS.
 The PIC-SURE API is helpful in wrangling our phenotypic data. 
 
 In a nutshell, this PheWAS analysis follows the subsequent steps:
@@ -198,13 +198,12 @@ sex_path <- colnames(facts)[grep('sex', colnames(facts))]
 sex_path
 ```
 
-We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS) and the Atherosclerosis Risk In Communities (ARIC) cohort. We can utilize the `A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort.` concept path in the DCC Harmonized data set to select the participants of interest.
+We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS) cohort. We can utilize the `A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort.` concept path in the DCC Harmonized data set to select the participants of interest.
 
 ```{r}
 subgroup_var <- colnames(facts)[2] # Get concept path for distinct subgroups
-# Filter using FHS and ARIC
+# Filter using FHS 
 fhs_subset <- facts %>% filter(grepl('FHS', get(subgroup_var)))
-aric_subset <- facts %>% filter(grepl('ARIC', get(subgroup_var)))
 ```
 
 ### 4. Statistical analysis
@@ -313,11 +312,9 @@ run_phewas <- function(facts, dependent_var, continuous_varnames, categorical_va
 }
 ```
 
-We then use our previously defined wrapper function to run the PheWAS 4 times:
+We then use our previously defined wrapper function to run the PheWAS 2 times:
 - Testing all harmonized variables against cholesterol in females in the FHS study
 - Testing all harmonized variables against cholesterol in males in the FHS study
-- Testing all harmonized variables against cholesterol in females in the ARIC study
-- Testing all harmonized variables against cholesterol in males in the ARIC study
 
 ```{r}
 fhs_female_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Female'),
@@ -338,27 +335,10 @@ fhs_male_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Male'),
     mutate(sex = 'Male',
            study = 'FHS')
 
-aric_female_df <- run_phewas(aric_subset %>% filter(get(sex_path) == 'Female'), 
-                                       "categorical_cholesterol", 
-                                       continuous_varnames, 
-                                       categorical_varnames, 
-                                       case_value="High", 
-                                       control_value="Normal/Low") %>%
-    mutate(sex = 'Female',
-           study = 'ARIC')
-
-aric_male_df <- run_phewas(aric_subset %>% filter(get(sex_path) == 'Male'), 
-                                       "categorical_cholesterol", 
-                                       continuous_varnames, 
-                                       categorical_varnames, 
-                                       case_value="High", 
-                                       control_value="Normal/Low") %>%
-    mutate(sex = 'Male',
-           study = 'ARIC')
 ```
 
 ```{r}
-combined_df <- rbind(fhs_female_df, fhs_male_df, aric_female_df, aric_male_df)
+combined_df <- rbind(fhs_female_df, fhs_male_df)
 head(combined_df)
 ```
 
@@ -439,9 +419,6 @@ print("FHS Females:")
 arrange(fhs_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
 print("FHS Males:")
 arrange(fhs_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
-print("ARIC Females:")
-arrange(aric_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
-print("ARIC Males:")
-arrange(aric_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
+
 ```
 
