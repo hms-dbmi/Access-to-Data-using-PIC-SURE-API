@@ -51,18 +51,26 @@ Install the following:
     - PIC-SURE Adapter
     - PIC-SURE Client
 
+**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+
 ```{r}
-source("Rstudio_lib/requirements.R")
+### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+#source("R_lib/requirements.R")
+#install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
+#install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
+#install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
+#install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
 ```
 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
 devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
 devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+library(hpds)
+library(ggplot2)
+library(tidyr)
 ```
 
 ##### Loading user-defined functions
