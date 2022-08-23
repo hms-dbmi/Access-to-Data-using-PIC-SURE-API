@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "0_Export_from_UI.ipynb"
+title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/0_Export_from_UI.ipynb"
 output: html_document
 ---
 
@@ -31,8 +31,16 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 * PIC-SURE Adapter
 * BioData Catalyst PIC-SURE Adapter
 
+**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+
 ```{r}
-install.packages('devtools')
+### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+#install.packages("devtools")
+```
+
+```{r}
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
 devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
 devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
