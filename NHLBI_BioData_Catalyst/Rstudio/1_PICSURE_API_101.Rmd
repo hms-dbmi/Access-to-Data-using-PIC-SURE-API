@@ -84,6 +84,9 @@ PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsu
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 connection <- picsure::connect(PICSURE_network_URL, token)
+# Seven Bridges users using the PIC-SURE image will need to uncomment the following lines:
+unloadNamespace("bdc")
+library(bdc, lib.loc = "/usr/local/lib/R/site-library")
 authPicSure = bdc::use.authPicSure(connection)
 ```
 
@@ -225,6 +228,11 @@ paste("We will filter to participants with the value '", filter_category, "' for
 We now have the PIC-SURE variable and the value to apply to the filter saved. We can use the `filter()` method to add this information to our query. 
 
 ```{r}
+
+
+
+
+
 bdc::query.filter.add(authQuery_categorical_example, categorical_var, filter_category)
 ```
 
