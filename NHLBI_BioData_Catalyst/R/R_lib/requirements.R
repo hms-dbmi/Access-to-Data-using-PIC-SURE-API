@@ -1,7 +1,6 @@
 list_packages <- c("ggplot2",
                    "dplyr",
                    "tidyr",
-                   "urltools",
                    "devtools",
                    "ggrepel")
 
