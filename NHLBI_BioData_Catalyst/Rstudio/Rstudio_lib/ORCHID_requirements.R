@@ -17,7 +17,6 @@ required_libraries <- c(
     "devtools", # many imports 
     "usethis", # many imports
     #"magrittr", # imported by kableExtra
-    "DescTools", # imports MASS and others
     #"cmprsk", #depeds on survival
     'coin'
 )
@@ -36,7 +35,6 @@ required_versions <- c(
     "1.3.4",
     "2.4.0",
     "2.0.1",
-    "0.99.41",
     #"2.2-10",
     "1.4-1"
 )
@@ -48,6 +46,8 @@ install.packages('cmprsk')
 library(cmprsk)
 install.packages('ggpubr')
 library(ggpubr)
+install.packages('DescTools')
+library(DescTools)
 
 for (package in required_libraries) {
     library(package, character.only = TRUE)
