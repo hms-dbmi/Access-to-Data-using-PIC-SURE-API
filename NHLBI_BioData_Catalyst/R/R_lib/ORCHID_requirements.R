@@ -1,5 +1,7 @@
 install.packages("versions", dependencies=TRUE)
 library(versions)
+
+
 required_libraries <- c(
     "tidyverse", # imports ggplot2, dplyr, tidyr, readr, purrr, tibble, stringr, forcats
     "arsenal", # depends on R, stats; imports knitr, utils       
@@ -15,14 +17,12 @@ required_libraries <- c(
     "devtools", # many imports 
     "usethis", # many imports
     #"magrittr", # imported by kableExtra
-    "DescTools", # imports MASS and others
-    "cmprsk", #depeds on survival
-    'coin',
-    'IRdisplay'
+    #"cmprsk", #depeds on survival
+    'coin'
 )
 
 required_versions <- c(
-    "1.3.0",
+    "1.3.1",
     "3.6.2",
     "1.7.3",
     "0.1.1",
@@ -35,19 +35,19 @@ required_versions <- c(
     "1.3.4",
     "2.4.0",
     "2.0.1",
-    "0.99.41",
-    "2.2-10",
-    "1.4-1",
-    "1.0"
+    #"2.2-10",
+    "1.4-1"
 )
 
-required_packages_versions <- paste(required_libraries, required_versions)
-installed_version <- installed.packages()[, "Version"]
-installed_packages_version <- paste(names(installed_version), installed_version)
-missing_packages <- !required_packages_versions %in% installed_packages_version
-if(any(missing_packages)) {
-  install.versions(required_libraries[missing_packages], required_versions[missing_packages])  
-} 
+install.versions(required_libraries, required_versions, verbose = FALSE, quiet = TRUE)
+
+# the following packages do not install correctly in all environments when controlling version
+install.packages('cmprsk')
+library(cmprsk)
+install.packages('ggpubr')
+library(ggpubr)
+install.packages('DescTools')
+library(DescTools)
 
 for (package in required_libraries) {
     library(package, character.only = TRUE)
