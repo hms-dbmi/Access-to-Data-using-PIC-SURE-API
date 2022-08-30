@@ -97,7 +97,24 @@ devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, qu
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
 devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="master", force=T)
 library(hpds)
-
+library(dplyr)
+library(stringr)
+library(forcats)
+install.packages('arsenal', repos='http://cran.rstudio.com/')
+library(arsenal)
+library(tidyr)
+library(ggplot2)
+install.packages('ggtext', repos='http://cran.rstudio.com/')
+library(ggtext)
+install.packages('quantreg', repos='http://cran.rstudio.com/')
+library(quantreg)
+install.packages('DescTools', repos='http://cran.rstudio.com/')
+library(DescTools)
+library(survival)
+install.packages('survminer', repos='http://cran.rstudio.com/')
+library(survminer)
+install.packages('cmprsk', repos='http://cran.rstudio.com/')
+library(cmprsk)
 ```
 
 # Installing the library and connecting to the database using the PICSURE API 
