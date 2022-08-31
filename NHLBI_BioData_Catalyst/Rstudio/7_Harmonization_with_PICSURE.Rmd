@@ -303,7 +303,6 @@ to_plot <- data.frame(total_means, sex, studies)
 ```
 
 ```{r}
-library(ggplot2)
 ggplot(data = to_plot, aes(fill=studies, y=total_means, x=sex)) + 
     geom_bar(position="dodge", stat="identity") +
     labs(title = "Average Body Mass Index by Sex and Dataset",
