@@ -1,6 +1,3 @@
-library("stringr")
-library("dplyr")
-
 TokenManager <- function(token_file) {
     token = scan(token_file, what = "character")
     return(token)

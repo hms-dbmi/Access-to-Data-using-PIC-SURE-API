@@ -83,15 +83,33 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 # Packages Installation 
 
 ```{r}
-source("Rstudio_lib/ORCHID_requirements.R")
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="master", force=T)
+library(hpds)
+library(dplyr)
+library(stringr)
+library(forcats)
+install.packages('arsenal', repos='http://cran.rstudio.com/')
+library(arsenal)
+library(tidyr)
 ```
 
-
 ```{r}
-options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-client", force = TRUE)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force = TRUE)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force = TRUE)
+library(ggplot2)
+install.packages('ggtext', repos='http://cran.rstudio.com/')
+library(ggtext)
+install.packages('quantreg', repos='http://cran.rstudio.com/')
+library(quantreg)
+install.packages('DescTools', repos='http://cran.rstudio.com/')
+library(DescTools)
+library(survival)
+install.packages('survminer', repos='http://cran.rstudio.com/')
+library(survminer)
+install.packages('cmprsk', repos='http://cran.rstudio.com/')
+library(cmprsk)
 ```
 
 # Installing the library and connecting to the database using the PICSURE API 
