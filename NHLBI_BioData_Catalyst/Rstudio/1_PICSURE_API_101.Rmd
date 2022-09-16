@@ -1,22 +1,27 @@
 ---
-title: PIC-SURE R API in R Markdown
+title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/1_PICSURE_API_101.ipynb"
 output: html_document
 ---
 
-# PIC-SURE API use-case: quick analysis on BioDataCatalyst data
+# Introduction to the PIC-SURE API
 
-This is a tutorial notebook aimed to get the user quickly up and running with the R PIC-SURE API. It covers the main functionalities of the API.
+This is a tutorial notebook aimed to get the user quickly up and running with the R PIC-SURE API. 
 
 ## PIC-SURE R API
 ### What is PIC-SURE?
 
+<!--img src="./img/PIC-SURE_logo.png" width= "360px"> -->
+
 As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
 
-Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible sciences.
+Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible science.
 
 
 ### More about PIC-SURE
-The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. The R/python PIC-SURE API is a small part of the entire PIC-SURE platform. 
+The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language.
+
+
+PIC-SURE is a larger project from which the R/python PIC-SURE API is only a brick. Among other things, PIC-SURE also offers a graphical user interface that allows researchers to explore variables across multiple studies, filter patients that match criteria, and create cohorts from this interactive exploration.
 
 The R API is actively developed by the Avillach Lab at Harvard Medical School.
 
@@ -28,386 +33,359 @@ PIC-SURE API GitHub repo:
 
 
  -------
-**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
-# Getting your own user-specific security token
+## Getting your own user-specific security token
 
 **Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
 
-# Environment set-up
+### Environment set-up
 
-### Pre-requisites
+#### Pre-requisites
 - R 3.4 or later
 
-### Install packages
+#### Install packages
 
-Install the following:
-- packages listed in the `requirements.R` file
-- PIC-SURE API components (from Github)
-    - PIC-SURE Adapter
-    - PIC-SURE Client
+The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
+
+- PIC-SURE Client
+- PIC-SURE Adapter
+- BioData Catalyst PIC-SURE Adapter
+
 **Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
-#source("Rstudio_lib/requirements.R")
-#install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
-#install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
-#install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
-#install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
+#install.packages("devtools")
 ```
 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
 library(hpds)
-library(ggplot2)
-```
-
-##### Loading user-defined functions
-
-```{r}
-source("Rstudio_lib/utils.R")
 ```
 
 ## Connecting to a PIC-SURE resource
 
 The following is required to get access to data through the PIC-SURE API: 
 - Network URL
-- Resource id
 - User-specific security token
+
+The following code specifies the network URL as the BioData Catalyst Powered by PIC-SURE URL and references the user-specific token saved as `token.txt`.
 
 If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
 
 ```{r}
-# Set required information as variables
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+# Uncomment production URL when testing in production
+# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
 token_file <- "token.txt"
-```
-
-```{r}
 token <- scan(token_file, what = "character")
+connection <- picsure::connect(PICSURE_network_URL, token)
+# Seven Bridges users using the PIC-SURE image will need to uncomment the following lines:
+unloadNamespace("bdc")
+library(bdc, lib.loc = "/usr/local/lib/R/site-library")
+authPicSure = bdc::use.authPicSure(connection)
 ```
 
-```{r}
-# Establish connection to PIC-SURE
-connection <- picsure::connect(url = PICSURE_network_URL,
-                                 token = token)
-```
-
-```{r}
-# it may take several minutes to connect and download the initialization data
-resource <- bdc::get.resource(connection,
-                               resourceUUID = resource_id)
-```
-
-Two objects are created here: a `connection` and a `resource` object.
-
-Since we will only be using a single resource, **the `resource` object is actually the only one we will need to proceed with data analysis hereafter**.
-
-It is connected to the specific data source ID we specified and enables us to query and retrieve data from this database.
-
-## Getting help with the PIC-SURE API
+### Getting help with the PIC-SURE API
 
 You can get help with PIC-SURE library functions by using the `?` operator
 
 ```{r}
-?bdc::get.resource()
+?bdc::find.in.dictionary
 ```
 
-## Using the *variables dictionary*
+For example, the above outpit lists and briefly defines how to use the `find.in.dictionary` function in the `bdc` adapter.
 
-Once a connection to the desired resource has been established, we first need to understand which variables are available in the database. To this end, we will use the `find.in.dictionary` function.
+## Using the PIC-SURE variable dictionary
 
-For instance, looking for variables containing the term `COPD` is done this way:
+Now that you have set up your connection to the PIC-SURE API, let's determine which study or studies you are authorized to access. The dictionary method can be used to search the data dictionary for a specific term or to retrieve information about all the variables you are authorized to access. 
 
 ```{r}
-dictionary_search <- bdc::find.in.dictionary(resource, "COPD")
-```
-
-Four different functions can be used to retrieve results from a dictionary search: `extract.count()`, `extract.keys()`, `extract.entries()`, and `extract.dataframe()`.
-
-```{r, results="hide"}
-print(list("Count"   = bdc::extract.count(dictionary_search), # How many dictionary entries contained "COPD"? 
-           "Keys"    = bdc::extract.keys(dictionary_search)[1:3], # Show the first three unique dictionary keys that contain "COPD"
-           "Entries" = bdc::extract.entries(dictionary_search)[1:3,])) # Show the first three entries that contain "COPD"
+dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
+all_variables <- bdc::find.in.dictionary(dictionary) # retrieve all the variables you have access to
 ```
 
 ```{r}
-# Save the entries from the "COPD" search to 'df_dictionary_copd'
-df_dictionary_copd <- bdc::extract.entries(dictionary_search)
-```
-
-**`bdc::extract.dataframe()` retrieves the result of the dictionary search in a data.frame format. This way, it enables us to:**
-
-* Use the various information exposed in the dictionary (patientCount, variable type ...) as criteria for variable selection.
-* Use the row names of the DataFrame to get the actual variables names, to be used in the query, as shown below.
-
-Variable names, as currently implemented in the API, aren't very practical to use right away for two reasons:
-1. Very long
-2. Presence of backslashes that requires modification right after copy-pasting.
-
-However, using the dictionary to select variables can help access the variable names. Let's say we want to retrieve every variable from the COPDGene study. One way to proceed is to retrieve the whole dictionary for those variables in the form of a data.frame, as below:
-
-```{r}
-plain_variablesDict <- bdc::find.in.dictionary(resource, "COPDGene") %>% # Search for "COPDGene"
-    bdc::extract.entries() # Retrieve unique entries from the search
-```
-
-```{r, results="hide"}
-plain_variablesDict[10:20,] # Display entries 10 through 20
-```
-
-The dictionary currently returned by the API provides information about the variables, such as:
-- observationCount: number of entries with non-null value
-- categorical: type of the variables, True if strings, False if numerical
-- min/max: only provided for numerical variables
-- HpdsDataType: 'phenotypes' or 'genotypes'. Currently, the API only exposes 'phenotypes' variables
-
-### Extract full data dictionary to CSV
-
-Using the `bdc::find.in.dictionary` we can extact the entire data dictionary by performing an empty search and saving it to `fullVariablesDict`:
-
-```{r}
-fullVariablesDict <- bdc::find.in.dictionary(resource, "") %>% # Search for '', or get entire dictionary
-    bdc::extract.entries() # Extract unique entries
-dim(fullVariablesDict) # Print the dimensions of fullVariablesDict (rows, columns)
-```
-
-Check that the `fullVariablesDict` dataframe contains some values.
-
-```{r}
-fullVariablesDict[0:5,]
-```
-
-We can than write the data frame that contains the full data dictionary to a CSV file.
-
-```{r}
-dataDictFile <- "data_dictionary.csv" # Name of output file
-saveDictFrame <- fullVariablesDict[ , c("name", "patientCount", "min", "categorical", "observationCount", "max", "HpdsDataType", "description")]
-write.csv(saveDictFrame, dataDictFile, row.names = FALSE)
-```
-
-You should now see a data_dictionary.csv in the RStudio file explorer.
-
-### Parsing variable names
-
-We can use a simple function, `get_multiIndex_variablesDict`, defined in `Rstudio_lib/utils.R` to add a little more information to the variable dictionary and to simplify working with variables names.
-
-Although not an official feature of the API, such functionality illustrates how to quickly select groups of related variables.
-
-Printing part of the parsed names dictionary allows us to quickly see the tree-like organization of the variable names. Moreover, original and simplified variable names are now stored respectively in the `varName` and `simplified_varName` columns (simplified variable names is simply the last component of the variable name, that is usually the most informative to know what each variable is about).
-
-```{r}
-# Display the variables tree hierarchy from the variables name
-variablesDict <- get_multiIndex_variablesDict(plain_variablesDict)
-head(variablesDict) # Show first few rows of variablesDict
-```
-
-Below is a simple example to illustrate the simplicity of using a multiIndex dictionary. Let's say we are interested in every variable pertaining to the terms "asthma" and "smoking".
-
-```{r, results="hide"}
-asthma <- str_detect(variablesDict$level_2, 'asthma') # Does the level_2 variable name contain "asthma"?
-mask_asthma <- variablesDict$level_2[!is.na(asthma) & asthma] # All level_2 variable names not NA and containing "asthma"
-smoking <- str_detect(variablesDict$level_2, 'smoking') # Does the level_2 variable name contain "smoking"?
-mask_smoking <- variablesDict$level_2[!is.na(smoking) & smoking] # All level_2 variable names not NA and containing "smoking"
-# Subsetting variablesDict to only level_2 variable names not NA and containing "asthma" or "smoking"
-asthma_and_smoking_variables <- variablesDict[!is.na(variablesDict$level_2) & variablesDict$level_2 %in% c(mask_asthma, mask_smoking), ]
+all_variable_df <- bdc::extract.dataframe(all_variables)
+studies <- unique(all_variable_df$study_id)
 ```
 
 ```{r}
-# View the new subsetted dataframe
-asthma_and_smoking_variables
+if (length(studies) == 0) {
+    print("You are not authorized to access any studies.")
+} else {
+    print("You are authorized to access the following studies:")
+    print(studies)
+}
 ```
 
-Although pretty simple, it can be easily combined with other filters to quickly select one or more desired groups of variables.
+### *Note: if you do not see any studies listed above, you are not authorized to access any data. The rest of the notebook will not work.*
 
-## Querying and retrieving data
-
-The second cornerstone of the API are the `query` functions (`bdc::query.anyof`, `bdc::query.select`, `bdc::query.filter`, `bdc::query.require`). They are the entering point to retrieve data from the resource.
-
-First, we need to create a query object.
+Let's save a study to use as an example for the rest of the notebook.
 
 ```{r}
-my_query <- bdc::new.query(resource = resource)
+phs_number = studies[1]
+paste0("The phs accession being used is: ", phs_number)
 ```
 
-The query object has several methods that enable to build a query.
-
-* bdc::query.select.add() 
-    Arguments/input: variable names (string) or list of strings
-    Output: all variables included in the list (no record subsetting)
-* bdc::query.require.add()
-    Arguments/input: variable names (string) or list of strings
-    Output: all variables; only records that do not contain null values for input variables |
-* bdc::query.anyof.add()
-    Arguments/input: variable names (string) or list of strings
-    Output: all variables; only records that contain at least one non-null value for input variables
-* bdc::query.filter.add()
-    Arguments/input: variable name and additional filtering values
-    Outpu: input variable; only records that match filter criteria
-
-All 4 methods can be combined when building a query. The record eventually returned by the query have to meet all the different specified filters.
-
-#### Building the query
-
-*In the following example, we are going to answer the following research question:*
-
-*What is the age distribution of patients that stopped smoking between 20 and 70 years in the COPDGene study?*
-
-*To answer this, we will first build a query to return data associated with patients in the COPDGene study who completely stopped smoking between the ages of 20 and 70 years. For these entries, we will pull the age that they stopped smoking along with any other categorical variables which have more than 4000 entries.*
-
-First, we create a mask `yo_stop_smoking_varname` to isolate the variable pertaining to the following text:
-
-`How old were you when you completely stopped smoking? [Years old]`
+Now, let's find all of the variables associated with that study. We can search for these using the `find.in.dictionary()` function and searching the phs accession number. We can then view a dataframe of the variables returned from this search using the `extract.dataframe()` function.
 
 ```{r}
-# Peek at the filtered dataframe
-fullVariablesDict[str_detect(fullVariablesDict$name, "How old were you when you completely stopped smoking"), ]
+my_variables <- bdc::find.in.dictionary(dictionary, phs_number) # Search for the phs accession number in our established variable dictionary
+my_variables_df <- bdc::extract.dataframe(my_variables)
 ```
 
 ```{r}
-# Create 'mask' where simplified_name is variable of interest
-mask <- variablesDict["simplified_name"] == "How old were you when you completely stopped smoking? [Years old]"
-# Apply mask to variablesDict and retrieve "name" info
-yo_stop_smoking_varname <- variablesDict[mask, "name"] %>%
-    unlist() %>% 
-    unname()
-yo_stop_smoking_varname <- as.character(yo_stop_smoking_varname)
+paste("There are", nrow(my_variables_df), "variables that were returned for your search.")
+paste("Here are some of the variables you have access to:")
+print(my_variables_df$var_description[1:10])
+```
+
+PIC-SURE integrates clinical and genomic datasets across BioData Catalyst, including TOPMed and TOPMed-related studies, COVID-19 studies, and BioLINCC studies. Each variable is organized as a concept path that contains information about the study, variable group, and variable. Though the specifics of the concept paths are dependent on the type of study, the overall information included is the same. 
+
+Data Organization in PIC-SURE
+---------------------------------------
+| Data organization | TopMED & TOPMed-related studies | BioLINCC & COVID-19 studies |
+|-------------------|---------------------------------|-----------------------------|
+| General organization | Data organized using the format implemented by the database of Genotypes and Phenotypes (dbGaP). Generally, a given study will have several tables, and those tables have several variables. | Data do not follow dbGaP format; there are no phv or pht accessions. Data are organized in groups of like variables, when available. For example, variables like Age, Gender, and Race could be part of the Demographics variable group. |
+| Concept path structure | \phs\pht\phv\variable name\ | \phs\variable name |
+| Variable ID | phv corresponding to the variable accession number | Equivalent to variable name | 
+| Variable name | Encoded variable name that was used by the original submitters of the data | Encoded variable name that was used by the original submitters of the data |
+| Variable description | Description of the variable | Description of the variable, as available |
+| Dataset ID | pht corresponding to the trait table accession number | Equivalent to Dataset name | 
+| Dataset name | Name of the trait table | Name of a group of like variables, as available | 
+| Dataset description | Description of the trait table | Description of a group of like variables, as available |
+| Study ID | phs corresponding to the study accession number | phs corresponding to the study accession number |
+| Study description | Description of the study from dbGaP | Description of the study from dbGaP |
+
+
+We can also view additional information for individual variables using the `varInfo()` function.
+Note that you will need the variable(s)' `HPDS PATH` for this function.
+
+```{r}
+first_var <- bdc::get.paths(my_variables)[1]
+bdc::get.varInfo(my_variables, first_var)
+```
+
+Now you can try to search for a term on your own. Below is sample code on how to search for the term `sex`. To practice searching the data dictionary, you can change "sex" to a term you are interested in. If there are results for your term, you will see them displayed in the convenient dataframe format by using the `extract.dataframe()` function.
+
+```{r}
+my_search <- bdc::find.in.dictionary(dictionary, 'sex') # Change sex to be your term of interest
+my_search_df <- bdc::extract.dataframe(my_search)
+if(nrow(my_search_df) == 0){
+    print("Search term returned no results. Please try searching a different term.")
+} else {
+    (tail(my_search_df))
+}
+```
+
+## Using PIC-SURE to build a query and retrieve data
+You can also use the PIC-SURE API to build a query and retrieve data. With this functionality, you can filter based on specific variables, add others, and export the data as a dataframe into this notebook. 
+
+The first step to this is setting up the `authQuery`.
+
+```{r}
+authQuery_categorical_example <- bdc::new.query(authPicSure)
+```
+
+There are several methods that can be used to build a query, which are listed below.
+
+| Method | Arguments / Input | Output|
+|--------|-------------------|-------|
+| query.select.add() | variable names (string) or list of strings | all variables included in the list (no record subsetting)|
+| query.require.add() | variable names (string) or list of strings | all variables; only records that do not contain null values for input variables |
+| query.anyof.add() | variable names (string) or list of strings | all variables; only records that contain at least one non-null value for input variables |
+| query.filter.add() | variable name and additional filtering values | input variable; only records that match filter criteria |
+
+### Build a query with a categorical variable
+Let's practice building a query by filtering on variables. First, let's select a categorical variable to use. We can identify one using the `is_categorical` column of the variable dataframe.
+
+```{r}
+categorical_vars <- my_variables_df[my_variables_df$data_type == 'categorical',] # filter to categorical variables
+categorical_vars <- categorical_vars[categorical_vars$values != '[]',] # make sure there are values for the variable
+
+v <- sample(c(1:nrow(categorical_vars)), 1) # select a random categorical variable
+
+categorical_var <- categorical_vars[v, 'HPDS_PATH']
+categorical_description <- categorical_vars[v, 'var_description']
+categories <- categorical_vars[v, 'values']
+# select the first category available to filter on
+filter_category <- strsplit(gsub('\\[|]|', '', categories), ',')[[1]][1]
+filter_category <- trimws(filter_category)
 ```
 
 ```{r}
-mask_cat <- plain_variablesDict["categorical"] == TRUE # Get all categorical variables
-mask_count <- plain_variablesDict["observationCount"] > 4000 # Get all variables with 4000+ entries
-selected_vars <- plain_variablesDict[mask_cat & mask_count, "name"] %>% 
-    as.list()
-selected_vars <- lapply(selected_vars, as.character)
+paste("We will use the PIC-SURE variable", categorical_var, "which is", categorical_description)
+print("Here are the categories associated with the variable:")
+print(categories)
+paste("We will filter to participants with the value '", filter_category, "' for the variable.")
+```
+
+We now have the PIC-SURE variable and the value to apply to the filter saved. We can use the `filter()` method to add this information to our query. 
+
+```{r}
+
+
+
+
+
+bdc::query.filter.add(authQuery_categorical_example, categorical_var, filter_category)
+```
+
+Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function.
+
+Now we can export our filtered data to a dataframe in this notebook.
+
+```{r}
+results_categorical <- bdc::query.run(authQuery_categorical_example)
+head(results_categorical)
+```
+
+In the data dictionary dataframe shown previously, each row represented a single concept path or variable. In the query dataframe, the concept paths are added as columns with each row representing a participant with data that matches your query. 
+
+The dataframe above should contain some automatically exported concept paths, such as `Patient ID`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept path we added to our query (`categorical_var`). Additionally, all participants should have the value we used to filter for our added concept path.
+
+We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the categorical variable of interest using `require()`.
+
+```{r}
+authQuery_categorical_example2 <- bdc::new.query(authPicSure) # Initialize a new query
+bdc::query.require.add(authQuery_categorical_example2, categorical_var) # Use require() and the categorical_var
+full_results_categorical <- bdc::query.run(authQuery_categorical_example2)
+head(full_results_categorical)
 ```
 
 ```{r}
-bdc::query.filter.add(query = my_query,
-                      keys = yo_stop_smoking_varname,
-                      min=20,
-                      max=70)
-bdc::query.select.add(query = my_query,
-                      keys = selected_vars[1:50])
+# Visualize the results with pie charts
+df2 <- data.frame(table(full_results_categorical[,eval(categorical_var)]))
+pie(df2$Freq, labels = df2$Var1, main = paste("Before filtering variable\n", categorical_var))
+
+df1 <- data.frame(table(results_categorical[,eval(categorical_var)]))
+pie(df1$Freq, labels = df1$Var1, main = paste("After filtering variable\n", categorical_var))
 ```
 
- ## Selecting consent groups
-
-PIC-SURE will limit results based on which study and/or patient consent groups for which the researcher has been individually authorized to use. 
-
-However, sometimes you might need to limit your results further to only contain a subset of the groups.
-
-To view the available consent groups, you can use the `query.show()` function. Look for the list of values under `query > categoryFilters > \\_consents\\`.
+### Build a query with a continuous variable
+Similarly, we can create a query using a continuous variable. Instead of using the `is_categorical` column, let's make use of the `min` and `max` columns to determine the range of values that can be selected for our query.
 
 ```{r}
-bdc::query.show(bdc::new.query(resource = resource))
+# Filter to a random continuous variable with a range of data
+continuous_vars <- my_variables_df[!is.na(my_variables_df$max) & my_variables_df$max != my_variables_df$min,]
+v <- sample(c(1:nrow(continuous_vars)), 1) 
+
+continuous_var <- continuous_vars[v,'HPDS_PATH']
+paste('We will use the PIC-SURE variable', continuous_var, 'which is', continuous_vars[v,'var_description'])
+
+# Get range of values for chosen variable
+min <- as.numeric(continuous_vars[v, 'min'])
+max <- as.numeric(continuous_vars[v, 'max'])
+paste('The minimum value for this variable is:', min)
+paste('The maximum value for this variable is:', max)
+
+# Set a sub-range of values to filter our participants with
+filter_min_value <- max - (max - min)/2
+filter_max_value <- max
+paste("We will filter to participants with values between", filter_min_value, "and", filter_max_value, ".")
 ```
 
-In order to update the values, the existing list needs to be cleared first, then replaced.  (phs000179.c2 is one consent code used in the COPDGene study.)
-
-It is safe to ignore the warning about "the condition has length > 1 ..." because we use a single vector as an argument.
+Again, we can use the `filter()` method to add the continuous variable to the query. Once added, we can retrieve our results dataframe.
 
 ```{r}
-# Delete current consents
-bdc::query.filter.delete(query = my_query,
-                      keys = "\\_consents\\")
-```
-
-```{r}
-bdc::query.filter.add(query = my_query,
-                      keys = "\\_consents\\",
-                      as.list(c("phs000179.c2")))
-```
-
-*Note that trying to manually add a consent group which you are not authorized to access will result in errors downstream.*
-
-## Retrieving the data
-
-Once our query object is finally built, we use the `query.run` function to retrieve the data corresponding to our query.
-
-```{r}
-my_df <- bdc::query.run(my_query, result.type = "dataframe")
+authQuery_continuous_example <- bdc::new.query(authPicSure) # Start a new query
+bdc::query.filter.add(authQuery_continuous_example, continuous_var, filter_min_value, filter_max_value)
+results_continuous <- bdc::query.run(authQuery_continuous_example)
+head(results_continuous)
 ```
 
 ```{r}
-dim(my_df) # Dimensions of the new dataframe
+paste("We will plot a histogram of our results to ensure we are only looking at values for",
+      continuous_vars[v,'var_description'],
+      "which fall between", filter_min_value, "and", filter_max_value, ".")
 ```
 
 ```{r}
-head(my_df) # Show first few rows
+hist(results_continuous[,eval(continuous_var)], 
+     main = paste('After filtering variable\n', continuous_vars[v,'var_description']))
 ```
 
-From this point, we can proceed with the data management and analysis using any other R function or libraries.
-
-Remember our original question: what is the distribution of the age that patients stopped smoking between 20 and 70 years old in the COPDGene study?
-
-To investigate this, we can narrow the new dataframe to the column saved before in `yo_stop_smoking_varname`.
+Compared to all data values for this variable:
 
 ```{r}
-parsed_data <- my_df[yo_stop_smoking_varname] # Select only data from column saved before
-names(parsed_data)[1] <- 'age_stopped_smoking' # Rename long column to age_stopped_smoking
-```
-
-Now we can visualize our results with `ggplot` or other plotting tools in R.
-
-```{r}
-ggplot(data = parsed_data) +
-    geom_histogram(mapping = aes(x=age_stopped_smoking), bins=15) +
-    labs(x = "Age stopped smoking, years old", y = "Count") +
-    theme_bw()
-```
-
-## Retrieving data from query run through PIC-SURE UI
-
-It is possible for you to retrieve the results of a query that you have previously run using the PIC-SURE UI. To do this you must "select data for export", then select the information that you want the query to return and then click "prepare data export". Once the query is finished executing, a group of buttons will be presented.  Click the "copy query ID to clipboard" button to copy your unique query identifier so you can paste it into your notebook.
-
-
-Paste your query's ID into your notebook and assign it to a variable.  You then use the `bdc::query.getResults(yourResource, yourQueryUUID)` function using an initialized resource object to retrieve the data from your query as shown below.
-
-The screenshot below shows the button of interest in the PIC-SURE UI. It shows that the previously run query has a Query ID of `bf3ddba5-de5f-460b-bcbc-ff56410d3075`. At this point a copy-paste process is used to provide the Query ID to the API, as shown in the example code below.  To run this code you must replace the example query ID with a query ID from a query that you have run in the PIC-SURE API.
-
-Note that query IDs are not permanent and will expire.
-
-<img src="https://drive.google.com/uc?id=1e38XT07bJ-JiO8oqbM5SydvVEozYavOm">
-
-```{r}
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
-token_file <- "token.txt"
-token <- scan(token_file, what = "character")
+authQuery_continuous_example2 <- bdc::new.query(authPicSure) # Start a new query
+bdc::query.require.add(authQuery_continuous_example2, continuous_var)
+full_results_continuous <- bdc::query.run(authQuery_continuous_example2)
 ```
 
 ```{r}
-connection <- picsure::connect(url = PICSURE_network_URL,
-                                 token = token)
-resource <- bdc::get.resource(connection,
-                               resourceUUID = resource_id)
+hist(full_results_continuous[,eval(continuous_var)], 
+     main = paste('Before filtering variable\n', continuous_vars[v,'var_description']))
 ```
+
+### Build a query with multiple variables
+You can also add multiple variables to a single query. Let's build a query with the first five variables for the study of interest.
+
+```{r}
+query_vars <- my_variables_df[c(1:5), 'HPDS_PATH']
+print("We will add the following variables to the query:")
+query_vars
+```
+
+We can use the`anyof` function to add variables to the query. This will filter to participants that have data **for at least one of the variables added**.  
+
+```{r}
+authQuery <- bdc::new.query(authPicSure) # Start a new query
+invisible(lapply(query_vars, bdc::query.anyof.add, query = authQuery))
+results <- bdc::query.run(authQuery)
+```
+
+```{r}
+head(results)
+```
+
+### Selecting consent groups
+
+PIC-SURE will limit results based on which study and consent groups you have been individually authorized to access. In some cases, such as instances where you can access multiple studies and/or consent groups, you may need to limit your results further to only a subset of the groups you have been authorized to access.
+
+Let's see which studies and consent groups you are authorized to access using the `show()` method of the query.
+
+```{r}
+authQuery_consents <- bdc::new.query(authPicSure) # Start a new query
+bdc::query.show(authQuery_consents)
+```
+
+The `\\_consents\\` section of the output shown above lists all of the phs accession numbers and consent codes that you are authorized to access. 
+
+To query on specific consent groups in this list, you must first clear the list of values within the `\\_consents\\` section and then manually replace them. Let's practice this by copying and pasting a phs accession number and consent code, deleting the `\\_consents\\` field, and adding it back with our selected consent code.
+
+*Note that trying to manually add a consent group which you are not authorized to access will results in errors downstream.*
+
+```{r}
+bdc::query.filter.delete(authQuery_consents, '\\_consents\\')
+bdc::query.show(authQuery_consents)
+```
+
+```{r}
+consent_group_filter <- "phs000964.c1"#"<<<Paste consent group here you are authorized to access here>>>"
+bdc::query.filter.add(authQuery_consents, '\\_consents\\', consent_group_filter)
+bdc::query.show(authQuery_consents)
+```
+
+Now your query is set to select only variables and participants from the phs accession and consent code you selected. From here, you can build out your query as shown above.
+
+### Retrieving data from a query built in the PIC-SURE user interface (UI)
+
+You are able to retrieve the results of a query that you have previously built using the [PIC-SURE Authorized Access UI](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/). After you have built your query and filtered to your cohort of interest, open the **Select and Package Data** tool in the Tool Suite. This will allow you to copy your query ID and bring it in to a Jupyter notebook. **Note that query IDs are not permanent and may expire.**
+
+<img src="https://drive.google.com/uc?id=1XD3L0obdgQZ3GgO2Xu-sxhMxzzXgqofL">
 
 ```{r}
 # To run this using your notebook you must replace it with the ID value of a query that you have run.
-DataSetID <- '02e23f52-f354-4e8b-992c-d37c8b9ba140'
+query_id <- '<<<Paste your Query ID here>>>'
+results <- bdc::query.getResults(authPicSure, query_id)
+results <- read.delim(textConnection(results), sep = ",")
+colnames(results) <- results[1,]
+head(results)
 ```
 
-```{r}
-my_csv_str <- bdc::query.getResults(resource, DataSetID)
-my_df <- read.table(textConnection(my_csv_str), sep = ",")
-```
-
-```{r}
-dim(my_df)
-```
-
-```{r}
-head(my_df)
-```
-
-# Troubleshooting
-If you experience trouble during package installation / loading, try restarting your R environment.
-You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
