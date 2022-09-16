@@ -1,5 +1,5 @@
 ---
-title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/ORCHID_COVID19.ipynb"
+title: An R Markdown document converted from "Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/ORCHID_COVID19.ipynb"
 output: html_document
 ---
 
@@ -13,63 +13,36 @@ The clinical trial has been conducted between April and July 2020, and stopped b
 
 ## Requirements
 
-*This notebook has been tested to work with R version 4.1.1*. 
-
-Below is the output of the sessionInfo() function:
+*This notebook has been tested to work with R version 4.0.0*. Below is the output of the sessionInfo() function:
 ```
-R version 4.1.1 (2021-08-10)
-Platform: x86_64-conda-linux-gnu (64-bit)
-Running under: Ubuntu 20.04.3 LTS
+R version 4.0.0 (2020-04-24)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 18.04.4 LTS
 
 Matrix products: default
-BLAS/LAPACK: /opt/conda/lib/libopenblasp-r0.3.17.so
+BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/libopenblasp-r0.2.20.so
 
 locale:
- [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
- [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
- [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
- [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
- [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] hpds_0.1.1        IRdisplay_1.0     coin_1.4-1        cmprsk_2.2-10    
- [5] DescTools_0.99.41 usethis_2.0.1     kableExtra_1.2.1  survival_3.3-1   
- [9] survminer_0.4.9   ggpubr_0.4.0      MASS_7.3-53.1     quantreg_5.85    
-[13] SparseM_1.81      ggtext_0.1.1      urltools_1.7.3    arsenal_3.6.2    
-[17] tidyr_1.1.3       ggplot2_3.3.5     forcats_0.5.1     stringr_1.4.0    
-[21] dplyr_1.0.9       versions_0.3     
+[1] BiocManager_1.30.10
 
 loaded via a namespace (and not attached):
- [1] TH.data_1.0-10     colorspace_2.0-2   ggsignif_0.6.3     ellipsis_0.3.2    
- [5] class_7.3-19       modeltools_0.2-23  rio_0.5.27         base64enc_0.1-3   
- [9] fs_1.5.0           gld_2.6.2          gridtext_0.1.4     rstudioapi_0.13   
-[13] proxy_0.4-26       MatrixModels_0.5-0 hash_2.2.6.2       fansi_0.5.0       
-[17] mvtnorm_1.1-3      xml2_1.3.2         codetools_0.2-18   splines_4.1.1     
-[21] rootSolve_1.8.2.1  libcoin_1.0-8      knitr_1.34         IRkernel_1.2      
-[25] jsonlite_1.8.0     broom_0.7.9        km.ci_0.5-6        compiler_4.1.1    
-[29] httr_1.4.3         backports_1.2.1    assertthat_0.2.1   Matrix_1.3-4      
-[33] fastmap_1.1.0      cli_3.3.0          htmltools_0.5.2    tools_4.1.1       
-[37] gtable_0.3.0       glue_1.6.2         lmom_2.8           Rcpp_1.0.9        
-[41] carData_3.0-5      cellranger_1.1.0   vctrs_0.4.1        conquer_1.0.2     
-[45] xfun_0.26          openxlsx_4.2.4     rvest_1.0.1        lifecycle_1.0.1   
-[49] rstatix_0.7.0      zoo_1.8-9          scales_1.1.1       hms_1.1.0         
-[53] sandwich_3.0-1     parallel_4.1.1     expm_0.999-6       curl_4.3.2        
-[57] Exact_2.1          gridExtra_2.3      KMsurv_0.1-5       triebeard_0.3.0   
-[61] stringi_1.7.8      e1071_1.7-8        boot_1.3-28        zip_2.2.0         
-[65] repr_1.1.3         rlang_1.0.2        pkgconfig_2.0.3    matrixStats_0.58.0
-[69] evaluate_0.14      lattice_0.20-44    purrr_0.3.4        tidyselect_1.1.1  
-[73] magrittr_2.0.3     R6_2.5.1           generics_0.1.0     multcomp_1.4-17   
-[77] pbdZMQ_0.3-5       DBI_1.1.1          pillar_1.6.2       haven_2.4.3       
-[81] foreign_0.8-82     withr_2.4.2        abind_1.4-5        tibble_3.1.4      
-[85] crayon_1.4.1       car_3.0-11         survMisc_0.5.6     uuid_0.1-4        
-[89] utf8_1.2.2         rmarkdown_2.10     grid_4.1.1         readxl_1.3.1      
-[93] data.table_1.14.0  digest_0.6.27      webshot_0.5.2      xtable_1.8-4      
-[97] stats4_4.1.1       munsell_0.5.0      viridisLite_0.4.0 
+ [1] tidyselect_1.1.0  xfun_0.22         repr_1.1.3        remotes_2.3.0     purrr_0.3.4       lattice_0.20-41   splines_4.0.0     picsure_0.1.0     vctrs_0.3.6      
+[10] generics_0.0.2    testthat_3.0.2    usethis_2.0.1     htmltools_0.5.1.1 base64enc_0.1-3   hash_2.2.6.1      yaml_2.2.1        survival_3.2-10   utf8_1.1.4       
+[19] rlang_0.4.10      pkgbuild_1.2.0    pillar_1.6.0      glue_1.4.2        withr_2.4.1       DBI_1.1.0         sessioninfo_1.1.1 lifecycle_1.0.0   stringr_1.4.0    
+[28] devtools_2.4.0    memoise_2.0.0     evaluate_0.14     knitr_1.31        callr_3.6.0       fastmap_1.1.0     ps_1.6.0          fansi_0.4.1       hpds_0.1.0       
+[37] IRdisplay_1.0     backports_1.1.6   cachem_1.0.4      desc_1.3.0        pkgload_1.2.1     cmprsk_2.2-10     jsonlite_1.7.2    fs_1.5.0          digest_0.6.25    
+[46] stringi_1.5.3     processx_3.5.1    dplyr_1.0.5       rprojroot_1.3-2   grid_4.0.0        cli_2.4.0         tools_4.0.0       magrittr_2.0.1    tibble_3.1.1     
+[55] crayon_1.4.1      pkgconfig_2.0.3   Matrix_1.2-18     ellipsis_0.3.1    MASS_7.3-53.1     prettyunits_1.1.1 assertthat_0.2.1  rmarkdown_2.2     httr_1.4.2       
+[64] bdc_0.1.0         R6_2.5.0          compiler_4.0.0   
 ```
+**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
 
 # Data Access using PIC-SURE API
 
@@ -110,133 +83,37 @@ All these outcomes will be analyzed using multivariable models, taking into acco
 # Packages Installation 
 
 ```{r}
-install.packages('devtools')
-devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
+source("Rstudio_lib/ORCHID_requirements.R")
 ```
 
-```{r}
-### SEVEN BRIDGES USERS ONLY RUN THIS CODE
-# Are you using a Seven Bridges analysis workspace? Uncomment this code to install your R packages.
-install.packages('dplyr')
-remove.packages("rlang")
-install.packages("https://cran.r-project.org/src/contrib/Archive/rlang/rlang_1.0.2.tar.gz", repo=NULL, type="source")
-install.packages('survminer')
-install.packages('survival')
-```
 
 ```{r}
-### SEVEN BRIDGES USERS ONLY: RESTART YOUR KERNEL BEFORE PROCEEDING
-```
-
-```{r}
-required_libraries <- c(
-    "dplyr", 
-    "stringr",
-    "forcats",
-    "ggplot2",
-    "tidyr",
-    "arsenal", # depends on R, stats; imports knitr, utils       
-    "urltools", 
-    "ggtext", # imports ggplot2, grid, gridtext, rland, scales
-    "SparseM", # depends on methods; imports graphics, stats, utils
-    "quantreg", # depends on R, stats, sparseM; imports methods, graphics, Matrix, MatrixModels, conquer
-    "MASS",  # depends on R, grDevices, graphics, stats, utils; imports 
-    "ggpubr",   
-    "survminer", # depends on ggplot2, ggpubr; imports a lot of things
-    "survival", # imports graphics, Matrix, methods, splines, stats, utils
-    "kableExtra", # imports knitr, magrittr, among other things
-    "usethis", # many imports
-    "DescTools", # imports MASS and others
-    "cmprsk", #depeds on survival
-    'coin',
-    'IRdisplay'
-)
-```
-
-```{r}
-required_versions <- c(
-    "1.0.8",
-    "1.4.0",
-    "0.5.1",
-    "3.3.5",
-    "1.2.0",
-    "3.6.2",
-    "1.7.3",
-    "0.1.1",
-    "1.81",
-    "5.85",
-    "7.3-53.1",
-    "0.4.0",
-    "0.4.9",
-    "3.2-10",
-    "1.3.1",
-    "2.0.1",
-    "0.99.41",
-    "2.2-10",
-    "1.4-1",
-    "1.0"
-)
-```
-
-```{r}
-install.packages("versions", dependencies=TRUE)
-library(versions)
-
-required <- data.frame(Package = required_libraries, Version = required_versions)
-
-installed <- as.data.frame(installed.packages()[,c('Package', 'Version')])
-
-tmp <- merge(required, installed, by = 'Package')
-a <- tmp[tmp$Version.x < tmp$Version.y,]
-tmp <- merge(required, installed, by = 'Package', all.x = TRUE)
-b <- tmp[is.na(tmp$Version.y),]
-to_update <- rbind(a,b)
-
-
-install.versions(to_update$Package, to_update$Version.x)
-
-for (x in c(1:nrow(required))) {
-    library(required[x, 'Package'], character.only = TRUE)
-}
-```
-
-```{r}
-library(hpds)
-```
-
-```{r}
-options(repr.plot.width=18, repr.plot.height=9)
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-client", force = TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force = TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force = TRUE)
 ```
 
 # Installing the library and connecting to the database using the PICSURE API 
 
 ```{r, Installing the library and connecting to the database}
-# Uncomment production URL when testing in production
-# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
+PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
-connection <- picsure::connect(PICSURE_network_URL, token)
-authPicSure = bdc::use.authPicSure(connection)
+httr::set_config(httr::config(ssl_verifypeer=0L, ssl_verifyhost=0L))
+myconnection <- picsure::connect(url = PICSURE_network_URL, token = token)
+resource_id <- picsure::list.resources(myconnection)[1] # select first resource id 
+resource <- bdc::get.resource(myconnection, resourceUUID = resource_id)
 ```
 
 # Querying the data
 
 ```{r, Query the data}
-dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
-dictionary_results <- bdc::find.in.dictionary(dictionary, 'ORCHID')
-dictionary_df <- bdc::extract.dataframe(dictionary_results)
-list_variables <- dictionary_df$HPDS_PATH
-
-query <- bdc::new.query(authPicSure) # Start a new query
-invisible(lapply(list_variables, bdc::query.anyof.add, query = query))
-raw_df <- bdc::query.run(query) %>% as_tibble()
-```
-
-```{r}
-raw_df <- raw_df %>% filter(`\\phs002299\\bl_sex\\` != '')
+dictionary_results <- bdc::find.in.dictionary(resource, 'ORCHID')
+list_variables <- bdc::extract.keys(dictionary_results)
+query <- bdc::new.query(resource)
+bdc::query.anyof.add(query, list_variables)
+raw_df <- bdc::query.run(query, result.type = "dataframe") %>% as_tibble()
 ```
 
 # Data Management
@@ -485,10 +362,10 @@ orchid_gg_theme <-  function(...) {
         panel.spacing = grid::unit(c(0), "lines"),
         axis.line = element_line(colour = "black"),
         panel.grid.major = element_blank(),
-        text = element_text(size=20),
-        plot.title = element_text(size = 20, face = 'bold'),
+        #text = element_text(size=20),
+        #plot.title = element_text(size = 20, face = 'bold'),
         axis.text.x = element_text(angle=0, hjust=0.5),
-        legend.key.height = unit(.8, "cm"),
+        #legend.key.height = unit(.8, "cm"),
         panel.border = element_blank(),
         panel.background = element_blank(),
         strip.background = element_rect(colour = "white", fill = "white")) +
@@ -507,7 +384,6 @@ orchid_table1$rand_trt <- relevel(orchid_table1$rand_trt, 'Hydroxychloroquine')
 for (label_name in names(table1_labels)) {
     attr(orchid_table1[[label_name]], 'label') <- table1_labels[[label_name]]
 }
-
 ```
 
 ```{r}
@@ -572,30 +448,7 @@ table1_df[, c('Hydroxychloroquine', 'Placebo')] <- apply(table1_df[, c('Hydroxyc
 indices_cat <- which(table1_df['Hydroxychloroquine'] == '')
 indices_results <- which(table1_df['Hydroxychloroquine'] != '')
 
-kbl(table1_df, caption = "Table 1: Description of the population") %>%
-kable_minimal() %>% kable_styling(bootstrap_options = c("striped"), 
-                                  full_width = FALSE,
-                                  position = "left", 
-                                 font_size = 12) %>%
-  column_spec(1, width = "20em") %>%
-  column_spec(2, width = "10em") %>% 
-  column_spec(3, width = "10em") %>% 
-add_header_above(c(" ", "No. (%)" = 2), align = 'left') %>%
-row_spec(0, bold = TRUE, extra_css = "font-size: medium") %>%
-row_spec(indices_cat, underline = FALSE, bold = TRUE, align = 'left') %>%
-column_spec(1, background = 'FDEBD0') %>%
-kableExtra:::add_indent_html(positions = indices_results) %>%
-pack_rows('Demographics', 1, 20, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-pack_rows('COVID-19 Symptoms', 20, 42, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-pack_rows('Comorbidities', 43, 52, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-as.character() %>%
-str_replace_all(c("Comorbidities"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Demographics"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("COVID-19 Symptoms"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-display_html()
+table1_df
 ```
 
 # Outcome Analysis
@@ -995,30 +848,8 @@ table_results_outcomes <- data_manage_table(outcome_comparison)
 ```
 
 ```{r}
-table_results <- table_results_outcomes %>%
-  kable(caption="Effect of Hydroxychloroquine on COVID Outcomes Scale") %>%
-  kable_minimal() %>%
-  pack_rows('Primary Outcome', 1, 1, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  pack_rows('Secondary Outcomes', 2, 2, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  pack_rows('COVID Outcomes Scale score, median (IQR)', 2, 4, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('Support-free days through day 28, median (IQR)', 6, 10, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('All-cause, all-location death, No. (%)', 11, 12, indent = TRUE, label_row_css = "text-align: left") %>%
-  pack_rows('Systematically collected safety events, No. (%)', 14, 19, indent = FALSE, label_row_css = "text-align: left; font-style: italic") %>%
-  as.character() %>%
-str_replace_all(c("Primary Outcome"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Secondary Outcomes"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace_all(c("Systematically collected safety events, No\\. \\(\\%\\)"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-str_replace("Placebo \\(n = 237\\)",
-            replacement = "Placebo <br>(n = 237)") %>%
-str_replace("Hydroxychloroquine \\(n = 242\\)",
-            replacement = "Hydroxychloroquine <br>(n = 242)") %>%
-str_replace("COVID Outcomes Scale score, median \\(IQR\\) at Day 14",
-            replacement = "<b>Outcomes Scale score, median (IQR) at Day 14</b>") %>%
-  as.character() %>%
-  IRdisplay::display_html()  
+
+table_results_outcomes
 ```
 
 ```{r}
@@ -1038,7 +869,8 @@ ggplot(aes(x = outcome, y = OR, ymin = `2.5%`, ymax = `97.5%`)) +
   scale_x_discrete(labels=outcomes_labels) +
   # scale_y_continuous(labels=c(0, 1, 2, 4, 6, 8)) +
   orchid_gg_theme(panel.spacing = unit(2, "lines"), 
-                 axis.text.y = element_markdown()) + 
+                 axis.text.y = element_markdown(),
+                 text = element_text(size=8),) + 
   labs(title = 'Hydroxychloroquine adjusted effects on the outcomes', 
       x = '', 
       y = 'Odds Ratio')
@@ -1102,7 +934,7 @@ death_plot <- ggsurvplot(survfit_death,
            legend.labs =c("Placebo", "Hydroxychloroquine"),
            risk.table.height = 0.25,
            ggtheme = theme_bw() +  theme(
-        text = element_text(size=20),
+        #text = element_text(size=20),
         axis.text.x = element_text(angle=0, hjust=0.5)),
            combine = TRUE,
            keep_data = TRUE,
@@ -1180,7 +1012,7 @@ ggsurvplot(
   legend.labs = c("Hydroxychloroquine", "Placebo"),
   risk.table.height = 0.25,
   ggtheme = theme_bw() +  theme(
-  text = element_text(size=20),
+  #text = element_text(size=20),
   axis.text.x = element_text(angle=0, hjust=0.5)),
   combine = TRUE,
   keep_data = TRUE,
@@ -1191,302 +1023,6 @@ ggsurvplot(
 )
 ```
 
-# Sensitivity Analyses
-
-This notebook can also be useful to kickstart new analyses. The heavy lifting data management has already been done and allows the user to expand quickly the original work. As an example, we are going to focus on the lab trajectories in the different treatment groups, and how it is related to the use of premedication by azithromycin.
-
-## Time to recovery associated with premedications
-
-```{r}
-premedications <- c(
-        "prmed_chlor",
-        "prmed_hydroxychlor",
-        "prmed_remdesivir",
-        "prmed_lopinavir",
-        "prmed_corticoster",
-        "prmed_tocilizumab",
-        "prmed_sarilumab",
-        "prmed_interferon",
-        "prmed_azithro"
-    )
-```
-
-```{r}
-coos_df <- orchid_data %>%
-  dplyr::select(subject_id, covid_ooscale_1, prmed_azithro, starts_with("d_covid")) %>%
-  pivot_longer(cols = c(starts_with("d_covid"), covid_ooscale_1),
-               names_to = "date",
-               values_to = "COOS") %>%
-  mutate(COOS =  fct_rev(COOS)) %>%
-  mutate(COOS = recode(COOS, !!!covid_ooscale_renaming))
-```
-
-```{r}
-table_outcomes_count <- coos_df %>%
-  filter(date %in% c("covid_ooscale_1", "d_covid15", "d_covid29")) %>%
-  mutate(prmed_azithro = as.factor(prmed_azithro)) %>%
-  mutate(prmed_azithro = fct_recode(relevel(prmed_azithro, 'Yes'),
-                               "Yes\n(n=150)" = "Yes",
-                               "No\n(n=329)" = "No"),
-         date = fct_recode(date,
-                           "At randomization" = "covid_ooscale_1", 
-                           "14 d After randomization\n(primary outcome)" = "d_covid15",
-                           "28 d After randomization\n(secondary outcome)" = "d_covid29"))
- 
-```
-
-```{r}
-table_count_azithro <- table_outcomes_count %>%
-  group_by(prmed_azithro, COOS, date) %>%
-  summarize(count = n()) %>%
-  group_by(prmed_azithro, date) %>%
-  mutate(percentage = round(count/sum(count) * 100, 1)) %>%
-  mutate(string = glue::glue("{count} ({percentage}%)", count = count, percentage = percentage)) %>% 
-  pivot_wider(id_cols = c(COOS),
-              names_from = c(date, prmed_azithro), 
-              values_from = string) %>%
-  arrange(desc(COOS))
-table_count_azithro <- table_count_azithro %>%
-  mutate(across(colnames(table_count_azithro)[-1], replace_na, "0 (0%)")) %>%
-  `[`(c(1, 4, 7, 2, 5, 3, 6))
-table_count_azithro
-```
-
-```{r}
-names(table_count_azithro) <-  c("COOS", 
-         "Yes (n=150)",
-         "No (n=329)",
-         "Yes (n=150)",
-         "No (n=329)",
-         "Yes (n=150)",
-         "No (n=329)")
-table_count_azithro %>%
-kbl() %>%
-kable_minimal() %>% 
-kable_styling(bootstrap_options = c("striped"), 
-                                full_width = FALSE,
-                                 position = "left", 
-                                 font_size = 12) %>%
-  column_spec(1, width = "20em") %>%
-  column_spec(2, width = "10em") %>% 
-  column_spec(3, width = "10em") %>% 
-add_header_above(c(" " = 1, "At randomization" = 2, 
-                  "14 d After randomization" = 2, 
-                  "28 d After randomization" = 2),
-                 align = 'left') %>%
-as.character() %>%
-display_html()
-```
-
-```{r}
-plot_count_COOS <- table_outcomes_count %>%
-  ggplot() +
-  geom_bar(aes(x = prmed_azithro, fill = COOS), 
-           width = 0.4, position="fill", colour = "black") +
-  scale_y_continuous(labels = scales::percent,
-                     n.breaks = 6,
-                     limits = c(0, 1)) +
-  facet_grid( ~ date) +
-  scale_fill_brewer(palette = "Oranges") +
-  orchid_gg_theme(plot.title = element_markdown()) +
-  labs(title="Clinical Status on the Coronavirus Disease (COVID) Outcomes Scale 14 Days and 28 Days After Randomization",
-       fill = "Clinical status (COVID Outcomes Scale category)"
-       ) +
-  xlab("Premedication by azithromycin") +
-  ylab("Patients with clinical status, %")
-
-plot_data <- ggplot_build(plot_count_COOS)$data
-line_data <- plot_data[[1]] %>%
-    mutate(x_line = if_else(x == 1, xmax, xmin), 
-           date = as.factor(if_else(PANEL == 1, 
-                                    "At randomization",
-                                    ifelse(PANEL == 2,
-                                           "14 d After randomization\n(primary outcome)",
-                                           "28 d After randomization\n(secondary outcome)"
-                                           )
-                            ))
-          )
-         
-plot_count_COOS <- plot_count_COOS + 
-    geom_line(data = line_data,
-              aes(x = x_line, y = ymax, group = fill), 
-              linetype = "dashed"
-              )
-print(plot_count_COOS)
-```
-
-This plot represents the patients' clinical status according at day 0, 14, and 28 from randomization. It shows that,  overall, patients who received premedication with azithromycin had more severe baseline clinical status. This translated into more severe outcomes at the different time points (day 14 and 28 from randomization). 
-
-## Premedications and labs trajectories
-
-```{r}
-labs_names <- list(
-    labs_wbch = "Highest white blood cell count (/mm3)", 
-    labs_wbcl = "Lowest white blood cell count (/mm3)", 
-    labs_hemol = "Lowest hemoglobin (g/dl)", 
-    labs_plateletl = "Lowest platelet count (/mm3; in thousands)", 
-    labs_sodiumh = "Highest sodium (mEq/L)", 
-    labs_sodiuml = "Lowest sodium (mEq/L)", 
-    labs_potassiumh = "Highest potassium (mEq/L)", 
-    labs_potassiuml = "Lowest potassium (mEq/L)", 
-    labs_chlorideh = "Highest chloride (mEq/L)", 
-    labs_bicarbonateh = "Highest bicarbonate (mEq/L)", 
-    labs_bicarbonatel = "Lowest bicarbonate (mEq/L)", 
-    labs_bunh = "Highest BUN - Blood Urea Nitrogen (mg/dL)", 
-    labs_creath = "Highest creatinine (mg/dL)", 
-    labs_troph = "Highest troponin (mg/dL)", 
-    labs_asth = "Highest AST - Aspartate aminotransferase (units per liter)", 
-    labs_alth = "Highest ALT - Alanine aminotransferase (units per liter)", 
-    labs_alph = "Highest ALP - Alkaline Phosphatase (IU/L)", 
-    labs_totbilih = "Highest total bilirubin (mg/dL)", 
-    labs_albuminl = "Lowest albumin (g/dL)", 
-    labs_ptth = "Highest PTT - Partial Thromboplastin Time (seconds)", 
-    labs_inrh = "Highest INR - International Normalized R"
-)
-```
-
-```{r}
-list_names = list()
-for (labs in names(labs_names)) {
-    list_names[[labs]] <- grep(labs, names(orchid_data), value = TRUE)
-}
-orchid_labs_names <- do.call(c, list_names) %>% unname()
-```
-
-```{r}
-labs_long <- orchid_data[c("Patient ID", "rand_trt", "prmed_azithro", orchid_labs_names)] %>%
-    pivot_longer(cols = all_of(orchid_labs_names), 
-                 names_sep = "_(?=[0-9]$)", 
-                 names_to = c("labs", "day"),
-                 values_to = "values") %>%
-    mutate(day = as.numeric(as.character(day)))
-```
-
-```{r}
-summarized_labs <- labs_long %>% 
-    group_by(rand_trt, prmed_azithro, labs, day) %>%
-    summarise(mean = mean(values, na.rm = TRUE), 
-              count = n(), 
-              sd = sd(values, na.rm = TRUE)) %>%
-   ungroup()
-```
-
-```{r}
-summarized_labs <- labs_long %>% 
-    group_by(rand_trt, prmed_azithro, labs, day) %>%
-    summarise(mean = mean(values, na.rm = TRUE), 
-              count = n(), 
-              sd = sd(values, na.rm = TRUE)) %>%
-   ungroup()
-```
-
-```{r}
-labs_long %>%
-group_by(prmed_azithro, labs, day) %>%
-summarise(median = median(values, na.rm = TRUE),
-          mean = mean(values, na.rm = TRUE),
-          sd = sd(values, na.rm = TRUE), 
-          n_obs = n()) %>% 
-mutate(labs = recode(labs, !!!labs_names), 
-       prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>% {
-ggplot(., aes(x = day, 
-           y = mean, 
-           color = prmed_azithro, 
-           shape = prmed_azithro)) +
-geom_point(aes(size=n_obs)) +
-geom_line() + 
-# geom_errorbar(aes(ymin = pmax(0, mean - sd), ymax = mean + sd), width = 0.2) +
-scale_size_binned() +
-scale_color_brewer(palette = "Set1") +
-facet_wrap("labs", scale = "free_y", labeller = label_wrap_gen(width=40)) + 
-orchid_gg_theme() +
-    theme(strip.text.x = element_text(size=11)) +
-labs(title = "Labs trajectory from Day 1 to 5, depending on premedication", 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = "Mean concentration", 
-     colour = "Azithromycin",
-     shape = "Azithromycin",
-     size = "Observation count")
-}
-```
-
-Interpretation of these graphs: 
-
-- Most significant differences are for the average level of troponin: patients that has been prescribed Azithromycin have average lower levels of troponin
-
-```{r}
-labs_long[labs_long$labs == "labs_asth", ] %>%
-mutate(prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>%
-   ggplot(aes(x=day, y=values, colour=prmed_azithro)) +
-   geom_jitter(size=4) +
-   scale_colour_brewer(palette = "Set1") +
-   orchid_gg_theme() +
-labs(title = paste0(labs_names[["labs_asth"]], " concentation"), 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = labs_names[["labs_troph"]], 
-     colour = "Azithromycin")
-   
-```
-
-```{r}
-labs_long[labs_long$labs == "labs_alth", ] %>%
-mutate(prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>%
-   ggplot(aes(x=day, y=values, colour=prmed_azithro)) +
-   geom_jitter(size=4) +
-   scale_colour_brewer(palette = "Set1") +
-   orchid_gg_theme() +
-labs(title = paste0(labs_names[["labs_alth"]], " concentation"), 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = labs_names[["labs_troph"]], 
-     colour = "Azithromycin")
-   
-```
-
-```{r}
-labs_long[labs_long$labs == "labs_alph", ] %>%
-mutate(prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>%
-   ggplot(aes(x=day, y=values, colour=prmed_azithro)) +
-   geom_jitter(size=4) +
-   scale_colour_brewer(palette = "Set1") +
-   orchid_gg_theme() +
-labs(title = paste0(labs_names[["labs_alph"]], " concentation"), 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = labs_names[["labs_troph"]], 
-     colour = "Azithromycin")
-   
-```
-
-```{r}
-labs_long[labs_long$labs == "labs_troph", ] %>%
-mutate(prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>%
-   ggplot(aes(x=day, y=values, colour=prmed_azithro)) +
-   geom_jitter(size=4) +
-   scale_colour_brewer(palette = "Set1") +
-   orchid_gg_theme() +
-labs(title = paste0(labs_names[["labs_troph"]], " concentation"), 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = labs_names[["labs_troph"]], 
-     colour = "Azithromycin")
-   
-```
-
-```{r}
-labs_long[grepl("labs_totbilih", labs_long$labs), ] %>%
-mutate(prmed_azithro = relevel(prmed_azithro, ref = "Yes")) %>%
-   ggplot(aes(x=day, y=values, colour=prmed_azithro)) +
-   geom_jitter(size=4) +
-   scale_colour_brewer(palette = "Set1") +
-   orchid_gg_theme() +
-labs(title = paste0(labs_names[["labs_totbilih"]], " concentation"), 
-     subtitle = "Premedication by azythromycin", 
-     x = "Days from inclusion", 
-     y = labs_names[["labs_totbilih"]], 
-     colour = "Azithromycin")
-   
-```
-
+# Troubleshooting
+If you experience trouble during package installation / loading, try restarting your R environment.
+You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
