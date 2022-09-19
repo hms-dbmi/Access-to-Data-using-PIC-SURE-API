@@ -1,6 +1,5 @@
 ---
-title: PIC-SURE R API use-case 
-subtitle: Phenome-Wide analysis on BioData Catalyst studies
+title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/3_PheWAS.ipynb"
 output: html_document
 ---
 
@@ -15,58 +14,44 @@ This notebook is an illustration example about how to query data using the R **P
 ### System requirements
 - R 4.0 or later
 
-### Packages installation
+### Install packages
+
+**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
 
 ```{r}
-source("Rstudio_lib/requirements.R")
+### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+#install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
 ```
 
-#### Installing latest R PIC-SURE API libraries from github
-
 ```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
-install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+install.packages('devtools')
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(hpds)
 ```
 
-#### Loading user-defined functions
+## Connecting to a PIC-SURE resource
 
 ```{r}
-source("Rstudio_lib/utils.R")
-```
-
-## Connecting to a PIC-SURE network
-
-```{r}
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+# Uncomment production URL when testing in production
+# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
 token_file <- "token.txt"
-```
-
-```{r}
 token <- scan(token_file, what = "character")
-```
-
-```{r}
-myconnection <- picsure::connect(url = PICSURE_network_URL,
-                                 token = token)
-```
-
-```{r}
-resource <- bdc::get.resource(myconnection,
-                               resourceUUID = resource_id)
+connection <- picsure::connect(PICSURE_network_URL, token)
+authPicSure = bdc::use.authPicSure(connection)
 ```
 
 # PheWAS analysis
 *Note: This example is not meant to be publication-ready, but rather serve as a guide or starting point to perform PheWAS.*
 
 This PheWAS analysis focuses on the TopMed DCC Harmonized Variables. 
-We leverage the harmonized variables to provide an example PheWAS focused on total cholesterol in two studies: ARIC and FHS.
+We leverage the harmonized variables to provide an example PheWAS focused on total cholesterol in FHS.
 The PIC-SURE API is helpful in wrangling our phenotypic data. 
 
 In a nutshell, this PheWAS analysis follows the subsequent steps:
@@ -104,70 +89,57 @@ Which phenotypic characteristics are included in the harmonized variables?
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-Here, we retrieve the harmonized variables information by searching for `DCC Harmonized data set` in PIC-SURE.
+Here, we find all 44 DCC harmonized variables. For more details on this process, see the `2_TOPMed_DCC_Harmonized_Variables_analysis` notebook.
 
 ```{r}
-harmonized_variables <- bdc::find.in.dictionary(resource, "DCC Harmonized data set") 
+dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
+harmonized_dic <- bdc::find.in.dictionary(dictionary, "harmonized")
+harmonized_df <- bdc::extract.dataframe(harmonized_dic)
+harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+dim(harmonized_df)
+head(harmonized_df[,c('var_name', 'var_description', 'HPDS_PATH', 'study_id')])
 ```
-
-```{r}
-harmonized_dic <- lapply(bdc::extract.entries(harmonized_variables), as.character)
-plain_variablesDict <- dplyr::bind_rows(harmonized_dic) %>% dplyr::arrange(name)
-```
-
-```{r}
-# Display the variables tree hierarchy from the variables name
-variablesDict <- get_multiIndex_variablesDict(plain_variablesDict)
-dim(variablesDict)
-head(variablesDict)
-```
-
-As you can see, we retrieved 80 variables from the DCC harmonized data set. The structure of `variablesDict` allows us to visualize the tree-like structure of the concept paths more easily.
 
 ### 2. Using the PIC-SURE API to select variables and retrieve data
-Now that we've retrieved the variable information, we need to select our variable of interest. In this example, we are interested in exploring the relationship between the harmonized variables and blood cholesterol. Specifically, we will find the full concept path that contains "Blood mass concentration of total cholesterol".
-
-```{r}
-my_harmonized_dic <- bdc::extract.entries(harmonized_variables)
-```
+Now that we've retrieved the variable information, we need to select our variable of interest. In this example, we are interested in exploring the relationship between the harmonized variables and blood cholesterol. Specifically, we will find the HPDS path that contains "Blood mass concentration of total cholesterol".
 
 ```{r}
 # Retrieve the dependent variable - total cholesterol
-cholesterol_path <- my_harmonized_dic %>% filter(grepl('Blood mass concentration of total cholesterol', name)) %>% pull(name)
-cholesterol_path
+cholesterol_variables <- harmonized_df %>%
+    filter(grepl('cholesterol', HPDS_PATH))
+cholesterol_variables
+
+cholesterol_path <- cholesterol_variables %>% pull(HPDS_PATH)
 ```
 
 ```{r}
 # Create full list of concept paths with cholesterol_path removed
-selected_vars <- lapply(variablesDict[["name"]] %>% as.list(), as.character)
-selected_vars <- selected_vars[selected_vars != cholesterol_path]
+selected_vars <- harmonized_df %>% 
+    filter(!grepl('cholesterol', HPDS_PATH)) %>%
+    pull(HPDS_PATH)
 ```
 
 We are ready to create our query and retrieve the dataframe. This query will consist of two parts:
 1. **Any record of `cholesterol_path`.** By performing an "any record of" filter on the `cholesterol_path`, we will filter out all participants that do not have total blood cholesterol measurements. This allows us to perform more meaningful statistical analysis on the data.
-2. **Select all remaining harmonized variables.** We will then add all of the remaining harmonized variables to the query, which will allow us to retrieve this information.
+2. **Select all remaining harmonized variables (`selected_vars`).** We will then add all of the remaining harmonized variables to the query, which will allow us to retrieve this information.
 
 ```{r}
 # Initialize a query
-query <- bdc::new.query(resource = resource)
-```
-
-```{r}
-bdc::query.anyof.add(query, cholesterol_path) # Use anyof for the cholesterol variable to filter out the NA values
-bdc::query.select.add(query, selected_vars)
-facts <- bdc::query.run(query, result.type = "dataframe")
-```
-
-```{r}
+myquery <- bdc::new.query(authPicSure) # Start a new query
+bdc::query.anyof.add(myquery, cholesterol_path) # Use anyof for the cholesterol variable to filter out the NA values
+invisible(lapply(selected_vars, bdc::query.select.add, query = myquery))
+facts <- bdc::query.run(myquery)
 head(facts)
 ```
 
 ### 3. Data-management
-Now that we have retrieved the data, we shall perform some data management steps to prepare for the statistical analysis. First, we will identify which variables are categorical and which are continuous using the "categorical" column of the `facts` dataframe. This is an example of how the PIC-SURE API greatly simplifies this step for the user, as categorizing variables can be tricky.
+Now that we have retrieved the data, we shall perform some data management steps to prepare for the statistical analysis. First, we will identify which variables are categorical and which are continuous using the `data_type` column of the harmonized dictionary. This is an example of how the PIC-SURE API greatly simplifies this step for the user, as categorizing variables can be tricky.
 
 ```{r}
-categorical_varnames <- my_harmonized_dic %>% filter(categorical == TRUE) %>% pull(name)
-continuous_varnames <-  my_harmonized_dic %>% filter(categorical == FALSE) %>% pull(name)
+categorical_df <- harmonized_df %>% filter(data_type == 'categorical')
+categorical_varnames <- categorical_df %>% pull(HPDS_PATH)
+continuous_df <- harmonized_df %>% filter(data_type == 'continuous')
+continuous_varnames <-  continuous_df %>% pull(HPDS_PATH)
 ```
 
 ```{r}
@@ -180,7 +152,7 @@ categorical_varnames <- categorical_varnames[-which(categorical_varnames == "\\D
 To perform this PheWAS, we will frame two participant cohorts in the context of the dependent variable of interest. In this example, we are interested in blood cholesterol. However, `Blood mass concentation of total cholesterol` is a continuous variable. We shall convert this variable into a binary variable with two groups, Normal/Low and High cholesterol levels, by applying a [threshold of 200mg/dL](https://www.mayoclinic.org/diseases-conditions/high-blood-cholesterol/diagnosis-treatment/drc-20350806). 
 
 ```{r}
-chol_vector <- as.numeric(unlist(facts['\\DCC Harmonized data set\\06 - Lipids\\Blood mass concentration of total cholesterol\\']))
+chol_vector <- facts %>% pull(eval(cholesterol_path))
 facts$categorical_cholesterol <- cut(chol_vector, breaks = c(48, 200, 647),
                   labels = c("Normal/Low", "High"))
 ```
@@ -192,13 +164,12 @@ sex_path <- colnames(facts)[grep('sex', colnames(facts))]
 sex_path
 ```
 
-We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS) and the Atherosclerosis Risk In Communities (ARIC) cohort. We can utilize the `A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort.` concept path in the DCC Harmonized data set to select the participants of interest.
+We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS). We can utilize the `\\DCC Harmonized data set\\demographic\\subcohort_1\\` concept path in the DCC Harmonized data set to select the participants of interest.
 
 ```{r}
-subgroup_var <- colnames(facts)[2] # Get concept path for distinct subgroups
-# Filter using FHS and ARIC
+subgroup_var <- '\\DCC Harmonized data set\\demographic\\subcohort_1\\' # Get concept path for distinct subgroups
+# Filter using FHS 
 fhs_subset <- facts %>% filter(grepl('FHS', get(subgroup_var)))
-aric_subset <- facts %>% filter(grepl('ARIC', get(subgroup_var)))
 ```
 
 ### 4. Statistical analysis
@@ -307,11 +278,9 @@ run_phewas <- function(facts, dependent_var, continuous_varnames, categorical_va
 }
 ```
 
-We then use our previously defined wrapper function to run the PheWAS 4 times:
+We then use our previously defined wrapper function to run the PheWAS 2 times:
 - Testing all harmonized variables against cholesterol in females in the FHS study
 - Testing all harmonized variables against cholesterol in males in the FHS study
-- Testing all harmonized variables against cholesterol in females in the ARIC study
-- Testing all harmonized variables against cholesterol in males in the ARIC study
 
 ```{r}
 fhs_female_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Female'),
@@ -331,28 +300,10 @@ fhs_male_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Male'),
                                      control_value="Normal/Low") %>%
     mutate(sex = 'Male',
            study = 'FHS')
-
-aric_female_df <- run_phewas(aric_subset %>% filter(get(sex_path) == 'Female'), 
-                                       "categorical_cholesterol", 
-                                       continuous_varnames, 
-                                       categorical_varnames, 
-                                       case_value="High", 
-                                       control_value="Normal/Low") %>%
-    mutate(sex = 'Female',
-           study = 'ARIC')
-
-aric_male_df <- run_phewas(aric_subset %>% filter(get(sex_path) == 'Male'), 
-                                       "categorical_cholesterol", 
-                                       continuous_varnames, 
-                                       categorical_varnames, 
-                                       case_value="High", 
-                                       control_value="Normal/Low") %>%
-    mutate(sex = 'Male',
-           study = 'ARIC')
 ```
 
 ```{r}
-combined_df <- rbind(fhs_female_df, fhs_male_df, aric_female_df, aric_male_df)
+combined_df <- rbind(fhs_female_df, fhs_male_df)
 head(combined_df)
 ```
 
@@ -365,7 +316,7 @@ adjusted_alpha <- -log10(0.01)
 ```
 
 ```{r}
-# idenfity top 5 adjusted p value results for each study
+# identify top 5 adjusted p value results for each study
 combined_df <- combined_df %>% 
     group_by(study) %>% 
     mutate(top5pbystudy = log_adj_pvalues %in% sort(log_adj_pvalues, decreasing = TRUE)[1:5])
@@ -395,16 +346,14 @@ plot_df[plot_df$top5pbystudy,]$graph_labels <- plot_df[plot_df$top5pbystudy, ]$s
 The x axis represents each of the phenotypes tested, and the y axis represents their associated -log10 p value. 
 
 ```{r}
-options(repr.plot.width=10, repr.plot.height=10)
-library(ggplot2)
-library(ggrepel)
+options(repr.plot.width=25, repr.plot.height=20)
 my_theme <- theme_bw() +
-theme(axis.title.y = element_text(face="italic", size=10),
-      title = element_text(size=10),
-      axis.title.x = element_text(size=10),
+theme(axis.title.y = element_text(face="italic", size=30),
+      title = element_text(size=35),
+      axis.title.x = element_text(size=30),
       axis.text.x = element_blank(),
       panel.grid.major.x = element_blank(),
-      strip.text = element_text(size=5)
+      strip.text = element_text(size=25)
       )
 ```
 
@@ -414,10 +363,10 @@ ggplot(data=plot_df, aes(x=concept_code, y=log_adj_pvalues,
                          shape=sex, color=category, label=graph_labels)) +
 geom_jitter(alpha=1, 
            width=0.5,
-           size=2) +
+           size=5) +
 geom_hline(yintercept=adjusted_alpha, linetype="dashed", color = 'red') +
 scale_y_continuous(expand = c(0, 20) ) +
-geom_text_repel(size=3)+
+geom_text_repel(size=6)+
 labs(title="Association between phenotypic variables and cholesterol level status",
     x="Phenotype",
     y="- log10(p-values)",
@@ -433,9 +382,5 @@ print("FHS Females:")
 arrange(fhs_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
 print("FHS Males:")
 arrange(fhs_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
-print("ARIC Females:")
-arrange(aric_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
-print("ARIC Males:")
-arrange(aric_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
 ```
 

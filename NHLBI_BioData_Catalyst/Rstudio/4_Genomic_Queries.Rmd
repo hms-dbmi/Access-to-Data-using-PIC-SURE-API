@@ -1,40 +1,17 @@
 ---
-title: Genomic Query example in R Studio
+title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/4_Genomic_Queries.ipynb"
 output: html_document
 ---
 
 # PIC-SURE API Use-Case: Querying on Genomic Variables
 
-This is a tutorial notebook, aimed to be quickly up and running with the R PIC-SURE API. It covers the main functionalities of the API.
+This tutorial notebook focuses how to use the PIC-SURE API to query genomic and phenotypic data together.
 
-## PIC-SURE R API 
-### What is PIC-SURE? 
-
-As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI). 
-
-Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By easing the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible science.
-
-Both phenotypic and genomic variables are accessible through the PIC-SURE API.
-
-### More about PIC-SURE
-The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language.
-
-The R/python PIC-SURE API is a small part of the entire PIC-SURE platform.
-
-The R API is actively developed by the Avillach Lab at Harvard Medical School.
-
-PIC-SURE API R Library GitHub repos:
-* https://github.com/hms-dbmi/pic-sure-r-adapter-hpds
-* https://github.com/hms-dbmi/pic-sure-r-client
-* https://github.com/hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds
-
+For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
+ 
+**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the \"Get your security token\" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token).**
 
  -------
-**Please view the troubleshooting chunk at the end of the notebook for help solving frequent issues.**
-
-# Getting your own user-specific security token
-
-**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
 
 # Environment set-up
 
@@ -43,253 +20,177 @@ PIC-SURE API R Library GitHub repos:
 
 ### Install packages
 
-```{r}
-source("Rstudio_lib/requirements.R")
-```
-
-#### Installing the latest PIC-SURE API library from GitHub
-
-Installation of the two components of the PIC-SURE API from GitHub, that is the PIC-SURE adapter and the PIC-SURE Client.
+**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
 
 ```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
-install.packages("https://cran.r-project.org/src/contrib/Archive/devtools/devtools_1.13.6.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/R6_2.5.1.tar.gz", repos=NULL, type="source")
-install.packages("https://cran.r-project.org/src/contrib/hash_2.2.6.1.tar.gz", repos=NULL, type="source")
-install.packages(c("urltools"),repos = "http://cran.us.r-project.org")
-devtools::install_github("hms-dbmi/pic-sure-r-client", force=T)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", force=T)
+### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+#install.packages(c("devtools", "dplyr"))
 ```
 
 ```{r}
-library(stringr)
+devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
+devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
 library(dplyr)
+library(hpds)
 ```
 
-```{r}
-source("Rstudio_lib/utils.R")
-```
-
-## Connecting to a PIC-SURE resource
-
-The following is required to get access to data through the PIC-SURE API: 
-- Network URL
-- Resource ID
-- User-specific security token
-
-
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
+### Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL <- "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-resource_id <- "02e23f52-f354-4e8b-992c-d37c8b9ba140"
+# Uncomment production URL when testing in production
+# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
 token_file <- "token.txt"
-```
-
-```{r}
 token <- scan(token_file, what = "character")
+connection <- picsure::connect(PICSURE_network_URL, token)
+authPicSure = bdc::use.authPicSure(connection)
 ```
 
+# Example 1: Walkthrough on building a query with genomic and phenotypic varibles
+## 1.1 Building the query with the PIC-SURE API
+
+We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single study, a single phenotype (gender and age range), and two genomic filters. 
+
+First we will create a new query instance.
+
 ```{r}
-connection <- picsure::connect(url = PICSURE_network_URL,
-                               token = token)
+my_query <- bdc::new.query(authPicSure) # Start a new query
 ```
 
+### Find all SAGE variables
+We can search for variables related to our search query using the `bdc::find.in.dictionary` function. 
+
+In this example, we will retrive all variables available in the SAGE study (NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) Study , phs000921).
+
+You can find information about the phs number associated with each study and what data are available from the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
+
 ```{r}
-resource <- bdc::get.resource(connection,
-                               resourceUUID = resource_id)
+dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
+sage_dictionary <- bdc::find.in.dictionary(dictionary, "phs000921")
+sage_df <- bdc::extract.dataframe(sage_dictionary)
+
+head(sage_df,2)
 ```
 
-Two objects are created here: a `connection` and a `resource` object.
+## 1.2 Add categorical phenotypic variable (sex) to the query
 
-Since we will only be using a single resource, **the `resource` object is the only one we will need to proceed with the data analysis**.
-
-It is connected to the specific resource we supplied and enables us to query and retrieve data from this database.
-
-## Building the query with the PIC-SURE API
-
-We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single study, a single phenotype (gender and age range), and two genomic filters.
-
-First, we will create a new query instance.
+First, we will search our sage data dictionary for a sex-related variable.
 
 ```{r}
-my_query <- bdc::new.query(resource=resource)
+sex_var <- sage_df %>% filter(grepl('sex', var_name, ignore.case = TRUE))
+sex_var
 ```
 
-
-#### Limiting the query to a single study
-
-By default, new query objects are automatically populated with all the consent groups for which you are authorized to access.  For this example we are going to clear the existing consents and specify a single consent group that represents accessing only the NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) study.
+Let's examine the values within this variable.
 
 ```{r}
-# Here we show all the studies that you have access to
-bdc::query.show(bdc::new.query(resource = resource))
+sex_var %>% pull(values)
 ```
 
+We are only interested in FEMALE values in this use case - let's apply this filter to our query accordingly.
+
 ```{r}
-# Here we delete that access and add only the consent code corresponding to the SAGE study
-bdc::query.filter.delete(my_query, "\\_consents\\")
+bdc::query.filter.add(my_query, sex_var %>% pull(HPDS_PATH), 'FEMALE')
 ```
 
+## 1.3 Add continuous phenotypic variable (age) to the query
+For this example, we are only interested in children (<=18 years of age).
+
+Following the data dictionary search pattern shown above, we can search for the SAGE study variables related to age.
+
 ```{r}
-# Here we show that we have only selected a single study
-bdc::query.filter.add(query = my_query,
-                      keys = "\\_consents\\",
-                      as.list(c("phs000921.c2")))
+# Search our SAGE dataframe for an age variable
+age_var <- sage_df %>% filter(grepl('age', var_name, ignore.case = TRUE))
+print(paste0(age_var$var_name, ': ', age_var$HPDS_PATH))
+
+# Examine the values
+print(paste0('Min: ', age_var$min, ', Max: ', age_var$max))
+
+# Filter to children aged 18 years or younger
+bdc::query.filter.add(my_query, age_var$HPDS_PATH, min = 7.3, max = 18)
 ```
 
-*Note that trying to manually add a consent group which you are not authorized to access will result in errors downstream.*
-
-#### List available phenotypic variables
-
-Once a connection to the desired resource has been established, it is helpful to search for variables related to our search query. To this end, we will use the `dictionary` method of the `resource` object to create a data dictionary instance to search for variables.
+## 1.4 Add genomic filters to the query
+To start adding genomic filters to our query, we first need to understand what genomic annotations are available.
 
 ```{r}
-# search for variables that are part of the SAGE study
-fullVariablesDict <- bdc::find.in.dictionary(resource, "") %>% bdc::extract.entries()
-
-# extract the phenotypic variables
-fullPhenotypeVars <- fullVariablesDict[fullVariablesDict$HpdsDataType == "phenotypes", ]
-
-# display phenotypic vars for SAGE study
-fullPhenotypeVars[stringr::str_detect(fullPhenotypeVars$name, fixed("(SAGE)")), c("name", "patientCount", "observationCount", "categorical", "min", "max", "HpdsDataType")]
-```
-
-#### Add categorical phenotypic variable (gender) to the query
-
-A `dictionary` instance enables us to retrieve matching records by searching for a specific term. The `extract.entries` method can be used to retrieve information about all available variables. For instance, looking for variables containing the term `Sex of participant` is done this way:
-
-```{r}
-found_terms <- bdc::find.in.dictionary(resource = resource, 
-                                        term = "Sex of participant")
-```
-
-We now will look for variables containing the term `Sex of participant` which also contain "`(SAGE)`" . This will allow us to find the specific name associated with our variable of interest and also which values of the sex variable are valid to add to our query.
-
-```{r}
-# View information about the "Sex of participant" variable for the "(SAGE)" study
-found_terms_df <- bdc::extract.entries(found_terms)
-found_terms_df[stringr::str_detect(found_terms_df$name, fixed("(SAGE)")), ]
-```
-
-The above dictionary entry shows that we can select "FEMALE", "MALE", or "NA" for gender.  For this example, let's limit our search to females.
-
-```{r}
-bdc::query.filter.add(query = my_query, 
-                       keys = "\\NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) Study ( phs000921 )\\Sex of participant\\",
-                       values = 'FEMALE')
-```
-
-```{r}
-bdc::query.show(my_query)
-```
-
-#### Add continous phenotypic variable (age) to the query
-
-Following the data dictionary search pattern just shown, we can search for the SAGE study variables related to `Subject Age`.
-
-```{r}
-# View information about the "subject age" variable
-found_terms <- bdc::find.in.dictionary(resource = resource,
-                                        term = "Subject Age")
-found_terms_df <- bdc::extract.entries(found_terms)
-found_terms_df[stringr::str_detect(found_terms_df$name, "(SAGE)"), ]
-```
-
-The dictionary entry in the output above shows the age range of data available for `Subject Age`.  
-
-For this example, let's limit our search to a minimum age of 8 and maximum age of 35.
-
-```{r}
-bdc::query.filter.add(query = my_query,
-                       keys = "\\NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) Study ( phs000921 )\\Subject age\\",
-                       min = 8,
-                       max = 35)
-```
-
-#### List available genotypic variables
-To start adding genomic filters to our query, we first need to understand which genomic variables exist.
-
-```{r}
-# extract the genotypic vars for SAGE
-geno_vars <- filter(fullVariablesDict, HpdsDataType == "info")
-
-geno_vars$categoryValues[geno_vars$name == "Gene_with_variant"] <- '<<<FULL GENE LIST REMOVED.>>>'
-# display genotypic vars
-geno_vars
+genotype_annotations <- bdc::get.genotypeAnnotations(authPicSure)
+genotype_annotations
 ```
 
 As shown in the output above, some genomic variables that can be used in queries include `Gene_with_variant`, `Variant_class`, and `Variant_severity`.
 
-Note that, for printing purposes, the full list of genes in `Gene_with_variant` row and `categoryValues` column was removed. This is to provide a simpler preview of the genomic variables and to avoid printing thousands of gene names in the dataframe.
-
 #### Add genotypic variable (Gene_with_variant) to the query
-Let's use `Gene_with_variant` to view a list of genes and get more information about this variable.
+
+Let's explore what genes we can filter our variants by by looking at the values associated with the `Gene_with_variant` annotation.
 
 ```{r}
-# View gene list from the "Gene_with_variant" variable
-found_terms <- bdc::find.in.dictionary(resource = resource,
-                                        term = "Gene_with_variant") %>% bdc::extract.entries()
-gene_list <- found_terms$categoryValues[found_terms$name == "Gene_with_variant"]
-print(sort(gene_list[[1]]))
+# get total list of genes
+genes <- genotype_annotations %>% filter(genomic_annotation == 'Gene_with_variant') %>% pull(values)
+genes <- strsplit(genes, ', ')[[1]]
+
+# print the first 10 genes
+print(genes[1:10])
+
+# check if a certain gene of interest, e.g. CHD8, is in the gene list
+gene_of_interest <- 'CHD8'
+gene_of_interest %in% genes
 ```
 
-The output shown above provides a list of values that can be used for this variable, in this case genes affected by a variant. Let's narrow our query to include the CHD8 gene.
-
+We can view the full list of `Variant_consequence_calculated` options in a similar way.
 
 ```{r}
-# Look for entries with variants in the CHD8 gene 
-bdc::query.filter.add(query = my_query,
-                       keys = "Gene_with_variant",
-                       values = "CHD8")
+# get all "Variant_consequence_calculated" values
+consequences = genotype_annotations %>% filter(genomic_annotation == 'Variant_consequence_calculated') %>% pull(values)
+consequences <- strsplit(consequences, ', ')[[1]]
+print(consequences)
 ```
 
-Now that all query criteria have been entered into the query instance, we can view it by using the following line of code:
+The gene list shown above provides a list of values that can be used for the `Gene_with_variant`, in this case genes affected by a variant. Let's say we are interested in participants who have some kind of variant on the CHD8 gene. We can add this genomic filter to our query like so:
 
 ```{r}
-# Now we show the query as it is specified
-bdc::query.show(query = my_query)
+bdc::query.filter.add(my_query, 'Gene_with_variant', 'CHD8')
 ```
 
+We can further narrow our query by filtering on variant consequence. Let's look at missense variants in this example. 
 
-Next we will take this query and retreve the data for patients with matching criteria.
+```{r}
+bdc::query.filter.add(my_query, 'Variant_consequence_calculated', 'missense_variant')
+```
 
-## Retrieving data from the query
+## 1.5 Retrieve data from the query
 
 #### Getting query count
+We have now built a query called `my_query` which contains the search criteria we are interested in:
+- Sex = Female
+- Age < 18
+- Participants have a missense variant on CHD8
 
-We have now built a query called `my_query` which contains the search criteria we are interested in.
-
-Next, we will run a count query to find the number of matching participants.
-
-Finally, we will run a data query to download the data.
+We will run a count query to find the number of matching participants.
+This is a great way to preview how many participants match your query criteria without extracting all of the data yet.
 
 ```{r}
-my_query_count <- bdc::query.run(query = my_query,
-                                  result.type = "count")
-print(my_query_count)
+bdc::query.run(my_query, result.type="count")
 ```
 
 #### Getting query data
-
-Once our query object is finally built, we set `result.type = "dataframe"` to retrieve the data corresponding to our query.
+We will retrieve our results in a dataframe.
+Note that since we only added sex and age to the query, these are the only phenotypic variables returned.
 
 ```{r}
-my_query_df <- bdc::query.run(query = my_query,
-                               result.type = "dataframe")
+query_result <- bdc::query.run(my_query)
 ```
 
 ```{r}
-dim(my_query_df)
+dim(query_result)
 ```
 
 ```{r}
-head(my_query_df, n=5)
+head(query_result)
 ```
 
-# Data analysis example: *SERPINA1* gene and COPD
+# Example 2: Use case with *SERPINA1* gene variants as a risk factor for  COPD
 
 In this example, we will create a query to explore the relationship between the COPD phenotype and variants in the SERPINA1 gene. Variations of the SERPINA1 gene have been found to be a strong risk factor for COPD, which you can read more about [here](https://pubmed.ncbi.nlm.nih.gov/31661293/).
 
@@ -298,67 +199,69 @@ To explore this relationship, we will narrow the cohort down to participants tha
 * have had COPD
 * have a *SERPINA1* gene variant with high or moderate severity
 
-#### Initialize the query
-Let's start by creating a new query and finding the variables pertaining to the COPDgene study using a dictionary.
+## 2.1 Create query
+Let's start by creating a new query and finding the variables pertaining to the COPDgene study (phs000179)
 
 ```{r}
-copd_query <- bdc::new.query(resource=resource)
-copd_dictionary <- bdc::find.in.dictionary(resource = resource,
-                                           term = "COPDGene") %>% bdc::extract.entries()
-copdDict <- get_multiIndex_variablesDict(copd_dictionary)
+# Retrieve all COPDGene variables
+copd_dictionary <- bdc::find.in.dictionary(dictionary, "phs000179")
+
+# Save as dataframe
+copd_df <- bdc::extract.dataframe(copd_dictionary)
+head(copd_df)
 ```
 
-**Add phenotypic variable (COPD: have you ever had COPD) to the query**
-
-Next we will find the full variable name for "COPD: have you ever had COPD" using the `simplified_name` column and filter to this data.
+### Criteria 1: Participants who have had COPD
+Let's search our dataframe of COPDGene variables to find the one we want to use to filter for participants who have ever had COPD.
 
 ```{r}
-mask_copd <- copdDict['simplified_name'] == 'COPD: have you ever had COPD'
-copd_varname <- copdDict[mask_copd, 'name'] %>%
-    unlist() %>%
-    unname()
-copd_varname <- as.character(copd_varname)
-bdc::query.filter.add(query=copd_query, keys=copd_varname, value='Yes')
+copd_df %>% 
+    filter(grepl('copd', var_description, ignore.case = TRUE)) %>%
+    select(HPDS_PATH, var_name, var_description, values)
 ```
 
-**Add genomic variable (Gene_with_variant) to the query**
-
-To add the genomic filter, we can use a dictionary to find the variable `Gene_with_variant` and filter to the *SERPINA1* gene.
+The variable with the description "COPD: have you ever had COPD" seems the most promising. Let's copy that variable's HPDS path to use in our query. Also note what values are present for this variable- we will filter to participants with value "Yes".
 
 ```{r}
-copd_dictionary <- bdc::new.query(resource=resource)
-gene_dictionary <- bdc::find.in.dictionary(resource=resource,
-                                           term="Gene_with_variant") %>% bdc::extract.entries()
-gene_varname <- gene_dictionary$name
-bdc::query.filter.add(query=copd_query, keys=gene_varname, value='SERPINA1')
+copd_path <- '\\phs000179\\pht002239\\phv00159731\\COPD\\'
 ```
-
-#### Add genomic variable (Variant_severity) to the query
-Finally, we can filter our results to include only variants of the *SERPINA1* gene with high or moderate severity.
 
 ```{r}
-severity_dictionary <- bdc::find.in.dictionary(resource=resource,
-                                              term = 'Variant_severity') %>% bdc::extract.entries()
-severity_varname <- severity_dictionary$name
-bdc::query.filter.add(query=copd_query, keys=severity_varname, value=list("HIGH","MODERATE"))
+copd_query <- bdc::new.query(authPicSure) # Start a new query
+bdc::query.filter.add(copd_query, copd_path, "Yes")
 ```
 
-#### Retrieve data from the query
+### Criteria 2: Participants with variants of high or moderate severity on *SERPINA1*
 
+```{r}
+bdc::query.filter.add(copd_query, "Gene_with_variant", "SERPINA1")
+```
+
+```{r}
+# what values are available for Variant_severity?
+genotype_annotations %>% filter(genomic_annotation == "Variant_severity") %>% pull(values)
+```
+
+```{r}
+bdc::query.filter.add(copd_query, "Variant_severity", list("HIGH", "MODERATE"))
+```
+
+### 2.2 Get Results
 Now that the filtering is complete, we can use this final query to get counts and perform analysis on the data.
 
 ```{r}
-copd_results <- bdc::query.run(copd_query, result.type='dataframe')
+bdc::query.run(copd_query, result.type = 'count')
 ```
 
 ```{r}
-dim(copd_results)
+copd_result <- bdc::query.run(copd_query)
 ```
 
 ```{r}
-head(copd_results)
+dim(copd_result)
 ```
 
-# Troubleshooting
-If you experience trouble during package installation / loading, try restarting your R environment.
-You may be prompted to install package updates in the console. If this happens, enter '1' to update all packages.
+```{r}
+head(copd_result)
+```
+
