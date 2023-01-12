@@ -1,5 +1,5 @@
-# NHLBI BioData Catalyst
-NHLBI BioData Catalyst is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to NHLBI datasets and innovative data analysis capabilities, BioData Catalyst accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
+# NHLBI BioData Catalyst®
+*NHLBI BioData Catalyst®* (BDC) is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to NHLBI datasets and innovative data analysis capabilities, BDC accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
 
 https://biodatacatalyst.nhlbi.nih.gov/
 
@@ -7,22 +7,21 @@ Access to data: https://picsure.biodatacatalyst.nhlbi.nih.gov
 
 # Grant information
 
-As part of the BioData Catalyst Initiative, PIC-SURE development is funded by the following grant:
+As part of BDC, PIC-SURE development is funded by the following grant:
 - “The development and integration of advanced cyberinfrastructure, leading-edge tools, and FAIR data to accelerate discovery by the NHLBI research community”
 - Grant Number: OT3 HL 142480
 
 # PIC-SURE_API BioData Catalyst examples
 
-This folder contains various PIC-SURE API use-cases and illustration examples using BioData Catalyst studies. PIC-SURE API is available in two languages --R and python. PIC-SURE API requires R 3.4 or later, or python 3.6 or later.
+This folder contains various PIC-SURE API use-cases and illustration examples using BDC studies. PIC-SURE API is available in two languages --R and python. PIC-SURE API requires R 3.4 or later, or python 3.6 or later.
 
 
 ## PIC-SURE API Overview
-
-The main goal of the PIC-SURE API is to provide a simple and reliable way to work with restricted-access data from TOPMed and TOPMed related studies that are part of BioData Catalyst. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE interface](https://picsure.biodatacatalyst.nhlbi.nih.gov). Finally, 43 specific phenotype variables that have been harmonized across multiple TOPMed studies are also accessible directly through the PIC-SURE API. 
+The main goal of the PIC-SURE API is to provide a simple and reliable way to work with restricted-access data from NHLBI Trans-Omics for Precision Medicine (TOPMed) and TOPMed related studies that are part of BDC. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE interface](https://picsure.biodatacatalyst.nhlbi.nih.gov). Finally, 43 specific phenotype variables that have been harmonized across multiple TOPMed studies are also accessible directly through the PIC-SURE API. 
 
 ### What is PIC-SURE? 
 
-As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets funded by the National Heart Lung and Blood Institute (NHLBI). 
+As part of BDC, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets funded by the National Heart Lung and Blood Institute (NHLBI). 
 
 Original data exposed through the PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on downstream analysis and to facilitate reproducible sciences.
 
