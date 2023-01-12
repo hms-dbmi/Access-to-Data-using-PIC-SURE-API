@@ -1,12 +1,13 @@
 # NHLBI BioData Catalyst®
-*NHLBI BioData Catalyst®* (BDC) is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to NHLBI datasets and innovative data analysis capabilities, BDC accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
+*NHLBI BioData Catalyst® (BDC)* is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to datasets funded by the National Heart, Lung, and Blood Institute (NHLBI) and innovative data analysis capabilities, BDC accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
 
-https://biodatacatalyst.nhlbi.nih.gov/
-
+*BDC* homepage: https://biodatacatalyst.nhlbi.nih.gov/
 Access to data: https://picsure.biodatacatalyst.nhlbi.nih.gov
 
-# Grant information
 
+
+
+## Grant information
 As part of BDC, PIC-SURE development is funded by the following grant:
 - “The development and integration of advanced cyberinfrastructure, leading-edge tools, and FAIR data to accelerate discovery by the NHLBI research community”
 - Grant Number: OT3 HL 142480
