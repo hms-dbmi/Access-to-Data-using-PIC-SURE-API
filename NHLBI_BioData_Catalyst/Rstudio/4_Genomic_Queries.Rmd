@@ -3,13 +3,13 @@ title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-AP
 output: html_document
 ---
 
-# PIC-SURE API Use-Case: Querying on Genomic Variables
+# *NHLBI BioData Catalyst® (BDC)* Powered by PIC-SURE API Use-Case: Querying on Genomic Variables
 
 This tutorial notebook focuses how to use the PIC-SURE API to query genomic and phenotypic data together.
 
 For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
  
-**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the \"Get your security token\" instructions in the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token).**
+**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the \"Get your security token\" instructions in the `README.md` file.**
 
  -------
 
@@ -20,10 +20,10 @@ For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API
 
 ### Install packages
 
-**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
 ```{r}
-### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
 #install.packages(c("devtools", "dplyr"))
 ```
 
