@@ -3,16 +3,14 @@ title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-AP
 output: html_document
 ---
 
-# Introduction to the PIC-SURE API
+# Introduction to the *NHLBI BioData Catalyst® (BDC) Powered by PIC-SURE* API
 
 This is a tutorial notebook aimed to get the user quickly up and running with the R PIC-SURE API. 
 
 ## PIC-SURE R API
 ### What is PIC-SURE?
 
-<!--img src="./img/PIC-SURE_logo.png" width= "360px"> -->
-
-As part of the BioData Catalyst initiative, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
+As part of the *BDC* ecosystem, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
 
 Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible science.
 
@@ -36,7 +34,7 @@ PIC-SURE API GitHub repo:
 
 ## Getting your own user-specific security token
 
-**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the `README.md` file. It explains about how to get a security token, which is mandatory to access the databases.**
 
 ### Environment set-up
 
@@ -51,10 +49,10 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 - PIC-SURE Adapter
 - BioData Catalyst PIC-SURE Adapter
 
-**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
 ```{r}
-### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
 #install.packages("devtools")
 ```
 
@@ -73,9 +71,9 @@ The following is required to get access to data through the PIC-SURE API:
 - Network URL
 - User-specific security token
 
-The following code specifies the network URL as the BioData Catalyst Powered by PIC-SURE URL and references the user-specific token saved as `token.txt`.
+The following code specifies the network URL as the *BDC Powered by PIC-SURE* URL and references the user-specific token saved as `token.txt`.
 
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
 
 ```{r}
 # Uncomment production URL when testing in production
