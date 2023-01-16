@@ -3,7 +3,7 @@ title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-AP
 output: html_document
 ---
 
-# PIC-SURE R API use-case: Phenome-Wide analysis on BioData Catalyst studies
+# PIC-SURE R API use-case: Phenome-Wide analysis on *NHLBI BioData Catalyst® (BDC)* studies
 
 This notebook is an illustration example about how to query data using the R **PIC-SURE API**. It takes as use-case a simple PheWAS analysis. This notebook is intentionally straightforward, and explanation provided are only aimed at guiding through the PheWAS analysis process. For a more step-by-step introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
@@ -16,10 +16,10 @@ This notebook is an illustration example about how to query data using the R **P
 
 ### Install packages
 
-**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
 ```{r}
-### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
 #install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
 ```
 
@@ -50,7 +50,7 @@ authPicSure = bdc::use.authPicSure(connection)
 # PheWAS analysis
 *Note: This example is not meant to be publication-ready, but rather serve as a guide or starting point to perform PheWAS.*
 
-This PheWAS analysis focuses on the TopMed DCC Harmonized Variables. 
+This PheWAS analysis focuses on the TOPMed DCC Harmonized Variables. 
 We leverage the harmonized variables to provide an example PheWAS focused on total cholesterol in FHS.
 The PIC-SURE API is helpful in wrangling our phenotypic data. 
 
