@@ -1,6 +1,5 @@
 The **Patient Information Commons: Standard Unification of Research Elements (PIC-SURE)** integrates clinical and genomic data to allow users to search, query, and export data at the variable and variant levels. This allows users to create analysis-ready data frames without manually mapping and merging files. 
 
-
 # *NHLBI BioData Catalyst®*
 *NHLBI BioData Catalyst® (BDC)* is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to data and innovative data analysis capabilities, *BDC* accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
 
@@ -27,7 +26,6 @@ To get your token, process as follows:
 2. Once logged in, click on the **User Profile** tab.
 3. Click **Copy** to copy the user token to your clipboard.
 4. In the analysis environment where you are running the example notebooks, create a file called `token.txt` into the home folder and paste the user token into it. Save the file.
-
 <img src="imgs/get_your_token.gif">
 
 ### Available notebooks
@@ -46,8 +44,6 @@ Example Jupyter notebooks are available in python and R. Additionally, R Markdow
 ## Contact
 For bug report or additional information, please visit: https://biodatacatalyst.nhlbi.nih.gov/contact
 
-
-
 ## Additional resources
 
 PIC-SURE API GitHub repository links:
@@ -57,7 +53,6 @@ PIC-SURE API GitHub repository links:
 
 *BDC* homepage: https://biodatacatalyst.nhlbi.nih.gov/
 *BDC Powered by PIC-SURE* homepage: https://picsure.biodatacatalyst.nhlbi.nih.gov
-
 
 ### Grant information
 As part of BDC, PIC-SURE development is funded by the following grant:
