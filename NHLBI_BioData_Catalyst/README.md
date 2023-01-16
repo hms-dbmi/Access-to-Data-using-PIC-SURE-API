@@ -12,7 +12,7 @@ The main goal of the PIC-SURE Application Programming Interface (API) is to prov
 Original data exposed through the PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on downstream analysis and to facilitate reproducible sciences.
 
 ## *BDC Powered by PIC-SURE* Example Notebooks
-This folder contains various *BDC-PIC-SURE* API use-cases and illustration examples using studies available on *BDC*. The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. It is actively developed by the Avillach Lab at Harvard Medical School.
+This folder contains various *BDC Powered by PIC-SURE (BDC-PIC-SURE)* API use-cases and illustration examples using studies available on *BDC*. The API is available in two different programming languages, python and R, enabling investigators to query the databases the same way using either language. It is actively developed by the Avillach Lab at Harvard Medical School.
 
 The PIC-SURE API requires R 3.4 or later, or python 3.6 or later.
 
@@ -28,7 +28,7 @@ To get your token, process as follows:
 3. Click **Copy** to copy the user token to your clipboard.
 4. In the analysis environment where you are running the example notebooks, create a file called `token.txt` into the home folder and paste the user token into it. Save the file.
 
-# Insert Gif here
+<img src="imgs/get_your_token.gif">
 
 ### Available notebooks
 
