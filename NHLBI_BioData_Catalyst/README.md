@@ -3,7 +3,7 @@ The **Patient Information Commons: Standard Unification of Research Elements (PI
 # *NHLBI BioData Catalyst®*
 *NHLBI BioData Catalyst® (BDC)* is a cloud-based platform providing tools, applications, and workflows in secure workspaces. By increasing access to data and innovative data analysis capabilities, *BDC* accelerates efficient biomedical research that drives discovery and scientific advancement, leading to novel diagnostic tools, therapeutics, and prevention strategies for heart, lung, blood, and sleep disorders.
 
-As part of BDC, the PIC-SURE platform has been integrating clinical and genomic datasets funded by the National Heart Lung and Blood Institute (NHLBI). 
+As part of *BDC*, the PIC-SURE platform has been integrating clinical and genomic datasets funded by the National Heart Lung and Blood Institute (NHLBI). 
 
 ## PIC-SURE API Overview
 The main goal of the PIC-SURE Application Programming Interface (API) is to provide a simple and reliable way to work with restricted-access data from NHLBI Trans-Omics for Precision Medicine (TOPMed) and TOPMed related studies that are part of *BDC*. Each individual study is accessible in a unique, easy to use, tabular format directly in an R or python environment. The API allows also to query studies subset, based on patients matching specified criteria, as well as to retrieve a cohort that has been created using the [PIC-SURE user interface (UI)](https://picsure.biodatacatalyst.nhlbi.nih.gov). Additionally, the TOPMed Data Coordinating Center curation team has harmonized 43 specific phenotype variables across multiple TOPMed studies, which are  accessible directly through the PIC-SURE API. 
@@ -55,6 +55,6 @@ PIC-SURE API GitHub repository links:
 *BDC Powered by PIC-SURE* homepage: https://picsure.biodatacatalyst.nhlbi.nih.gov
 
 ### Grant information
-As part of BDC, PIC-SURE development is funded by the following grant:
+As part of *BDC*, PIC-SURE development is funded by the following grant:
 - “The development and integration of advanced cyberinfrastructure, leading-edge tools, and FAIR data to accelerate discovery by the NHLBI research community”
 - Grant Number: OT3 HL 142480
