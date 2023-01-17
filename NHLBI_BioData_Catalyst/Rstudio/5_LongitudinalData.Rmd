@@ -40,6 +40,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 library(ggplot2)
+library(picsure)
 ```
 
 ## Connecting to a PIC-SURE Network

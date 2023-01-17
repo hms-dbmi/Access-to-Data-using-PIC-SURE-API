@@ -33,6 +33,7 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 library(ggrepel)
+library(picsure)
 ```
 
 ## Connecting to a PIC-SURE resource
