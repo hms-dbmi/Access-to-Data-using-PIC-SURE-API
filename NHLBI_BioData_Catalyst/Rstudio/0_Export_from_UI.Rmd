@@ -43,10 +43,9 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="master", force=T)
-library(hpds)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="ALS-3799", force=T, quiet=FALSE)
+library(picsure)
+library(dplyr)
 ```
 
 ## Connecting to a PIC-SURE resource
@@ -59,11 +58,13 @@ The following code specifies the network URL as the BioData Catalyst Powered by 
 If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+# integration url
+PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure" 
+#PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
-connection <- picsure::connect(PICSURE_network_URL, token)
-authPicSure = bdc::use.authPicSure(connection)
+session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
+session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 ```
 
 ## Step 3: Export data from a query built in the PIC-SURE UI using the Query ID
@@ -79,8 +80,7 @@ queryID <- '<<<Paste your Query ID here>>>'
 
 ```{r}
 # save the data as a dataframe
-results <- bdc::query.getResults(authPicSure, queryID)
-results <- read.delim(textConnection(results), sep = ",")
+results <- picsure::getResultByQueryUUID(session, queryID)
 
 # view the first few records
 head(results)
