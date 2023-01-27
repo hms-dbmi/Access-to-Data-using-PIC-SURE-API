@@ -7,7 +7,7 @@ output: html_document
 
 This notebook is an illustration example about how to query data using the R **PIC-SURE API**. It takes as use-case a simple PheWAS analysis. This notebook is intentionally straightforward, and explanation provided are only aimed at guiding through the PheWAS analysis process. For a more step-by-step introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
-**Before running this notebook, please be sure to get an user-specific security token. For more information on how to proceed, see the `get_your_token.ipynb` notebook**
+**Before running this notebook, please be sure to get an user-specific security token. For more information on how to proceed, see the [`README.md` file](../README.md).**
 
 ## Environment set-up
 

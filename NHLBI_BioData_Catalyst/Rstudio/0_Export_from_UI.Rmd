@@ -17,7 +17,7 @@ Two things are needed to export data into an analysis workspace:
 Using these two components, the API can be used to export the selected data into the analysis workspace (in this case, where this Jupyter Notebook is being run). 
 
 ## Step 1: Getting your user-specific security token
-**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the `README.md` file. It explains about how to get a security token, which is mandatory to access the databases.**
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the [`README.md` file](../README.md). It explains about how to get a security token, which is mandatory to access the databases.**
 
 ## Step 2: Setting up your notebook
 

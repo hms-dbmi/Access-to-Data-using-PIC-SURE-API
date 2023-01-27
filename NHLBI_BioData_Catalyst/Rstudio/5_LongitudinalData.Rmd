@@ -14,7 +14,7 @@ In this example, we will find the patient level data for a lipid-related longitu
 
 For a more basic introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
-**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the `README.md` file.**
+**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the "Get your security token" instructions in the [`README.md` file](../README.md).**
 
 ## Environment Set-Up
 

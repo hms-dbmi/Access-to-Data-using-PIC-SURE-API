@@ -9,7 +9,7 @@ This tutorial notebook focuses how to use the PIC-SURE API to query genomic and 
 
 For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
  
-**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the \"Get your security token\" instructions in the `README.md` file.**
+**Before running this notebook, please be sure to get a user-specific security token. For more information about how to proceed, see the \"Get your security token\" instructions in the [`README.md` file](../README.md).**
 
  -------
 
