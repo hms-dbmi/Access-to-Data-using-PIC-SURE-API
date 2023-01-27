@@ -26,7 +26,8 @@ To get your token, process as follows:
 2. Once logged in, click on the **User Profile** tab.
 3. Click **Copy** to copy the user token to your clipboard.
 4. In the analysis environment where you are running the example notebooks, create a file called `token.txt` into the home folder and paste the user token into it. Save the file.
-![alt How to copy PIC-SURE toekn](/imgs/get_your_token.gif "How to copy PIC-SURE token")
+
+![alt How to copy PIC-SURE toekn](./imgs/get_your_token.gif "How to copy PIC-SURE token")
 
 ### Available notebooks
 
