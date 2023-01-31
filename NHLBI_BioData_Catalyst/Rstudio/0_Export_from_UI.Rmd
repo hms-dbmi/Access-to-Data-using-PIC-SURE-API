@@ -72,6 +72,10 @@ You are able to retrieve the results of a query that you have previously built u
 
 <img src='../imgs/get_query_ID.gif'>
 
+*If you cannot view the image above:*
+* BDC Powered by Seven Bridges users please view the `get_query_ID.gif` in the `imgs` folder
+* BDC Powered by Terra users please [view the image in your browser](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/blob/bdc-branding/NHLBI_BioData_Catalyst/imgs/get_query_ID.gif)
+
 ```{r}
 # To run this using your notebook you must replace it with the ID value of a query that you have run.
 queryID <- '<<<Paste your Query ID here>>>'
