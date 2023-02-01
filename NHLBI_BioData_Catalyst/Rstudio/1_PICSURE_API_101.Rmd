@@ -47,7 +47,7 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 
 - PIC-SURE Client
 - PIC-SURE Adapter
-- BioData Catalyst PIC-SURE Adapter
+- *BDC-PIC-SURE* Adapter
 
 **Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
@@ -147,7 +147,7 @@ PIC-SURE integrates clinical and genomic datasets across BioData Catalyst, inclu
 
 Data Organization in PIC-SURE
 ---------------------------------------
-| Data organization | TopMED & TOPMed-related studies | BioLINCC & COVID-19 studies |
+| Data organization | TOPMed & TOPMed-related studies | BioLINCC & COVID-19 studies |
 |-------------------|---------------------------------|-----------------------------|
 | General organization | Data organized using the format implemented by the database of Genotypes and Phenotypes (dbGaP). Generally, a given study will have several tables, and those tables have several variables. | Data do not follow dbGaP format; there are no phv or pht accessions. Data are organized in groups of like variables, when available. For example, variables like Age, Gender, and Race could be part of the Demographics variable group. |
 | Concept path structure | \phs\pht\phv\variable name\ | \phs\variable name |

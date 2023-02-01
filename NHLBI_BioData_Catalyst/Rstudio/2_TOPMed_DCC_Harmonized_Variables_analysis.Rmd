@@ -69,7 +69,7 @@ The following phenotypes are included as harmonized variables:
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-# Working with the DCC Harmonized Variables in PIC-SURE
+# Working with the TOPMed DCC Harmonized Variables in PIC-SURE
 ## 1. Identifying harmonized variables of interest
 First, let's explore what harmonized variables are available in PIC-SURE by searching for the keyword `harmonized`.
 

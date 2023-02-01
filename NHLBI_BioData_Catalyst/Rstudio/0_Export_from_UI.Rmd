@@ -29,7 +29,7 @@ Using these two components, the API can be used to export the selected data into
 The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
 * PIC-SURE Client
 * PIC-SURE Adapter
-* BioData Catalyst PIC-SURE Adapter
+* *BDC-PIC-SURE* Adapter
 
 **Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
