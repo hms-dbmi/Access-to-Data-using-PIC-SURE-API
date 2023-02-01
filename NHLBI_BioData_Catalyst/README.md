@@ -53,6 +53,7 @@ PIC-SURE API GitHub repository links:
 * https://github.com/hms-dbmi/pic-sure-python-client
 
 *BDC* homepage: https://biodatacatalyst.nhlbi.nih.gov/
+
 *BDC Powered by PIC-SURE* homepage: https://picsure.biodatacatalyst.nhlbi.nih.gov
 
 ### Grant information
