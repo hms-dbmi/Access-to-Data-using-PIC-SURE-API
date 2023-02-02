@@ -328,10 +328,6 @@ hist(full_results_continuous[,eval(continuous_var)],
      main = paste('Before filtering variable\n', continuous_vars[v,'var_description']))
 ```
 
-```{r}
-head(my_variables_df)
-```
-
 ### Build a query with multiple variables
 You can also add multiple variables to a single query. Let's build a query with the first five variables for the study of interest.
 
