@@ -250,7 +250,7 @@ We can see how this query filtering worked by comparing the resulting dataframe 
 authQuery_categorical_example2 <- picsure::bdc.newQuery(session) # Initialize a new query
 authQuery_categorical_example2 <- picsure::addClause(query = authQuery_categorical_example2, 
                                                      keys = categorical_var, 
-                                                     type = 'REQUIRE') # use type = REQUIRE to retreive all data from pariticipants with a value for this variable
+                                                     type = 'REQUIRE') # use type = REQUIRE to retrieve all data from participants with a value for this variable
 full_results_categorical <-  picsure::runQuery(authQuery_categorical_example2)
 head(full_results_categorical)
 ```
