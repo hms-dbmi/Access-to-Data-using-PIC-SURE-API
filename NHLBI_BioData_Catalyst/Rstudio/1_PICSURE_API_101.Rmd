@@ -129,7 +129,7 @@ phs_number = studies[1]
 paste0("The phs accession being used is: ", phs_number)
 ```
 
-Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number. We are interested in the values associated with the categorial variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
+Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
 
 ```{r}
 my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, includeValues = TRUE) # Search for the phs accession number 
