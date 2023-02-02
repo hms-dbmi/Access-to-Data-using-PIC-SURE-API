@@ -362,7 +362,7 @@ authQuery_consents <- picsure::bdc.newQuery(session) # Initialize a new query
 authQuery_consents$categoryFilters$`\\_consents`[1:10]
 ```
 
-Tthe output shown above lists all of the phs accession numbers and consent codes that you are authorized to access. 
+The output shown above lists all of the phs accession numbers and consent codes that you are authorized to access. 
 
 To query on specific consent groups in this list, you must first clear the list of values within the `\\_consents\\` section and then manually replace them. Let's practice this by copying and pasting a phs accession number and consent code, deleting the `\\_consents\\` field, and adding it back with our selected consent code.
 
