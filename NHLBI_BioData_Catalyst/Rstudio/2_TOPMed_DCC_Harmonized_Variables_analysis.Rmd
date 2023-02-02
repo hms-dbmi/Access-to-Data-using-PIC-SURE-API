@@ -126,10 +126,6 @@ vars_of_interest <- demographic_df$name
 ## Query PIC-SURE for participant-level data for harmonized variables of interest
 
 ```{r}
-list(vars_of_interest)[[1]]
-```
-
-```{r}
 demographic_query <- picsure::bdc.newQuery(session) # Initialize a new query
 demographic_query <- picsure::addClause(query = demographic_query, 
                                 keys = vars_of_interest,
