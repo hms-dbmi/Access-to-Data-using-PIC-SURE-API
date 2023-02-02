@@ -267,9 +267,6 @@ pie(df1$Freq, labels = df1$Var1, main = paste("After filtering variable\n", cate
 ### Build a query with a continuous variable
 Similarly, we can create a query using a continuous variable. Instead of using the `is_categorical` column, let's make use of the `min` and `max` columns to determine the range of values that can be selected for our query.
 
-```{r}
-colnames(my_variables_df)
-```
 
 ```{r}
 # Filter to a random continuous variable with a range of data
