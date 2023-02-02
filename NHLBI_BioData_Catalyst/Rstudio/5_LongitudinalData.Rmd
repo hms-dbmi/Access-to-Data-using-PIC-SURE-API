@@ -99,14 +99,14 @@ Next, we will extract the exam or visit number of each variable into column `exa
 
 ```{r}
 filtered_lipid_df <- filtered_lipid_df %>%
-    mutate(exam_number = toupper(str_trim(str_extract(var_description, regex('exam \\d+|visit \\d+', ignore_case = 'T')))))
+    mutate(exam_number = toupper(str_trim(str_extract(var_description, regex('exam \\d+|visit \\d+', ignore_case = TRUE)))))
 ```
 
 Now we save the variable name without the exam number as `varname_noexam`. This prepares us for the next step, where we will group the data by the variable name root.
 
 ```{r}
 filtered_lipid_df <- filtered_lipid_df %>%
-    mutate(varname_noexam = str_trim(str_replace(var_description, regex('exam \\d+|visit \\d+', ignore_case = 'T'), '')))
+    mutate(varname_noexam = str_trim(str_replace(var_description, regex('exam \\d+|visit \\d+', ignore_case = TRUE), '')))
 ```
 
 Finally, we can return a summary table showing which variables have more than one exam recorded.
