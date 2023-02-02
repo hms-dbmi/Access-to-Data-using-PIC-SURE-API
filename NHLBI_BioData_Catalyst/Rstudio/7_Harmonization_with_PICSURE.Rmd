@@ -104,10 +104,6 @@ We will approach this complication by examining the data associated with each se
 Because we want to examine the patient level data, we will create a query using all sex/gender variables in ECLIPSE. We will add these variables to our query using the `anyof` method, as we are interested in all observations with a value for any of our chosen variables.
 
 ```{r}
-eclipse_sex_df$name
-```
-
-```{r}
 eclipse_sex_query <- picsure::bdc.newQuery(session) # Initialize a new query
 
 eclipse_sex_query <- picsure::bdc.addClause(query = eclipse_sex_query, 
@@ -143,7 +139,6 @@ Now we have filtered our dataset to only include sex/gender variables in ECLIPSE
 # in this example, we notice that all our filtered variables have equivalent data for each patient:
 unique(apply(filtered_eclipse_sex_results[,-c(1:3)], 1, n_distinct))
 
-#filtered_eclipse_sex_results.iloc[:,4:].nunique(axis = 1).unique()
 ```
 
 We can see that all the values in the filtered, complete ECLIPSE sex/gender variables are the same, so we will simply select the first variable to use in our analysis.
@@ -216,7 +211,7 @@ First, we create a new query:
 combined_query <- picsure::bdc.newQuery(session)
 ```
 
-Next, we add the paths (names) for our selected variabels of interest to the query.
+Next, we add the paths (names) for our selected variables of interest to the query.
 
 As a reminder, these are the paths associated to the sex/gender and BMI variables from ECLIPSE and EOCOPD.
 
@@ -432,11 +427,6 @@ table(orthopnea_results$orthopnea)
 
 print('Pneumonia values: ')
 table(orthopnea_results$pneumonia)
-```
-
-```{r}
-c(unique(orthopnea_results$orthopnea), 
-                                   unique(orthopnea_results$pneumonia))
 ```
 
 We create a consistent mapping:
