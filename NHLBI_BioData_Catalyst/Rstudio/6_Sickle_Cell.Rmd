@@ -128,7 +128,7 @@ myquery <- picsure::bdc.addClause(query = myquery,
 
 ## Retrieving the data
 
-Once our query object is finally built, we use the `query.run` function to retrieve the data corresponding to our query
+Now that the query object is built, we will use the `query.run` function to retrieve the data corresponding to our query
 
 ```{r}
 results <-  picsure::runQuery(myquery)
