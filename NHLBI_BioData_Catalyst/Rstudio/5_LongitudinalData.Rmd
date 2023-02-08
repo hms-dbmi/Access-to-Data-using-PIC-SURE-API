@@ -10,7 +10,7 @@ This tutorial notebook will demonstrate how to identify and extract longitudinal
 In this example, we will find the patient level data for a lipid-related longitudinal variable within the Framingham Heart study. We will:
 1. Identify what longitudinal variables are associated with the keywords of interest (lipid, triglyceride), and how many exams / visits are associated with each one
 2. Select a longitudinal variable of interest from a specific study (Framingham heart study)
-3. Extract patient level data into a dataframe where each rows represent patients and columns represent visits
+3. Extract patient level data into a dataframe where rows represent patients and columns represent visits
 
 For a more basic introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
@@ -66,13 +66,12 @@ In this notebook example, we will:
 
 ### Identify lipid-related variables in the Framingham Heart Study
 
-First, let's search the data dictionary in PIC-SURE. We will use a regular expression for the search term: `lipid|trigliceride`. This allows us to find all variables related to `lipid` *or* `trigliceride`. 
-
+First, let's search the data dictionary in PIC-SURE using a regular expression to find all variables related to `lipid` *or* `trigliceride`. 
 ```{r}
 lipid_df <- picsure::bdc.searchPicsure(session, 'lipid|triglyceride')  
 ```
 
-We are interested in variables from the Framingham Heart Study. The PHS number associated with this study is `phs000007`. If you don't know the PHS number for a study of interest, you can check the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login).
+We are interested in variables from the Framingham Heart Study. The study ID associated with this study is `phs000007`. If you don't know the PHS number for a study of interest, you can check the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login).
 
 Here, we filter our variables dataframe to only include those where the studyId matches our PHS number of interest.
 
@@ -100,7 +99,7 @@ filtered_lipid_df <- filtered_lipid_df %>%
     mutate(exam_number = toupper(str_trim(str_extract(var_description, regex('exam \\d+|visit \\d+', ignore_case = TRUE)))))
 ```
 
-Now we save the variable name without the exam number as `varname_noexam`. This prepares us for the next step, where we will group the data by the variable name root.
+Now we will save the variable name without the exam number as `varname_noexam`. This prepares us for the next step, where we will group the data by the variable name root.
 
 ```{r}
 filtered_lipid_df <- filtered_lipid_df %>%
@@ -131,7 +130,7 @@ Now that we know which longitudinal variables are available to us, we can choose
 
 ### Identify which longitudinal lipid variable(s) are of interest
 
-We can see from the table above that the variable `treated for lipids` appears to be the most robust, with 32 exams recored.
+We can see from the table above that the variable `treated for lipids` appears to be the most robust, with 32 exams recorded.
 
 In this example, we will further investigate the `treated for lipids` variable by adding all the associated variable IDs to our PIC-SURE query.
 
