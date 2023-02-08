@@ -183,7 +183,7 @@ if(nrow(my_search_df) == 0){
 ## Using PIC-SURE to build a query and retrieve data
 You can also use the PIC-SURE API to build a query and retrieve data. With this functionality, you can filter based on specific variables, add others, and export the data as a dataframe into this notebook. 
 
-The first step to this is setting up the query object.
+The first step is to set up the query object.
 
 ```{r}
 query_categorical_example <- picsure::bdc.newQuery(session)
@@ -309,7 +309,8 @@ paste("We will plot a histogram of our results to ensure we are only looking at 
 
 ```{r}
 hist(results_continuous[,eval(continuous_var)], 
-     main = paste('After filtering variable\n', continuous_vars[v,'var_description']))
+     main = paste('After filtering variable\n', continuous_vars[v,'var_description']),
+     xlab = continuous_vars[v,'var_description'])
 ```
 
 Compared to all data values for this variable:
@@ -325,7 +326,8 @@ head(full_results_continuous)
 
 ```{r}
 hist(full_results_continuous[,eval(continuous_var)], 
-     main = paste('Before filtering variable\n', continuous_vars[v,'var_description']))
+     main = paste('Before filtering variable\n', continuous_vars[v,'var_description']),
+     xlab = continuous_vars[v,'var_description'])
 ```
 
 ### Build a query with multiple variables
@@ -374,7 +376,7 @@ authQuery_consents$categoryFilters$`\\_consents`
 ```
 
 ```{r}
-consent_group_filter <- "phs000964.c1"#"<<<Paste consent group here you are authorized to access here>>>"
+consent_group_filter <- "phs000964.c1"#"<<<Paste a consent group that you are authorized to access here>>>"
 authQuery_consents <- picsure::bdc.addClause(query = authQuery_consents, 
                                          keys = '\\_consents\\', 
                                          categories = list(consent_group_filter), 
