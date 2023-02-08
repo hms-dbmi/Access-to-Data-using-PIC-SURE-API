@@ -70,7 +70,7 @@ One of the key challenges to conducting analyses with several studies is ensurin
 
 These variables are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To acccount for these differences, we need to develop a way to search for multiple keywords at once.
 
-Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by searching for both sex and gender in the same regular expression.
+Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by  using the ' | ' regular expression, allowing us to find all variables that include sex or gender. 
 
 ```{r}
 sex_df <- picsure::bdc.searchPicsure(session, "sex|gender")  
@@ -83,7 +83,7 @@ After reviewing the variables using the dataframe (or the [user interface](https
 
 We can find the study IDs in the Data Access Dashboard in the user interface.
 
-We have already used the PIC-SURE API dictionary object and find method to find variables which contain the keywords sex and gender. Let's filter these results to our desired studies of interest.
+We have already used the PIC-SURE search method to find variables which contain the keywords sex and gender. Let's filter these results to our desired studies of interest.
 
 ```{r}
 # which sex / gender variables are part of ECLIPSE?
@@ -178,7 +178,7 @@ We will follow the approach outlined above to first search our data dictionary f
 bmi_df <- picsure::bdc.searchPicsure(session, 'body mass index') 
 ```
 
-We then filter to only those BMI variables which are part of ECLIPSE or EOCOPD and view the variables with their associated metadata. 
+We will then our results to include only those BMI variables which are part of ECLIPSE or EOCOPD and view the variables with their associated metadata. 
 
 ```{r}
 # which bmi variables are part of ECLIPSE or EOCOPD?
@@ -203,15 +203,15 @@ eclipse_bmi_var <- "\\phs001252\\pht006373\\phv00293610\\VSBMI\\"
 ```
 
 ### Query PIC-SURE for selected variables
-First, we create a new query:
+First, we will create a new query:
 
 ```{r}
 combined_query <- picsure::bdc.newQuery(session)
 ```
 
-Next, we add the paths (names) for our selected variables of interest to the query.
+Next, we will add the paths (names) for our selected variables of interest to the query.
 
-As a reminder, these are the paths associated to the sex/gender and BMI variables from ECLIPSE and EOCOPD.
+As a reminder, these are the paths associated with the sex/gender and BMI variables from the ECLIPSE and EOCOPD studies.
 
 We use the `.anyof` method to add these variables to the query because we are interested in results with observations in any of the variables of interest. If you are interested in learning more about the other query methods available, see the `1_PICSURE_API_101.ipynb` notebook. 
 
@@ -319,7 +319,7 @@ Let's say we want to harmonize orthopnea variables from the following datasets:
 
 We can first get all concept paths related to our terms of interest (`orthopnea` or `pillows`) and then filter to our studies of interest.
 
-You can get the phs number associated with each study from the Data Access Dashboard.
+You can get the phs number associated with each study from the [Data Access Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/picsureui/).
 
 ```{r}
 harmonized_df <- picsure::bdc.searchPicsure(session, 'orthopnea|pillows') 
@@ -427,7 +427,7 @@ print('Pneumonia values: ')
 table(orthopnea_results$pneumonia)
 ```
 
-We create a consistent mapping:
+Here we create a consistent mapping:
 
 ```{r}
 mapping_df <- data.frame('raw' = c(unique(orthopnea_results$orthopnea), 
