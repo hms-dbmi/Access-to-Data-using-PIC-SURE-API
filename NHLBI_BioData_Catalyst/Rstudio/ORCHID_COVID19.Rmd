@@ -173,9 +173,7 @@ options(repr.plot.width=18, repr.plot.height=9)
 # Installing the library and connecting to the database using the PICSURE API 
 
 ```{r, Installing the library and connecting to the database}
-# integration url
-PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure" 
-#PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)

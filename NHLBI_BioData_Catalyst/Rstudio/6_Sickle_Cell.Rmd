@@ -52,9 +52,7 @@ The following is required to get access to data through the PIC-SURE API:
 If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
 
 ```{r}
-# integration url
-PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure" 
-#PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
