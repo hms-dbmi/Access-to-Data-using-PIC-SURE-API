@@ -48,7 +48,7 @@ session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
      
 ```
 
-# Example 1: Walkthrough on building a query with genomic and phenotypic varibles
+# Example 1: Build a query with genomic and phenotypic variables
 ## 1.1 Building the query with the PIC-SURE API
 
 We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single study, a single phenotype (gender and age range), and two genomic filters. 
@@ -72,7 +72,7 @@ sage_df <- picsure::bdc.searchPicsure(session, 'phs000921', includeValues = TRUE
 
 ## 1.2 Add categorical phenotypic variable (sex) to the query
 
-First, we will search our sage data dictionary for a sex-related variable.
+First, we will search our SAGE data dictionary for a sex-related variable.
 
 ```{r}
 sex_var <- sage_df %>% filter(grepl('sex', var_name, ignore.case = TRUE))
@@ -126,7 +126,7 @@ As shown in the genomic_annotations object above, some genomic variables that ca
 
 #### Add genotypic variable (Gene_with_variant) to the query
 
-Let's explore what genes we can filter our variants by by looking at the values associated with the `Gene_with_variant` annotation.
+By looking at the values associated with the `Gene_with_variant` annotation we see what genes we can filter the variants by.
 
 ```{r}
 # get total list of genes
@@ -159,7 +159,7 @@ my_query <- picsure::addClause(query = my_query,
                                categories = list('CHD8'))
 ```
 
-We can further narrow our query by filtering on variant consequence. Let's look at missense variants in this example. 
+We can further narrow our query by filtering on variant consequence. In this example, let's look at the missense variants. 
 
 ```{r}
 my_query <- picsure::addClause(query = my_query, 
@@ -177,7 +177,7 @@ We have now built a query called `my_query` which contains the search criteria w
 - Participants have a missense variant on CHD8
 
 We will run a count query to find the number of matching participants.
-This is a great way to preview how many participants match your query criteria without extracting all of the data yet.
+This is a great way to preview how many participants match your query criteria without extracting the data.
 
 ```{r}
 picsure::runQuery(my_query, resultType = 'Count')
