@@ -227,7 +227,7 @@ orchid_data <- orchid_data  %>%
 head(raw_df)
 ```
 
-This cell rename signification of the variables that are being used throughout the notebook.
+Here we will rename the variables  we will use throughout this notebook. 
 
 ```{r}
 outcomes_labels <- c(
@@ -910,7 +910,7 @@ data_manage_table <- function(outcome_comparison) {
 
 ## Outcomes Analyses
 
-The outcomes will be analyzed in univariate and multivariate analyses. The multivariable model adjust the treatment effect on 5 confoundings: 
+The outcomes will be analyzed in univariate and multivariate analyses. The multivariable model adjusts the treatment effect for the following 5 confoundings:
 - Age at baseline
 - Gender
 - COVID clinical scale evaluated at baseline (treated as a covariate with 3 levels: 1. invasive or non-invasive ventilation, 2. oxygen supplementation, and 3. no oxygen supplementation)
@@ -1021,7 +1021,7 @@ suppressWarnings(print(forest_plot(outcome_comparison, outcomes_labels)))
 
 ## All-cause survival
 
-Survival has been analyzed through a Kaplan-Meïer curve, and difference in the survival curved tested using a log-rank test. Adjusted treatment effect on all-cause death was estimated using an adjusted hazard regression model.
+Survival has been analyzed through a Kaplan-Meïer curve. The difference in survival curve was tested using a log-rank test. The adjusted treatment effect for all-cause death was estimated using an adjusted hazard regression model.
 
 ```{r}
 CENSOR_TIME <- 28
@@ -1082,7 +1082,7 @@ death_plot
 
 ### Hospital discharge 
 
-Time to hospital-discharge between treatment groups has been analyzed using a Fin and Gray Model, treating death as a competing risk. A patient was considered discharge at first hospital discharge, regardless of eventual rehospitalization or death occuring afterwards.
+Time to hospital-discharge between treatment groups has been analyzed using a Fin and Gray Model, treating death as a competing risk. A patient was considered discharged at first hospital discharge, regardless of eventual re-hospitalization or death occurring afterwards.
 
 Adjusted treatment effect on time to hospital-discharge was estimated using an adjusted hazard regression model.
 
@@ -1160,7 +1160,7 @@ ggsurvplot(
 
 # Sensitivity Analyses
 
-This notebook can also be useful to kickstart new analyses. The heavy lifting data management has already been done and allows the user to expand quickly the original work. As an example, we are going to focus on the lab trajectories in the different treatment groups, and how it is related to the use of premedication by azithromycin.
+This notebook can also be useful to kick-start new analyses. The heavy lifting data management has already been done and allows the user to begin expanding on the original work quickly. As an example, we are going to focus on the lab trajectories in the different treatment groups, and how it is related to the use of premedication by azithromycin.
 
 ## Time to recovery associated with premedications
 
@@ -1282,7 +1282,7 @@ plot_count_COOS <- plot_count_COOS +
 print(plot_count_COOS)
 ```
 
-This plot represents the patients' clinical status according at day 0, 14, and 28 from randomization. It shows that,  overall, patients who received premedication with azithromycin had more severe baseline clinical status. This translated into more severe outcomes at the different time points (day 14 and 28 from randomization). 
+This plot represents the patients' clinical status according to day 0, 14, and 28 from randomization. It shows that, overall, patients who received premedication with azithromycin had more severe clinical baseline status. This translated into more severe outcomes at the different time points (day 14 and 28 from randomization).
 
 ## Premedications and labs trajectories
 
@@ -1380,7 +1380,7 @@ labs(title = "Labs trajectory from Day 1 to 5, depending on premedication",
 
 Interpretation of these graphs: 
 
-- Most significant differences are for the average level of troponin: patients that has been prescribed Azithromycin have average lower levels of troponin
+The most significant differences occur in the average level of troponin: patients that had been prescribed Azithromycin had lower levels of troponin on average.
 
 ```{r}
 labs_long[labs_long$labs == "labs_asth", ] %>%
