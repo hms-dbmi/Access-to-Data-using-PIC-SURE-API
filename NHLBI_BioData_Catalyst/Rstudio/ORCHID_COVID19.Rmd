@@ -96,7 +96,7 @@ sessionInfo()
 
 # Data Access using PIC-SURE API
 
-User access authentication works through a security token, which is passed to the API using the token.txt file (file to be created by the user). In order to know how to get your security token, please see [the README of the PIC-SURE API GitHub repo](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst).
+User access authentication works through a security token, which is passed to the API using the token.txt file (file to be created by the user). In order to know how to get your security token, please see [`README.md` file](../README.md).
 
 # ORCHID Clinical Trial
 

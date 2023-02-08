@@ -3,7 +3,7 @@ title: An R Markdown document converted from "6_Sickle_Cell.ipynb"
 output: html_document
 ---
 
-# PIC-SURE API use-case: quick analysis on Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) data
+# *NHLBI BioData Catalyst® (BDC) Powered by PIC-SURE* API use-case: quick analysis on Hematopoietic Cell Transplant for Sickle Cell Disease (HCT for SCD) data
 
 This is a tutorial notebook aimed to get the user quickly up and running with the R PIC-SURE API. It covers the main functionalities of the API.
 
@@ -11,7 +11,7 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 
 # Getting your own user-specific security token
 
-**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+**Before running this notebook, please be sure to review the "Get your security token" documentation, which exists in the [`README.md` file](../README.md). It explains about how to get a security token, which is mandatory to access the databases.**
 
 # Environment set-up
 
@@ -20,7 +20,7 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 
 ### Install Packages
 
-**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
 *Troubleshooting: if you encounter an error while installing packages or connecting to a PIC-SURE resource, try restarting your kernel and trying again.*
 
@@ -30,7 +30,7 @@ options(unzip = "internal")
 ```
 
 ```{r}
-### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
 #install.packages(c("devtools"))
 ```
 
@@ -49,7 +49,7 @@ The following is required to get access to data through the PIC-SURE API:
 - Resource id
 - User-specific security token
 
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the [README.md](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token) file.
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
 
 ```{r}
 PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
