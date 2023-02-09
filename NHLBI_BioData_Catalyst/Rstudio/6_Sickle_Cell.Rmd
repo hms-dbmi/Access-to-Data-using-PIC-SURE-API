@@ -115,7 +115,7 @@ myquery <- picsure::bdc.addClause(query = myquery,
                                   min = 1999, max = 2019)
 ```
 
-We are also interested in the patients' age at which they received their transplant. However, we do not want to filter our cohort based on these values. We can use the query.select method to add this variable to the query without filtering.
+We are also interested in the patients' age at which they received their transplant. However, we do not want to filter our cohort based on these values. We can use the `SELECT` query type to add this variable to the query without filtering.
 
 Using this cohort, we can add the variable of interest: "Patient age at transplant, years"
 
