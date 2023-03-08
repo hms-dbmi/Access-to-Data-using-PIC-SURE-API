@@ -99,8 +99,7 @@ For example, the above output lists and briefly defines how to use the `searchPi
 Now that you have set up your connection to the PIC-SURE API, let's determine which study or studies you are authorized to access. The `searchPicsure` function can be used to search the data dictionary for a specific term or to retrieve information about all the variables you are authorized to access. 
 
 ```{r}
-# NOTE: remove limit when not developer
-searchResults <- picsure::bdc.searchPicsure(session, limit = 1000) # retrieve all the variables you have access to
+searchResults <- picsure::bdc.searchPicsure(session) # retrieve all the variables you have access to
 ```
 
 ```{r}
@@ -153,17 +152,6 @@ Data Organization in PIC-SURE
 | Dataset description | Description of the trait table | Description of a group of like variables, as available |
 | Study ID | phs corresponding to the study accession number | phs corresponding to the study accession number |
 | Study description | Description of the study from dbGaP | Description of the study from dbGaP |
-
-
-# Note: not working, in bdc package
-We can also view additional information for individual variables using the `varInfo()` function.
-Note that you will need the variable(s)' `HPDS PATH` for this function.
-
-```{r}
-#first_var <- picsure::bdc.get.paths(my_variables)[1]
-#bdc::get.varInfo(my_variables, first_var)
-#?picsure::get.varInfo
-```
 
 Now you can try to search for a term on your own. Below is sample code on how to search for the term `sex`. To practice searching the data dictionary, you can change "sex" to a term you are interested in. 
 
