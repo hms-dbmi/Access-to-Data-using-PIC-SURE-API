@@ -561,8 +561,7 @@ str_replace_all(c("Comorbidities"),
 str_replace_all(c("Demographics"),
             replacement = function(string) paste0(string, '<hr>')) %>%
 str_replace_all(c("COVID-19 Symptoms"),
-            replacement = function(string) paste0(string, '<hr>')) %>%
-IRdisplay::display_html()
+            replacement = function(string) paste0(string, '<hr>')) 
 ```
 
 # Outcome Analysis
@@ -984,8 +983,7 @@ str_replace("Hydroxychloroquine \\(n = 242\\)",
             replacement = "Hydroxychloroquine <br>(n = 242)") %>%
 str_replace("COVID Outcomes Scale score, median \\(IQR\\) at Day 14",
             replacement = "<b>Outcomes Scale score, median (IQR) at Day 14</b>") %>%
-  as.character() %>%
-  IRdisplay::display_html()  
+  as.character() 
 ```
 
 ```{r}
@@ -1241,8 +1239,7 @@ add_header_above(c(" " = 1, "At randomization" = 2,
                   "14 d After randomization" = 2, 
                   "28 d After randomization" = 2),
                  align = 'left') %>%
-as.character() %>%
-IRdisplay::display_html()
+as.character()
 ```
 
 ```{r}
