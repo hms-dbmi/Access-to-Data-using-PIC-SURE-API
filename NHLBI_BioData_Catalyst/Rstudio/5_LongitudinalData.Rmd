@@ -212,7 +212,6 @@ head(plotdf)
 Although we have 12792 patients in this dataset with at least one 'treated for lipids' value, some of the data is quite sparse. Let's focus on visualizing patients which have at least 20 values recorded.
 
 ```{r}
-#colnames(plotdf) <- paste0('a', colnames(plotdf))
 plotdf <- plotdf %>%
     mutate(recorded_values = rowSums(. != 0)) %>%
     filter(recorded_values >= 20) %>%
