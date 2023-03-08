@@ -148,6 +148,7 @@ library(picsure)
 #install.packages('cmprsk', repos='http://cran.rstudio.com/')
 #install.packages('kableExtra', repos='http://cran.rstudio.com/')
 #install.packages('arsenal', repos='http://cran.rstudio.com/')
+#install.packages('tidyr', repos='http://cran.rstudio.com/')
 ```
 
 ```{r}
