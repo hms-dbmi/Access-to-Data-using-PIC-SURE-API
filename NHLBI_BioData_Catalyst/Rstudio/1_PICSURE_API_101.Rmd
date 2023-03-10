@@ -173,14 +173,14 @@ The first step is to set up the query object.
 query_categorical_example <- picsure::bdc.newQuery(session)
 ```
 
-There are several methods that can be used to build a query, which are listed below.
+There are several methods that can be used to build a query, which can be specified by the `type` argument in the `picsure::addClause` function.
 
-| Method | Arguments / Input | Output|
-|--------|-------------------|-------|
-| query.select.add() | variable names (string) or list of strings | all variables included in the list (no record subsetting)|
-| query.require.add() | variable names (string) or list of strings | all variables; only records that do not contain null values for input variables |
-| query.anyof.add() | variable names (string) or list of strings | all variables; only records that contain at least one non-null value for input variables |
-| query.filter.add() | variable name and additional filtering values | input variable; only records that match filter criteria |
+| type | functionality |
+|--------|-------------------|
+| type = 'SELECT' | return all variables included in the list (no record subsetting)|
+| type = 'REQUIRE' | return all variables included in the list; only records that do not contain null values for input variables |
+| type = 'ANYOF' | return all variables included in the list; only records that contain at least one non-null value for input variables |
+| type = 'FILTER' | return input variable; only records that match filter criteria |
 
 ### Build a query with a categorical variable
 Let's practice building a query by filtering on variables. First, let's select a categorical variable to use. We can identify one using the `is_categorical` column of the variable dataframe.
