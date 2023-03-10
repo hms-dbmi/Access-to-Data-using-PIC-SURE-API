@@ -28,7 +28,7 @@ This notebook is an illustration example about how to query data using the R **P
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="ALS-3799", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(stringr)
 library(ggplot2)

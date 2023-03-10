@@ -61,7 +61,7 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="ALS-3799", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(picsure)
 ```
