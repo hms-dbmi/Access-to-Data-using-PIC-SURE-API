@@ -1,13 +1,13 @@
 ---
-title: An R Markdown document converted from "~/Access-to-Data-using-PIC-SURE-API/NHLBI_BioData_Catalyst/R/2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb"
+title: An R Markdown document converted from "2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb"
 output: html_document
 ---
 
-# Accessing BioData Catalyst Harmonized variables using R PIC-SURE API
+# Accessing *NHLBI BioData Catalyst® (BDC)* Harmonized variables using R PIC-SURE API
 
-This tutorial notebook will demonstrate how to query and work with the BioData Catalyst cross-studies harmonized variables using R PIC-SURE API. For a more step-by-step introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
+This tutorial notebook will demonstrate how to query and work with the *BDC* cross-studies harmonized variables using R PIC-SURE API. For a more step-by-step introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.ipynb` notebook.
 
-**Before running this notebook, please be sure to review the \"Get your security token\" documentation, which exists in the NHLBI_BioData_Catalyst [README.md file](https://github.com/hms-dbmi/Access-to-Data-using-PIC-SURE-API/tree/master/NHLBI_BioData_Catalyst#get-your-security-token). It explains about how to get a security token, which is mandatory to access the databases.**
+**Before running this notebook, please be sure to review the \"Get your security token\" documentation, which exists in the [`README.md` file](../README.md). It explains about how to get a security token, which is mandatory to access the databases.**
 
  -------
 
@@ -18,37 +18,37 @@ This tutorial notebook will demonstrate how to query and work with the BioData C
 
 ## Install Packages
 
-**Note that if you are using the dedicated PIC-SURE environment within the BioData Catalyst Seven Bridges platform, the necessary packages have already been installed.**
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
+
+*Troubleshooting: if you encounter an error while installing packages or connecting to a PIC-SURE resource, try restarting your kernel and trying again.*
 
 ```{r}
-### Uncomment this code if you are not using the PIC-SURE environment in Seven Bridges, or if you do not have all the necessary dependencies installed.
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
 #install.packages(c("devtools", "dplyr", "ggplot2"))
 ```
 
 ```{r}
-devtools::install_github("hms-dbmi/pic-sure-r-client", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="master", force=T, quiet=TRUE)
-devtools::install_github("hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds", ref="new-search", force=T)
-library(hpds)
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(ggplot2)
+library(picsure)
 ```
 
 ## Connecting to a PIC-SURE resource
 
 ```{r}
-# Uncomment production URL when testing in production
-# PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
-PICSURE_network_URL = "https://biodatacatalyst.integration.hms.harvard.edu/picsure"
+PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
-connection <- picsure::connect(PICSURE_network_URL, token)
-authPicSure = bdc::use.authPicSure(connection)
+session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
+session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 ```
 
 ## About Harmonized Variables
 
-The data harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with Working Group members and phenotype experts on this endeavor. So far, 44 harmonized variables are accessible through PIC-SURE API (in addition to the age at which each variable value as been collected for a given subject).
+The data harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with working group members and phenotype experts on this endeavor. So far, 44 harmonized variables are accessible through PIC-SURE API (in addition to the age at which each variable value has been collected for a given subject).
 
 The following phenotypes are included as harmonized variables:
 
@@ -69,18 +69,16 @@ The following phenotypes are included as harmonized variables:
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-# Working with the DCC Harmonized Variables in PIC-SURE
+# Working with the TOPMed DCC Harmonized Variables in PIC-SURE
 ## 1. Identifying harmonized variables of interest
 First, let's explore what harmonized variables are available in PIC-SURE by searching for the keyword `harmonized`.
 
 ```{r}
-dictionary <- bdc::use.dictionary(connection) # set up the variable dictionary
-harmonized_dic <- bdc::find.in.dictionary(dictionary, "harmonized")
-harmonized_df <- bdc::extract.dataframe(harmonized_dic)
+harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized')  
 head(harmonized_df)
 ```
 
-We can see that these variables are all part of the unique study ID pertaining to the DCC Harmonized dataset.
+We can see that the returned variables are all part of the DCC Harmonized dataset unique study ID
 
 ```{r}
 unique(harmonized_df$study_id)
@@ -98,16 +96,16 @@ dim(harmonized_df)
 # and variables which indicate the units of a given harmonized variable
 harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
 dim(harmonized_df)
-head(harmonized_df[,c('var_name', 'var_description', 'HPDS_PATH', 'study_id')])
+head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
 
 We can now see our 44 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
 
 ## 2. Selecting variables and retrieving data from the database
 
-Let's say we are interested in the subset of Harmonized Variables pertaining to patient demographics. 
+Let's say we are interested in the subset of harmonized variables pertaining to patient demographics. 
 
-We might do this by selecting variables based on what **datatable** or **variable group** the variables belong to. 
+We might do this by selecting variables based on what **data table** or **variable group** the variables belong to. 
 
 We will do this by filtering on the `group_id` column. We can see the values of this column and how many variables are in each group:
 
@@ -115,25 +113,27 @@ We will do this by filtering on the `group_id` column. We can see the values of 
 table(harmonized_df$group_id)
 ```
 
-Since we are interested in patient demographics, we filter our dataframe to include all harmonized variables which are part of the `demographic` variable group or data table. 
+Since we are interested in patient demographics, we will filter our dataframe to include all harmonized variables which are part of the `demographic` variable group or data table. 
 
 ```{r}
 demographic_df <- harmonized_df[grepl('demographic', harmonized_df$group_id),]
-demographic_df[,c('var_name', 'var_description', 'HPDS_PATH', 'study_id')]
-vars_of_interest <- demographic_df$HPDS_PATH
+demographic_df[,c('var_name', 'var_description', 'name', 'study_id')]
+vars_of_interest <- demographic_df$name
 ```
 
 ## Query PIC-SURE for participant-level data for harmonized variables of interest
 
 ```{r}
-demographic_query <- bdc::new.query(authPicSure) # Start a new query
-vars_of_interest <- c(vars_of_interest, '\\DCC Harmonized data set\\demographic\\race_1\\')
-invisible(lapply(vars_of_interest, bdc::query.anyof.add, query = demographic_query))
-demographic_results <- bdc::query.run(demographic_query)
+demographic_query <- picsure::bdc.newQuery(session) # Initialize a new query
+demographic_query <- picsure::addClause(query = demographic_query, 
+                                keys = vars_of_interest,
+                                type = 'ANYOF') 
+
+demographic_results <-  picsure::runQuery(demographic_query)
 head(demographic_results)
 ```
 
-## Visualizing our sex and race harmonized variables across study cohorts
+## 3. Visualizing sex and race harmonized variables across study cohorts
 ### Male:Female ratio across study cohorts
 
 Below, we wrangle the data to calculate the male/female sex ratio per study cohort and prepare our data for plotting.
