@@ -107,36 +107,34 @@ studies <- unique(searchResults$study_id)
 ```
 
 ```{r}
-if (length(studies) == 0) {
-    print("You are not authorized to access any studies.")
-} else {
-    print("You are authorized to access the following studies:")
-    print(studies)
-}
+print("You are authorized to access the following studies:")
+print(studies)
 ```
 
-### *Note: if you do not see any studies listed above, you are not authorized to access any data. The rest of the notebook will not work.*
-
-Let's save a study to use as an example for the rest of the notebook.
+For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Digitalis Investigation Group (DIG) Trial: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_digitalis` in the PIC-SURE output above.
 
 ```{r}
-phs_number = studies[1]
-paste0("The phs accession being used is: ", phs_number)
+phs_number <- "tutorial-biolincc_digitalis"
 ```
 
-Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
+Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number; in this case `tutorial-biolincc_digitalis`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
 
 ```{r}
 my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, includeValues = TRUE) # Search for the phs accession number 
 ```
 
+We can now review the variables that were returned and some of the information associated with these variables.
+
 ```{r}
-paste("There are", nrow(my_variables_df), "variables that were returned for your search.")
-paste("Here are some of the variables you have access to:")
-print(my_variables_df$var_description[1:10])
+nrow(my_variables_df) # Count number of rows to determine number of variables that matched our search
 ```
 
-PIC-SURE integrates clinical and genomic datasets across BioData Catalyst, including TOPMed and TOPMed-related studies, COVID-19 studies, and BioLINCC studies. Each variable is organized as a concept path that contains information about the study, variable group, and variable. Though the specifics of the concept paths are dependent on the type of study, the overall information included is the same. 
+```{r}
+head(my_variables_df$var_description, 10) # Review the first 10 variable descriptions in the dataframe
+```
+
+
+PIC-SURE integrates clinical and genomic datasets across BDC, including TOPMed and TOPMed-related studies, COVID-19 studies, and BioLINCC studies. Each variable is organized as a concept path that contains information about the study, variable group, and variable. Though the specifics of the concept paths are dependent on the type of study, the overall information included is the same. 
 
 Data Organization in PIC-SURE
 ---------------------------------------
@@ -157,11 +155,7 @@ Now you can try to search for a term on your own. Below is sample code on how to
 
 ```{r}
 my_search_df <- picsure::bdc.searchPicsure(session, 'sex') # Change sex to be your term of interest
-if(nrow(my_search_df) == 0){
-    print("Search term returned no results. Please try searching a different term.")
-} else {
-    (tail(my_search_df))
-}
+head(my_search_df)
 ```
 
 ## Using PIC-SURE to build a query and retrieve data
@@ -186,36 +180,25 @@ There are several methods that can be used to build a query, which can be specif
 Let's practice building a query by filtering on variables. First, let's select a categorical variable to use. We can identify one using the `is_categorical` column of the variable dataframe.
 
 ```{r}
-categorical_vars <- my_variables_df[my_variables_df$data_type == 'categorical',] # filter to categorical variables
-categorical_vars <- categorical_vars[categorical_vars$values != '[]',] # make sure there are values for the variable
+categorical_vars <- my_variables_df[my_variables_df$data_type == 'categorical',] # Filter to only categorical variables
+head(categorical_vars$var_description) #View the first 5 examples
+#categorical_vars # Uncomment to view the full dataframe
+```
 
-v <- sample(c(1:nrow(categorical_vars)), 1) # select a random categorical variable
+Let's do a simple filter on the `SEX` variable to select only females.
 
-categorical_var <- categorical_vars[v, 'name']
-categorical_description <- categorical_vars[v, 'var_description']
-categories <- categorical_vars[v, 'values']
-# select the first category available to filter on
-filter_category <- strsplit(gsub('\\[|]|', '', categories), ',')[[1]][1]
-filter_category <- list(trimws(filter_category))
+```{r}
+#categorical_vars[categorical_vars$var_description == "SEX", ] # Uncomment to view information about the variable
 ```
 
 ```{r}
-paste("We will use the PIC-SURE variable", categorical_var, "which is", categorical_description)
-print("Here are the categories associated with the variable:")
-print(categories)
-paste("We will filter to participants with the value '", filter_category, "' for the variable.")
+query_categorical_example <- picsure::addClause(query = query_categorical_example, # Query to build on
+                                                keys = "\\tutorial-biolincc_digitalis\\SEX\\", # Variable concept path to filter on
+                                                type = "FILTER", # The type of query, in this case a FILTER
+                                                categories = list("Female")) # Value(s) to filter on
 ```
 
-We now have the PIC-SURE variable and the value to apply to the filter saved. We can use the `filter()` method to add this information to our query. 
-
-```{r}
-query_categorical_example <- picsure::addClause(query = query_categorical_example, 
-                                                keys = categorical_var, 
-                                                type = "FILTER", 
-                                                categories = filter_category)
-```
-
-Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function.
+Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function. 
 
 Now we can export our filtered data to a dataframe in this notebook.
 
@@ -226,26 +209,29 @@ head(results_categorical)
 
 In the data dictionary dataframe shown previously, each row represented a single concept path or variable. In the query dataframe, the concept paths are added as columns with each row representing a participant with data that matches your query. 
 
-The dataframe above should contain some automatically exported concept paths, such as `Patient ID`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept path we added to our query (`categorical_var`). Additionally, all participants should have the value we used to filter for our added concept path.
+The dataframe above should contain some automatically exported concept paths, such as `Patient ID`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept path we added to our query (`\tutorial-biolincc_digitalis\SEX\`). Additionally, all participants should have the value we used to filter for our added concept path.
 
-We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the categorical variable of interest using `require()`.
+We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the categorical variable (in this case, both males and females) of interest using `require()`.
 
 ```{r}
-authQuery_categorical_example2 <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery_categorical_example2 <- picsure::addClause(query = authQuery_categorical_example2, 
-                                                     keys = categorical_var, 
-                                                     type = 'REQUIRE') # use type = REQUIRE to retrieve all data from participants with a value for this variable
-full_results_categorical <-  picsure::runQuery(authQuery_categorical_example2)
+full_categorical_example <- picsure::bdc.newQuery(session) #Initialize a new query
+full_categorical_example <- picsure::addClause(query = full_categorical_example,
+                                               keys = "\\tutorial-biolincc_digitalis\\SEX\\",
+                                               type = "REQUIRE")
+
+full_results_categorical <- picsure::runQuery(full_categorical_example)
 head(full_results_categorical)
 ```
 
 ```{r}
 # Visualize the results with pie charts
-df2 <- data.frame(table(full_results_categorical[,eval(categorical_var)]))
-pie(df2$Freq, labels = df2$Var1, main = paste("Before filtering variable\n", categorical_var))
+df_full <- data.frame(table(full_results_categorical[,eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
+pie(df_full
+Var1, main = paste("Before filtering on SEX"))
 
-df1 <- data.frame(table(results_categorical[,eval(categorical_var)]))
-pie(df1$Freq, labels = df1$Var1, main = paste("After filtering variable\n", categorical_var))
+df_filter <- data.frame(table(results_categorical[, eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
+pie(df_filter
+Var1, main = paste("After filtering on SEX"))
 ```
 
 ### Build a query with a continuous variable
