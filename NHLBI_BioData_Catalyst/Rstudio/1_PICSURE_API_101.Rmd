@@ -226,97 +226,89 @@ head(full_results_categorical)
 ```{r}
 # Visualize the results with pie charts
 df_full <- data.frame(table(full_results_categorical[,eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
-pie(df_full
-Var1, main = paste("Before filtering on SEX"))
+pie(df_full$Freq, labels = df_full$Var1, main = paste("Before filtering on SEX"))
 
 df_filter <- data.frame(table(results_categorical[, eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
-pie(df_filter
-Var1, main = paste("After filtering on SEX"))
+pie(df_filter$Freq, labels = df_filter$Var1, main = paste("After filtering on SEX"))
 ```
 
 ### Build a query with a continuous variable
-Similarly, we can create a query using a continuous variable. Instead of using the `is_categorical` column, let's make use of the `min` and `max` columns to determine the range of values that can be selected for our query.
-
+Similarly, we can create a query using a continuous variable. Let's first filter to continuous variables using the `data_type` column.
 
 ```{r}
-# Filter to a random continuous variable with a range of data
-continuous_vars <- my_variables_df[!is.na(my_variables_df$max) & my_variables_df$max != my_variables_df$min,]
-v <- sample(c(1:nrow(continuous_vars)), 1) 
-
-continuous_var <- continuous_vars[v,'name']
-paste('We will use the PIC-SURE variable', continuous_var, 'which is', continuous_vars[v,'var_description'])
-
-# Get range of values for chosen variable
-min <- as.numeric(continuous_vars[v, 'min'])
-max <- as.numeric(continuous_vars[v, 'max'])
-paste('The minimum value for this variable is:', min)
-paste('The maximum value for this variable is:', max)
-
-# Set a sub-range of values to filter our participants with
-filter_min_value <- max - (max - min)/2
-filter_max_value <- max
-paste("We will filter to participants with values between", filter_min_value, "and", filter_max_value, ".")
+continuous_vars <- my_variables_df[my_variables_df$data_type == 'continuous',] # Filter to only categorical variables
+head(continuous_vars$var_description) #View the first 5 examples
+#continuous_vars # Uncomment to view the full dataframe
 ```
 
-Again, we can use the `filter()` method to add the continuous variable to the query. Once added, we can retrieve our results dataframe.
+Let's do a simple filter on age to include the age range from 30 to 50 years old.
 
 ```{r}
-authQuery_continuous_example <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery_continuous_example <- picsure::addClause(query = authQuery_continuous_example, 
-                                                   keys = continuous_var, 
-                                                   type = 'FILTER', 
-                                                   min = filter_min_value,
-                                                   max = filter_max_value) 
-results_continuous <-  picsure::runQuery(authQuery_continuous_example)
+#continuous_vars[continuous_vars$var_name == "AGE", ] # Uncomment to view information about the variable
+```
+
+
+```{r}
+query_continuous_example <- picsure::bdc.newQuery(session) # Initialize a new query
+
+query_continuous_example <- picsure::addClause(query = query_continuous_example, # Query to filter on
+                                               keys = "\\tutorial-biolincc_digitalis\\AGE\\", # Variable concept path to filter on
+                                               type = "FILTER", # The type of query, in this case FILTER
+                                               min = 30, # Minimum of the range
+                                               max = 50) # Maximum of the range
+```
+
+Note that if you do not specify the `min` or `max` fields, the minimum or maximum of the variable will be used.
+
+Now we can export our filtered data to a dataframe in this notebook.
+
+```{r}
+results_continuous <- picsure::runQuery(query_continuous_example, resultType = 'DATA_FRAME')
 head(results_continuous)
 ```
 
-```{r}
-paste("We will plot a histogram of our results to ensure we are only looking at values for",
-      continuous_vars[v,'var_description'],
-      "which fall between", filter_min_value, "and", filter_max_value, ".")
-```
+We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the continuous variable (in this case, participants of all ages) of interest using `require()`.
 
 ```{r}
-hist(results_continuous[,eval(continuous_var)], 
-     main = paste('After filtering variable\n', continuous_vars[v,'var_description']),
-     xlab = continuous_vars[v,'var_description'])
-```
+full_continuous_example <- picsure::bdc.newQuery(session) #Initialize a new query
+full_continuous_example <- picsure::addClause(query = full_continuous_example,
+                                               keys = "\\tutorial-biolincc_digitalis\\AGE\\",
+                                               type = "REQUIRE")
 
-Compared to all data values for this variable:
-
-```{r}
-authQuery_continuous_example2 <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery_continuous_example2 <- picsure::addClause(query = authQuery_continuous_example2, 
-                                                   keys = continuous_var, 
-                                                   type = 'REQUIRE') # use type = REQUIRE to retrieve all data from participants with a value for this variable
-full_results_continuous <-  picsure::runQuery(authQuery_continuous_example2)
+full_results_continuous <- picsure::runQuery(full_continuous_example)
 head(full_results_continuous)
 ```
 
 ```{r}
-hist(full_results_continuous[,eval(continuous_var)], 
-     main = paste('Before filtering variable\n', continuous_vars[v,'var_description']),
-     xlab = continuous_vars[v,'var_description'])
+# Visualize results with histograms
+hist(full_results_continuous[,eval("\\tutorial-biolincc_digitalis\\AGE\\")],
+     main = "Before filtering on AGE",
+     xlab = "Age (in years)")
+```
+
+```{r}
+hist(results_continuous[,eval("\\tutorial-biolincc_digitalis\\AGE\\")], 
+     main = "After filtering on AGE",
+     xlab = "Age (in years)")
 ```
 
 ### Build a query with multiple variables
 You can also add multiple variables to a single query. Let's build a query with the first five variables for the study of interest.
 
 ```{r}
-query_vars <- my_variables_df[c(5:10), 'name']
-print("We will add the following variables to the query:")
-query_vars
+query_vars_readable <- my_variables_df[c(5:10), "var_description"]
+query_vars_concept_path <- my_variables_df[c(5:10), "name"]
+query_vars_readable
 ```
 
 We can use the`anyof` function to add variables to the query. This will filter to participants that have data **for at least one of the variables added**.  
 
 ```{r}
-authQuery <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery <- picsure::addClause(query = authQuery, 
-                                keys = query_vars,
+query_anyof <- picsure::bdc.newQuery(session) # Initialize a new query
+query_anyof <- picsure::addClause(query = query_anyof, 
+                                keys = query_vars_concept_path,
                                 type = 'ANYOF') 
-results <-  picsure::runQuery(authQuery)
+results <-  picsure::runQuery(query_anyof)
 ```
 
 ```{r}
@@ -327,16 +319,16 @@ head(results)
 
 PIC-SURE will limit results based on which study and consent groups you have been individually authorized to access. In some cases, such as instances where you can access multiple studies and/or consent groups, you may need to limit your results further to only a subset of the groups you have been authorized to access.
 
-Let's see the first 10 studies and consent groups you are authorized to access by navigating to the 'consents' portion of the query object.
+Let's see the studies and consent groups you are authorized to access by navigating to the 'consents' portion of the query object.
 
 ```{r}
 authQuery_consents <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery_consents$categoryFilters$`\\_consents`[1:10]
+authQuery_consents$categoryFilters$`\\_consents`
 ```
 
 The output shown above lists all of the phs accession numbers and consent codes that you are authorized to access. 
 
-To query on specific consent groups in this list, you must first clear the list of values within the `\\_consents\\` section and then manually replace them. Let's practice this by copying and pasting a phs accession number and consent code, deleting the `\\_consents\\` field, and adding it back with our selected consent code.
+To query on specific consent groups in this list, you must first clear the list of values within the `\\_consents\\` section and then manually replace them. Let's practice this by deleting the `\\_consents\\` field and adding it back with our selected consent code. We can use another publicly available dataset in PIC-SURE, "Childhood Asthma Management Program (CAMP: Dataset for Teaching Purposes)" with consent code `tutorial-biolincc_camp"
 
 *Note that trying to manually add a consent group which you are not authorized to access will results in errors downstream.*
 
@@ -346,7 +338,7 @@ authQuery_consents$categoryFilters$`\\_consents`
 ```
 
 ```{r}
-consent_group_filter <- "phs000964.c1"#"<<<Paste a consent group that you are authorized to access here>>>"
+consent_group_filter <- "tutorial-biolincc_camp"
 authQuery_consents <- picsure::bdc.addClause(query = authQuery_consents, 
                                          keys = '\\_consents\\', 
                                          categories = list(consent_group_filter), 
@@ -354,5 +346,5 @@ authQuery_consents <- picsure::bdc.addClause(query = authQuery_consents,
 authQuery_consents$categoryFilters$`\\_consents`
 ```
 
-Now your query is set to select only variables and participants from the phs accession and consent code you selected. From here, you can build out your query as shown above.
+Now your query is set to select only variables and participants from `tutorial-biolincc_camp`. From here, you can build out your query as shown above.
 
