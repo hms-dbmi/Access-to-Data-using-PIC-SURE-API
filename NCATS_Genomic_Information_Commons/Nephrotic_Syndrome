@@ -1,0 +1,524 @@
+---
+Title: 'Nephrotic Syndrome' 
+output: html_document
+---
+
+
+# Accessing patient level data in Genomic Information Commons (GIC) Service Workbench 
+
+
+This example will demonstrate the process of accessing shared patient-level data within GIC Service Workbench. 
+The focus will be on patients diagnosed with nephrotic syndrome and possessing a variant in either the NPHS1, NPHS2, PLCE1, or TRPC6 gene.
+
+
+
+
+##### Install libraries and load phenotypic data  
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(utils)
+library(tibble)
+```
+
+
+```{r}
+##### Load phenotypic data 
+
+#File paths for phenotypic data 
+phen1 <- '/home/rstudio-user/studies/phenotypic-data-only/bch_1_phenotypic_data.csv'
+phen2 <- '/home/rstudio-user/studies/phenotypic-data-only/uthsc_phenotypic_data.csv'
+phen3 <-'/home/rstudio-user/studies/phenotypic-data-only/washu_phenotypic_data.csv'
+phen4 <- '/home/rstudio-user/studies/phenotypic-data-only/cchmc_phenotypic_data.csv'
+
+# load phenotypic data into dataframe 
+bch <- read.csv(phen1) 
+uthsc <- read.csv(phen2)
+washu<- read.csv(phen3)
+cchmc<- read.csv(phen4)
+
+```
+
+##### Group by sex & count number of patients per site
+```{r}
+#BCH data 
+bch_demographics <- bch %>%
+  filter(grepl("\\ACT Demographics", CONCEPT_PATH))
+
+# Use double \\ to escape the '\' in concept path 
+bch_sex <- bch_demographics %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Sex\\\\', CONCEPT_PATH))
+
+# Count number of male / female  
+bch_sex_count <- bch_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+# percent of patients who are  male/female
+bch_sex_percent <- bch_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(bch_sex) * 100)
+
+#UTHSC data 
+uthsc_sex <- uthsc_dem %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Sex\\\\', CONCEPT_PATH))
+
+uthsc_sex_count <- uthsc_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+uthsc_sex_percent <- uthsc_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(uthsc_sex) * 100)
+
+
+#WashU data
+washu_sex <- washu_dem %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Sex\\\\', CONCEPT_PATH))
+
+washu_sex_count <- washu_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+washu_sex_percent <- washu_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(washu_sex) * 100)
+
+## CCHMC data 
+cchmc_sex <- cchmc_dem %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Sex\\\\', CONCEPT_PATH))
+
+cchmc_sex_count <- cchmc_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+cchmc_sex_percent <- cchmc_sex %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(cchmc_sex) * 100)
+
+```
+
+
+##### Merge counts data 
+```{r}
+
+merged_sex <-bch_sex_count %>%
+  merge(washu_sex_count, by= "TVAL_CHAR") 
+
+# Rename columns for BCH & WashU - required so when we merge 4 df, the column names are not duplicated
+merged_sex <- merged_sex %>%
+  rename('BCH' = Count.x, 'WashU' = Count.y)  
+
+# Add utshc & cchmc data to merged_data df 
+merged_sex <- merged_sex %>%  
+  merge(uthsc_sex_count, by = "TVAL_CHAR") %>%
+  merge(cchmc_sex_count, by = "TVAL_CHAR")
+
+# Rename columns for Sex, UTHSC & CCHMC
+merged_sex <- merged_sex %>%
+  rename('Sex' = TVAL_CHAR,
+         'UTHSC' = Count.x,
+         'CCHMC' = Count.y) 
+
+# Add total count to for each column 
+sex_total <- rbind(merged_sex,data.frame(Sex = "Total", t(colSums(merged_sex[,-1]))))
+
+```
+##### Merge percent percent data into one df 
+```{r}
+
+merged_sex2 <-bch_sex_percent %>%
+  merge(washu_sex_percent, by= "TVAL_CHAR") 
+
+# Rename columns 
+merged_sex2 <- merged_sex2 %>%
+  rename('BCH' = percentage.x, 'WashU' = percentage.y)  
+
+merged_sex2 <- merged_sex2 %>%  
+  merge(uthsc_sex_percent, by = "TVAL_CHAR") %>%
+  merge(cchmc_sex_percent, by = "TVAL_CHAR")
+
+# Rename columns for Sex, UTHSC & CCHMC
+merged_sex2 <- merged_sex2 %>%
+  rename('Sex' = TVAL_CHAR,
+         'UTHSC' = percentage.x,
+         'CCHMC' = percentage.y) 
+
+
+# Reshape the data for plotting
+sex_long <- merged_sex2 %>%
+  pivot_longer(cols = c(BCH, WashU, UTHSC, CCHMC),
+               names_to = "Group", values_to = "percent")
+
+```
+
+##### View sex distribution across GIC institutions 
+```{r}
+#View table of patient sex per site
+print(sex_total)
+```
+
+```{r}
+# Plot patient sex distribution across GIC sites 
+ggplot(sex_long, aes(x = Sex, y = percent, fill = Group)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) + 
+  labs(title = "Patient Distribution by Sex", x = "Sex", y = "Patients (%)") +
+  scale_fill_manual(values = c("#74C449","#FEBC35","#328FFF", "#ED462C")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 0.5),plot.title = element_text(hjust = 0.5)) + 
+   labs(fill = "GIC Institution") + 
+   scale_y_continuous(labels = scales::percent_format(scale = 1),
+                     breaks = seq(0, 100, by = 10)) 
+         
+```
+
+
+
+###### Group by race & count number of patients for each site  
+```{r}
+
+bch_race <- bch_demographics %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Race\\\\', CONCEPT_PATH))
+
+# Group by race 
+bch_race_count <- bch_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+# percent of patients grouped by race 
+bch_race_percent <- bch_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(bch_race) * 100)
+
+
+#UTHSC data 
+uthsc_dem <- uthsc %>%
+  filter(grepl("\\ACT Demographics", CONCEPT_PATH))
+
+uthsc_race <- uthsc_dem %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Race\\\\', CONCEPT_PATH))
+
+uthsc_race_count <- uthsc_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+  
+uthsc_race_percent <- uthsc_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(uthsc_race) * 100)
+
+#WashU data 
+washu_dem <- washu %>%
+  filter(grepl("\\ACT Demographics", CONCEPT_PATH))
+
+washu_race <- washu_dem %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Race\\\\', CONCEPT_PATH))
+
+washu_race_count <- washu_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+washu_race_percent <- washu_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(washu_race) * 100)
+
+#CCHMC data 
+cchmc_dem <- cchmc %>%
+   filter(grepl("\\ACT Demographics", CONCEPT_PATH))
+
+cchmc_race <- cchmc_dem %>%
+   filter(grepl('\\\\ACT Demographics\\\\Race\\\\', CONCEPT_PATH))
+
+cchmc_race_count <- cchmc_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarise(Count = n_distinct(PATIENT_NUM))
+
+cchmc_race_percent <- cchmc_race %>%
+  group_by(TVAL_CHAR) %>%
+  summarize(percentage = n() / nrow(cchmc_race) * 100)
+  
+```
+
+##### Merge counts data  
+```{r}
+# merge race BCH & WashU 
+merged_race <- bch_race_count %>%
+  merge(washu_race_count, by = "TVAL_CHAR")
+
+# Rename columns 
+merged_race <- merged_race %>%
+  rename('BCH' = Count.x, 'WashU' = Count.y)  
+
+merged_race <- merged_race %>%  
+  merge(uthsc_race_count, by = "TVAL_CHAR") %>%
+  merge(cchmc_race_count, by = "TVAL_CHAR")
+
+
+merged_race <- merged_race %>%
+  rename('Race' = TVAL_CHAR,
+         'UTHSC' = Count.x,
+         'CCHMC' = Count.y)
+
+
+race_total <- rbind(merged_race,data.frame(Race = "Total", t(colSums(merged_race[,-1]))))
+
+```
+
+##### Merge percent data 
+```{r} 
+merged_race2 <- bch_race_percent %>%
+  merge(washu_race_percent, by = "TVAL_CHAR")
+
+# Rename columns 
+merged_race2 <- merged_race2 %>%
+  rename('BCH' = percentage.x, 'WashU' = percentage.y)  
+
+merged_race2 <- merged_race2 %>%  
+  merge(uthsc_race_percent, by = "TVAL_CHAR") %>%
+  merge(cchmc_race_percent, by = "TVAL_CHAR")
+
+
+merged_race2 <- merged_race2 %>%
+  rename('Race' = TVAL_CHAR,
+         'UTHSC' = percentage.x,
+         'CCHMC' = percentage.y) 
+
+# Reshape the data for plotting
+race_long <- merged_race2 %>%
+  pivot_longer(cols = c(BCH, WashU, UTHSC, CCHMC),
+               names_to = "Group", values_to = "percent")
+
+```
+
+##### View race distribution across GIC institutions 
+```{r}
+# View race count per site
+print(race_total)
+```
+
+```{r}
+labels <-c("Asian", "Black or \n African American","No Information","White")
+
+# Plot race distribution across GIC sites 
+ggplot(race_long, aes(x = Race, y = percent, fill = Group)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  labs(title = "Patient Distribution by Race", x = "Race", y = "Patients") +
+  scale_fill_manual(values = c("#74C449","#FEBC35","#328FFF", "#ED462C")) +
+  theme_minimal() +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+   theme(axis.text.x = element_text(hjust = .5), plot.title = element_text(hjust = 0.5)) + 
+    labs(fill = "GIC Institution") +
+  scale_x_discrete(labels = labels) + 
+  scale_y_continuous(labels = scales::percent_format(scale = 1),
+                     breaks = seq(0, 100, by = 10)) 
+
+
+```
+
+
+
+##### Load genomic data 
+```{r}
+# file paths 
+data1 <-'/home/rstudio-user/studies/Nephortic-Syndrome-BCH/bch_phenotypic_data.csv'
+data2<- '/home/rstudio-user/studies/Nephortic-Syndrome-BCH/bch_genomic_data.tsv'
+
+# Load data 
+phen <- read.csv(data1)
+gene <- read.table(data2, header = TRUE, sep = "\t")
+
+```
+
+##### Data manipulation for ease of use
+```{r}
+# pivot data: 1 column for patient id, genotype (gt), has_variant T/F; remove rows where variant does not exist 
+new_gene <- pivot_longer(gene, cols = 15:ncol(gene), names_to = 'PID', values_to = 'GT')
+new_gene <- new_gene %>% 
+  mutate(has_variant = GT != '0/0')
+
+```
+
+
+##### Split patients by age group 
+```{r}
+demographics <- phen %>%
+  filter(grepl("\\ACT Demographics", CONCEPT_PATH))
+
+age <- demographics %>% 
+  filter(grepl('\\\\ACT Demographics\\\\Age\\\\', CONCEPT_PATH))
+
+# Define age group cut off
+breaks <- c(1, 6, 12, 18, 25)
+
+age_groups <- age %>%
+  mutate(Age_Group = cut(NVAL_NUM, breaks = breaks, labels = c("1-6", "7-12", "13-18", "19-25"),include.lowest = TRUE, right = FALSE))
+
+```
+
+
+#####  Gene 1: NPHS1 Summary Statistics 
+```{r}
+
+# Filter for patients with atleast 1 variant in the NPHS1 gene 
+NPHS1_var <- new_gene %>% 
+  filter(Gene_with_variant == "NPHS1") %>%
+  group_by(Variant_consequence_calculated, PID,Variant_severity) %>%
+  summarise(has_variant =max(has_variant)) %>%
+  mutate(has_variant = ifelse(has_variant, 'has_variant', 'does_not_have_variant'))
+
+#removing x from PID column name 
+NPHS1_var$PID <- str_replace(NPHS1_var$PID, 'X', '')
+
+# merge genomic data & and age group from phen dataset
+merged_NPHS1 <- left_join(NPHS1_var,age_groups %>% 
+                           select(PATIENT_NUM, Age_Group) %>%
+                           mutate(PATIENT_NUM = as.character(PATIENT_NUM)), by = c('PID' = 'PATIENT_NUM'))
+                          
+
+
+# Variant counts for NPHS1 gene
+sum_NPHS1 <- merged_NPHS1 %>%
+  group_by(Age_Group,has_variant,Variant_consequence_calculated) %>%
+  summarise(n_patients = n_distinct(PID)) %>%
+  filter(has_variant == 'has_variant')
+
+
+# plot NPHS1 variant across age groups 
+ggplot(sum_NPHS1, aes(x = Age_Group, y = n_patients, fill = Variant_consequence_calculated)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variant Distribution by Age for NPHS1 Gene",
+       x = "Age Group",
+       y = "Number of distinct patients with atleast 1 variant",
+       fill = "Calculated Consequence") +
+  theme_minimal() + 
+  #red: ED462C, blue:328FFF, green: 74C449 yellow: FEBC35
+  scale_fill_manual(values = c("#328FFF","#ED462C","#FEBC35","#74C449"),
+                     labels = c("Missense", "Splice acceptor", "Splice polypyrimidine tract", "Synonymous")) + 
+   labs(fill = "Calculated Variant Consequence")
+
+```
+
+
+#####  GENE 2: NPHS2 Summary Statistics 
+```{r}
+# Filter for patients with atleast 1 variant in the NPHS2 gene 
+NPHS2_var <- new_gene %>% 
+  filter(Gene_with_variant == "NPHS2") %>%
+  group_by(Variant_consequence_calculated, PID,Variant_severity) %>%
+  summarise(has_variant =max(has_variant)) %>%
+  mutate(has_variant = ifelse(has_variant, 'has_variant', 'does_not_have_variant'))
+
+#removing x from PID column name 
+NPHS2_var$PID <- str_replace(NPHS2_var$PID, 'X', '')
+
+# merge genomic data & and age group from phen dataset
+merged_NPHS2 <- left_join(NPHS2_var,age_groups %>% 
+                           select(PATIENT_NUM, Age_Group) %>%
+                           mutate(PATIENT_NUM = as.character(PATIENT_NUM)), by = c('PID' = 'PATIENT_NUM'))
+                          
+
+# Variant counts for NPHS2 gene
+sum_NPHS2 <- merged_NPHS2 %>%
+  group_by(Age_Group,has_variant,Variant_consequence_calculated) %>%
+  summarise(n_patients = n_distinct(PID)) %>%
+  filter(has_variant == 'has_variant')
+
+
+# plot NPHS2 variant across age groups 
+ggplot(sum_NPHS2, aes(x = Age_Group, y = n_patients, fill = Variant_consequence_calculated)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variant Distribution by Age for NPHS2 Gene",
+       x = "Age Group",
+       y = "Number of distinct patients with atleast 1 variant",
+       fill = "Calculated Consequence") +
+  theme_minimal() + 
+  scale_fill_manual(values = c("#FEBC35","#ED462C","#74C449","#328FFF"), 
+                    labels = c("Frameshift", "Missense", "Splice region", "Synonymous")) +
+   labs(fill = "Calculated Variant Consequence")
+
+```
+  
+ 
+#####  GENE 3: PLCE1 Summary Statistics 
+```{r}
+# Filter for patients with atleast 1 variant in the NPHS2 gene 
+PLCE1_var <- new_gene %>% 
+  filter(Gene_with_variant == "PLCE1") %>%
+  group_by(Variant_consequence_calculated, PID,Variant_severity) %>%
+  summarise(has_variant =max(has_variant)) %>%
+  mutate(has_variant = ifelse(has_variant, 'has_variant', 'does_not_have_variant'))
+
+#removing x from PID column name 
+PLCE1_var$PID <- str_replace(PLCE1_var$PID, 'X', '')
+
+# merge genomic data & and age group from phen dataset
+merged_PLCE1 <- left_join(PLCE1_var,age_groups %>% 
+                           select(PATIENT_NUM, Age_Group) %>%
+                           mutate(PATIENT_NUM = as.character(PATIENT_NUM)), by = c('PID' = 'PATIENT_NUM'))
+                          
+
+
+# Variant counts for PLCE1 gene
+sum_PLCE1 <- merged_PLCE1 %>%
+  group_by(Age_Group,has_variant,Variant_consequence_calculated) %>%
+  summarise(n_patients = n_distinct(PID)) %>%
+  filter(has_variant == 'has_variant')
+
+
+# plot PLCE1 variant across age groups 
+ggplot(sum_PLCE1, aes(x = Age_Group, y = n_patients, fill = Variant_consequence_calculated)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variant Distribution by Age for PLCE1 Gene",
+       x = "Age Group",
+       y = "Number of distinct patients with atleast 1 variant",
+       fill = "Calculated Consequence") +
+  theme_minimal() + 
+  scale_fill_manual(values = c("#74C449","#328FFF","#ED462C","#FEBC35"), 
+                    labels = c("Missense", "Splice region", "Synonymous"))+ 
+  labs(fill = "Calculated Variant Consequence")
+  # theme(axis.title.y = element_text(margin = margin(r = 5)))  # Adjust Y-axis title size and margin
+  # 
+```
+ 
+ 
+ 
+#####  GENE 4: TRPC6 Summary Statistics 
+```{r}
+# Filter for patients with atleast 1 variant in the TRPC6 gene 
+TRPC6_var <- new_gene %>% 
+  filter(Gene_with_variant == "TRPC6") %>%
+  group_by(Variant_consequence_calculated, PID,Variant_severity) %>%
+  summarise(has_variant =max(has_variant)) %>%
+  mutate(has_variant = ifelse(has_variant, 'has_variant', 'does_not_have_variant'))
+
+#removing x from PID column name 
+TRPC6_var$PID <- str_replace(TRPC6_var$PID, 'X', '')
+
+# merge genomic data & and age group from phen dataset
+merged_TRPC6 <- left_join(TRPC6_var,age_groups %>% 
+                           select(PATIENT_NUM, Age_Group) %>%
+                           mutate(PATIENT_NUM = as.character(PATIENT_NUM)), by = c('PID' = 'PATIENT_NUM'))
+                          
+
+# Variant counts for TRPC6 gene
+sum_TRPC6 <- merged_TRPC6 %>%
+  group_by(Age_Group,has_variant,Variant_consequence_calculated) %>%
+  summarise(n_patients = n_distinct(PID)) %>%
+  filter(has_variant == 'has_variant')
+
+
+# plot TRPC6 variant across age groups 
+ggplot(sum_TRPC6, aes(x = Age_Group, y = n_patients, fill = Variant_consequence_calculated)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Variant Distribution by Age for TRPC6 Gene",
+       x = "Age Group",
+       y = "Number of patients with atleast 1 variant in TRPC6",
+       fill = "Calculated Consequence") +
+  theme_minimal() +
+  scale_fill_manual(values = c("#74C449","#328FFF","#ED462C","#FEBC35"), 
+                    labels = c("Missense", "Synonymous"))+ 
+  labs(fill = "Calculated Variant Consequence")
+```
+ 
+
+
