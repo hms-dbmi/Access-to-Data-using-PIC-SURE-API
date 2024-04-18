@@ -340,7 +340,7 @@ After browsing the available variables, we decided to choose the following:
 orthopnea_variables_of_interest <- harmonized_df %>%
     filter((var_description %in% c('F136 Orthopnea', 
                                   'SLEEP ON 2+ PILLOWS TO HELP BREATHING')) |
-           var_name %in% 'B131')
+           var_name %in% 'G3A163')
 
 # save variable paths for querying data
 orthopnea_variable_paths_of_interest = orthopnea_variables_of_interest$name
@@ -364,7 +364,7 @@ After browsing the available variables, we decided to choose the following:
 
 ```{r}
 pneumonia_variables_of_interest = harmonized_df %>%
-    filter(grepl('phv00255144|phv00083774|phv00283208', var_id))
+    filter(grepl('phv00021300|phv00087211|phv00283208', var_id))
 
 # save variable paths for querying data
 pneumonia_variable_paths_of_interest = pneumonia_variables_of_interest$name
@@ -385,9 +385,9 @@ orthopnea_results <- picsure::runQuery(orthopnea_query)
 
 ```{r}
 # rename columns
-colnames(orthopnea_results) = c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
-                             'fhs_pneumonia', 'fhs_orthopnea', 'whi_pneumonia', 
-                             'whi_orthopnea', 'mesa_pneumonia', 'mesa_orthopnea')
+colnames(orthopnea_results) <- c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
+                             'fhs_orthopnea', 'fhs_pneumonia', 'whi_pneumonia', 
+                             'whi_orthopnea', 'mesa_orthopnea', 'mesa_pneumonia')
 head(orthopnea_results)
 ```
 
@@ -432,8 +432,8 @@ Here we create a consistent mapping:
 ```{r}
 mapping_df <- data.frame('raw' = c(unique(orthopnea_results$orthopnea), 
                                    unique(orthopnea_results$pneumonia)),
-                        'harmonized' = c('Unknown', 'No', 'Yes', 'Unknown', 'No', 'Yes', 'Unknown', 'Unknown',
-                                         'No', 'Unknown', 'Yes', 'Unknown', 'No', 'Yes', 'Unknown')) %>%
+                        'harmonized' = c('Unknown', 'No', 'Yes', 'No', 'Yes', 'Unknown',
+                                         'No', 'Unknown', 'Yes', 'Unknown', 'No', 'Unknown', 'Yes')) %>%
 unique()
 
 mapping_df
