@@ -169,13 +169,6 @@ First, we will clean the data by removing the subject identifiers and renaming t
 
 ```{r}
 plotdf <- longitudinal_results
-plotdf <- plotdf[,-c(1:4)]
-colnames(plotdf)
-gsub('LIPRX', '', str_extract(colnames(plotdf), 'LIPRX\\d+'))
-```
-
-```{r}
-plotdf <- longitudinal_results
 
 # drop columns not containing data
 plotdf <- plotdf[,-c(1:4)]
