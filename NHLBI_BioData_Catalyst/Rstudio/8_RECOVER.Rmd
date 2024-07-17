@@ -1,0 +1,196 @@
+# Exploring the RECOVER Adult Cohort on BioData Catalyst
+
+RECOVER is a first-of-its-kind, patient-centered research initiative to understand, diagnose, treat, and prevent Long COVID. RECOVER research includes observational cohort studies, electronic health records analysis, pathobiology studies, tissue pathology studies, and clinical trials.
+
+RECOVER studies involve thousands of people from all walks of life, hundreds of research investigators, and millions of electronic health records (EHRs). RECOVER aims to achieve the following:
+-   Understand the range of recovery from Long COVID and the changes it can cause in people over time.
+-   Define risk factors, understand the number of people getting Long COVID, and determine whether there are specific, different Long COVID types.
+-   Study how Long COVID changes over time and how those changes may relate to other illnesses.
+-   Identify possible treatments for Long COVID symptoms.
+
+Researchers can utilize BioData Catalyst Powered by PIC-SURE to search terms, apply filters, build cohorts, and export of the RECOVER Adult data in an analysis-ready format.
+
+## Set up
+
+#### Pre-requisites
+
+-   R 3.4 or later
+
+#### Install packages
+
+The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
+
+-   PIC-SURE Client
+-   PIC-SURE Adapter
+-   *BDC-PIC-SURE* Adapter
+
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
+
+*Troubleshooting: if you encounter an error while installing packages or connecting to a PIC-SURE resource, try restarting your kernel and trying again.*
+
+```{r}
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
+#install.packages("devtools")
+```
+
+```{r}
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+library(dplyr)
+library(picsure)
+```
+## Connecting to a PIC-SURE resource
+
+The following is required to get access to data through the PIC-SURE API: 
+- Network URL
+- User-specific security token
+
+The following code specifies the network URL as the *BDC Powered by PIC-SURE* URL and references the user-specific token saved as `token.txt`.
+
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
+
+```{r}
+PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+token_file <- "token.txt"
+token <- scan(token_file, what = "character")
+session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
+session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+```
+
+## Using the RECOVER Adult Cohort
+The RECOVER Adult dataset includes many variables related to Long COVID and COVID-19 symptoms. For a complete view of all RECOVER variables in PIC-SURE, you can refer to the [PIC-SURE RECOVER Data Dictionary spreadsheet](https://docs.google.com/spreadsheets/d/1A-BGTOjEgaPRG0KqSNWLuFFHMRkflSMh4Y_wYL2AGag/edit?usp=sharing).
+
+PIC-SURE can also be used in the coding interface to conduct searches for variables, apply filters to build cohorts, and export the data in an analysis-ready format.
+
+For the purposes of this example notebook, let's use variables related to:
+- Postacute sequelae of SARS-CoV-2 infection (PASC)
+- Headaches or head pain
+
+Postacute sequelae of SARS-CoV-2 infection (PASC), also known as long COVID is defined as ongoing, relapsing, or new symptoms or conditions present 30 or more days after infection. A recent publication developed a preliminary rule for defining PASC based on a score derived from the most frequently reported symptoms from those with long COVID. A PASC score between 0 and 34 is assigned based on a person's symptoms, where a greater score indicates more PASC symptoms. The publication also defined a cutoff based on this score to identify individuals as PASC positive or PASC negative:
+- PASC score < 12: PASC negative
+- PASC score >= 12: PASC positive
+
+The RECOVER biostatistics team has used this definition to derive PASC scores for the RECOVER Adult cohort, which will be used in this notebook. For more information about these PASC scores, please refer to Thaweethai et al.'s [Development of a Definition of Postacute Sequelae of SARS-CoV-2 Infection](https://jamanetwork.com/journals/jama/fullarticle/2805540).
+
+### PASC Scores
+First, let's search for variables related to `derived PASC score`.
+```{r}
+pasc_vars <- picsure::bdc.searchPicsure(session, keyword = "derived PASC score", includeValues = TRUE)
+head(pasc_vars)
+```
+
+Here, we can see that there are many PASC-related variables in the RECOVER Adult dataset. The scores we are interested in are the `pasc_score_biostats_derived`, which are the variables generated by the RECOVER biostatistics team.
+```{r}
+# Limit to only variables with pasc_score_derived_biostats in the var_id
+biostats_pasc_vars <- pasc_vars %>% filter(grepl("pasc_score_biostats_derived", var_id))
+head(biostats_pasc_vars)
+```
+
+As shown above, there are derived PASC scores as different times during the data collection, including a baseline measurement and followup visits. Let's use the baseline measurement and information from the first three followup visits.
+```{r}
+# Save PASC variables for baseline and first three followups
+baseline_pasc <- biostats_pasc_vars %>% filter(grepl("baseline", var_id)) %>% pull(name)
+f1_pasc <- biostats_pasc_vars %>% filter(grepl("f1_", var_id)) %>% pull(name)
+f2_pasc <- biostats_pasc_vars %>% filter(grepl("f2_", var_id)) %>% pull(name)
+f3_pasc <- biostats_pasc_vars %>% filter(grepl("f3_", var_id)) %>% pull(name)
+```
+
+### Headache / Head Pain
+Next, let's search for variables related to `head pain`.
+```{r}
+# Search for headache variables
+headpain_vars <- picsure::bdc.searchPicsure(session, keyword = "head pain", includeValues = TRUE)
+headpain_vars <- headpain_vars %>% filter(study_id == "phs003463")
+head(headpain_vars)
+```
+
+We can see that there are many variables related to head pain, such as `pain_head___around` for head pain around the time of index and `pain_head___now` for head pain at the time of the survey. Let's use the `pain_head___now` variables.
+```{r}
+headpain_now_vars <- headpain_vars %>% filter(grepl("pain_head___now", var_id))
+head(headpain_now_vars)
+```
+
+As shown above, there are derived head pain now scores at different times during the data collection, including a baseline measurement and followup visits. Let's use the baseline measurement and information from the first three followup visits.
+```{r}
+# Save head pain variables for baseline and first three followups
+baseline_headpain <- headpain_now_vars %>% filter(grepl("baseline", var_id)) %>% pull(name)
+f1_headpain <- headpain_now_vars %>% filter(grepl("f1_", var_id)) %>% pull(name)
+f2_headpain <- headpain_now_vars %>% filter(grepl("f2_", var_id)) %>% pull(name)
+f3_headpain <- headpain_now_vars %>% filter(grepl("f3_", var_id)) %>% pull(name)
+```
+
+### Build a Query
+Now that we have our variables selected, we can build a query. For more information on how to apply filters to a query, please refer to the `1_PICSURE_API_101` file.
+
+For this query, we will be requiring that participants have information for all selected variables: PASC scores and head pain information for baseline and first three followups.
+```{r}
+# Build a query
+pasc_headpain_query <- picsure::bdc.newQuery(session)
+
+# Add variables as a "require"
+pasc_headpain_query <- picsure::addClause(query = pasc_headpain_query,
+                                          keys = c(baseline_pasc, f1_pasc, f2_pasc, f3_pasc, baseline_headpain, f1_headpain, f2_headpain, f3_headpain),
+                                          type = "REQUIRE")
+```
+
+```{r}
+# Retrieve results
+results <- picsure::runQuery(pasc_headpain_query, resultType = "DATA_FRAME")
+# head(results) # Uncomment to peek at the dataframe
+```
+
+The export has all variables added to the query as columns, with each RECOVER Adult study participants as rows. This is saved as an R dataframe and can be used for analysis.
+
+### Analysis
+Let's make a visualization to quickly observe the correlation between PASC scores and head pain. 
+```{r}
+# Load libraries for plotting and cleaning dataframe
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+# Create a boxplot
+
+# Rename columns to simpler names and select only those necessary for plotting\n",
+colnames(results) <- c("Patient_ID", "Parent", "Topmed", "consents",
+                       "headpain_baseline", "headpain_f1", "headpain_f2", "headpain_f3",
+                       "pasc_baseline", "pasc_f1","pasc_f2", "pasc_f3")
+
+                       clean <- results %>% select("Patient_ID", "headpain_baseline", "headpain_f1",
+                                                   "headpain_f2", "headpain_f3", "pasc_baseline",
+                                                   "pasc_f1", "pasc_f2", "pasc_f3")
+
+                       
+# Clean up dataframe for plotting
+clean_long <- clean %>%
+  # Create two columns from headpain and pasc columns to save visit and value
+  pivot_longer(cols = starts_with("headpain"), names_to = "headpain_time", values_to = "Headpain") %>%
+  pivot_longer(cols = starts_with("pasc"), names_to = "pasc_time", values_to = "PASC_Score") %>%
+  # Save visit into separate columns
+  separate(headpain_time, into = c("headpain", "Visit"), sep = "_") %>%
+  separate(pasc_time, into = c("pasc", "Visit2"), sep = "_") %>%
+  # Save only rows where the visits match and select only necessary columns
+  filter(Visit == Visit2) %>%
+  select(Patient_ID, Headpain, PASC_Score, Visit) %>%
+  # Rename values for better plotting and cleaner data
+  mutate(Headpain = if_else(Headpain == "does not have symptom NOW at time of survey", "No Headpain", "Headpain"),
+         Visit = case_when(Visit == "baseline" ~ "Baseline",
+                           Visit == "f1" ~ "Followup 1",
+                           Visit == "f2" ~ "Followup 2", 
+                           Visit == "f3" ~ "Followup 3"))
+
+# Make Headpain column a factor, with No Headpain as baseline
+clean_long$Headpain <- factor(clean_long$Headpain, levels = c("No Headpain", "Headpain"))
+```
+
+```{r}
+ggplot(clean_long, aes(x = Visit, y = PASC_Score, fill = Headpain)) +
+  geom_boxplot() +
+  labs(title = "RECOVER Adult PASC Scores and Headpain",
+       y = "PASC Score",
+       fill = "Headpain Status") +
+  scale_fill_manual(values = c("Headpain" = "#c0143c", "No Headpain" = "#1a568c"))
+```
+
