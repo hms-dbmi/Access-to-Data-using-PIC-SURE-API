@@ -102,7 +102,7 @@ For this example, we are only interested in obese participants (BMI >= 30).
 Following the data dictionary search pattern shown above, we can search for the TOPMed DCC Harmonized dataset variables related to BMI.
 
 ```{r}
-# Search our TOPMed harmonized dataframe for an age variable
+# Search our TOPMed harmonized dataframe for a BMI variable
 bmi_var <- harmonized_df %>% filter(grepl('body mass index', var_description, ignore.case = TRUE))
 print(paste0(bmi_var$var_name, ': ', bmi_var$name))
 
