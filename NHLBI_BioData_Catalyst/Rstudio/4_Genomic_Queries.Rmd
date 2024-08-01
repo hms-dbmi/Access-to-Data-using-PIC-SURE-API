@@ -26,12 +26,12 @@ For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-#install.packages(c("devtools", "dplyr"))
+install.packages(c("devtools", "dplyr"))
 ```
 
 ```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
+#Sys.setenv(TAR = "/bin/tar")
+#options(unzip = "internal")
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(picsure)
@@ -51,7 +51,9 @@ session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 # Example 1: Build a query with genomic and phenotypic variables
 ## 1.1 Building the query with the PIC-SURE API
 
-We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single study, a single phenotype (gender and age range), and two genomic filters. 
+We are going to create a new query request from the PIC-SURE resource that was specified above.  For this example, we will limit the query to a single dataset (the TOPMed DCC Harmonized dataset) by filtering on sex, body mass index, and two genomic filters. 
+
+For more information about the TOPMed DCC Harmonized dataset, please refer to the [`2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb` notebook](./2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb).
 
 First we will create a new query instance.
 
@@ -59,23 +61,23 @@ First we will create a new query instance.
 my_query <- picsure::bdc.newQuery(session) # Initialize a new query
 ```
 
-### Find all SAGE variables
-We can search for variables related to our search query using the `bdc::find.in.dictionary` function. 
+### Find all TOPMed DCC Harmonized variables
+We can search for variables related to our search query using the `bdc::searchPicsure` function. 
 
-In this example, we will retrive all variables available in the SAGE study (NHLBI TOPMed: Study of African Americans, Asthma, Genes and Environment (SAGE) Study , phs000921).
+In this example, we will retrieve all variables available in the TOPMed DCC Harmonized dataset.
 
 You can find information about the phs number associated with each study and what data are available from the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
 
 ```{r}
-sage_df <- picsure::bdc.searchPicsure(session, 'phs000921', includeValues = TRUE)  
+harmonized_df <- picsure::bdc.searchPicsure(session, 'DCC Harmonized', includeValues = TRUE)  
 ```
 
 ## 1.2 Add categorical phenotypic variable (sex) to the query
 
-First, we will search our SAGE data dictionary for a sex-related variable.
+First, we will search our TOPMed DCC Harmonized data dictionary for a sex-related variable.
 
 ```{r}
-sex_var <- sage_df %>% filter(grepl('sex', var_name, ignore.case = TRUE))
+sex_var <- harmonized_df %>% filter(grepl('subject sex', var_description, ignore.case = TRUE))
 sex_var
 ```
 
@@ -85,33 +87,33 @@ Let's examine the values within this variable.
 sex_var %>% pull(values)
 ```
 
-We are only interested in FEMALE values in this use case - let's apply this filter to our query accordingly.
+We are only interested in Female values in this use case - let's apply this filter to our query accordingly.
 
 ```{r}
 my_query <- picsure::addClause(query = my_query, 
                                keys = sex_var %>% pull(name),
                                type = 'FILTER',
-                               categories = list('FEMALE'))
+                               categories = list('Female'))
 ```
 
-## 1.3 Add continuous phenotypic variable (age) to the query
-For this example, we are only interested in children (<=18 years of age).
+## 1.3 Add continuous phenotypic variable (body mass index, BMI) to the query
+For this example, we are only interested in obese participants (BMI >= 30).
 
-Following the data dictionary search pattern shown above, we can search for the SAGE study variables related to age.
+Following the data dictionary search pattern shown above, we can search for the TOPMed DCC Harmonized dataset variables related to BMI.
 
 ```{r}
-# Search our SAGE dataframe for an age variable
-age_var <- sage_df %>% filter(grepl('age', var_name, ignore.case = TRUE))
-print(paste0(age_var$var_name, ': ', age_var$name))
+# Search our TOPMed harmonized dataframe for a BMI variable
+bmi_var <- harmonized_df %>% filter(grepl('body mass index', var_description, ignore.case = TRUE))
+print(paste0(bmi_var$var_name, ': ', bmi_var$name))
 
 # Examine the values
-print(paste0('Min: ', age_var$min, ', Max: ', age_var$max))
+print(paste0('Min: ', bmi_var$min, ', Max: ', bmi_var$max))
 
-# Filter to children aged 18 years or younger
+# Filter to obese participants with BMI 30 or more
 my_query <- picsure::addClause(query = my_query, 
-                               keys = age_var$name,
+                               keys = bmi_var$name,
                                type = 'FILTER',
-                               min = 7.3, max = 18)
+                               min = 30)
 ```
 
 ## 1.4 Add genomic filters to the query
@@ -119,7 +121,7 @@ To start adding genomic filters to our query, we first need to understand what g
 
 ```{r}
 genotype_annotations <- picsure::getGenomicAnnotations(session)
-genotype_annotations[2:5,]
+genotype_annotations
 ```
 
 As shown in the genomic_annotations object above, some genomic variables that can be used in queries include `Gene_with_variant`, `Variant_class`, and `Variant_severity`.
@@ -127,6 +129,8 @@ As shown in the genomic_annotations object above, some genomic variables that ca
 #### Add genotypic variable (Gene_with_variant) to the query
 
 By looking at the values associated with the `Gene_with_variant` annotation we see what genes we can filter the variants by.
+
+The fat mass and obesity related gene, or *FTO* gene, [has been linked to obesity and other diseases](https://www.ncbi.nlm.nih.gov/gene/79068). Let's search for this gene.
 
 ```{r}
 # get total list of genes
@@ -136,45 +140,40 @@ genes <- strsplit(genes, ', ')[[1]]
 # print the first 10 genes
 print(genes[1:10])
 
-# check if a certain gene of interest, e.g. CHD8, is in the gene list
-gene_of_interest <- 'CHD8'
+# check if a certain gene of interest, e.g. FTO, is in the gene list
+gene_of_interest <- 'FTO'
 gene_of_interest %in% genes
 ```
 
-We can view the full list of `Variant_consequence_calculated` options in a similar way.
+Let's also say that we only want highly severe variants. We can see the levels of severity shown below.
 
 ```{r}
-# get all "Variant_consequence_calculated" values
-consequences = genotype_annotations %>% filter(name == 'Variant_consequence_calculated') %>% pull(values)
-consequences <- strsplit(consequences, ', ')[[1]]
-print(consequences)
+# what values are available for Variant_severity?
+genotype_annotations %>% filter(name == "Variant_severity") %>% pull(values)
 ```
 
-The gene list shown above provides a list of values that can be used for the `Gene_with_variant`, in this case genes affected by a variant. Let's say we are interested in participants who have some kind of variant on the CHD8 gene. We can add this genomic filter to our query like so:
+The gene list shown above provides a list of values that can be used for the `Gene_with_variant`, in this case genes affected by a variant. Let's say we are interested in participants who have a highly severe *FTO* variant. We can add these filters to the query.
 
 ```{r}
 my_query <- picsure::addClause(query = my_query, 
                                keys = 'Gene_with_variant',
                                type = 'FILTER',
-                               categories = list('CHD8'))
-```
+                               categories = list('FTO'))
 
-We can further narrow our query by filtering on variant consequence. In this example, let's look at the missense variants. 
-
-```{r}
-my_query <- picsure::addClause(query = my_query, 
-                               keys = 'Variant_consequence_calculated',
+my_query <- picsure::addClause(query = my_query,
+                               keys = 'Variant_severity',
                                type = 'FILTER',
-                               categories = list('missense_variant'))
+                               categories = list("HIGH"))
 ```
+
 
 ## 1.5 Retrieve data from the query
 
 #### Getting query count
 We have now built a query called `my_query` which contains the search criteria we are interested in:
 - Sex = Female
-- Age < 18
-- Participants have a missense variant on CHD8
+- BMI > 30
+- Participants have a highly severe *FTO* variant
 
 We will run a count query to find the number of matching participants.
 This is a great way to preview how many participants match your query criteria without extracting the data.
@@ -206,7 +205,7 @@ In this example, we will create a query to explore the relationship between the 
 To explore this relationship, we will narrow the cohort down to participants that meet the following criteria:
 * participated in the COPDgene study
 * have had COPD
-* have a *SERPINA1* gene variant with high or moderate severity
+* have a missense variant of the *SERPINA1* gene
 
 ## 2.1 Create query
 Let's start by creating a new query and finding the variables pertaining to the COPDgene study (phs000179)
@@ -240,7 +239,9 @@ copd_query <- picsure::addClause(query = copd_query,
                                  categories = list('Yes'))
 ```
 
-### Criteria 2: Participants with variants of high or moderate severity on *SERPINA1*
+### Criteria 2: Participants with a missense variant on *SERPINA1*
+
+A filter for the *SERPINA1* gene can be added in a way similar to the first query shown above.
 
 ```{r}
 copd_query <- picsure::addClause(query = copd_query, 
@@ -249,16 +250,20 @@ copd_query <- picsure::addClause(query = copd_query,
                                  categories = list('SERPINA1'))
 ```
 
+We can take a look at the variant consequences available for filtering to confirm that missense variant is a filtering option.
+
 ```{r}
-# what values are available for Variant_severity?
-genotype_annotations %>% filter(name == "Variant_severity") %>% pull(values)
+# get all "Variant_consequence_calculated" values
+consequences = genotype_annotations %>% filter(name == 'Variant_consequence_calculated') %>% pull(values)
+consequences <- strsplit(consequences, ', ')[[1]]
+print(consequences)
 ```
 
 ```{r}
 copd_query <- picsure::addClause(query = copd_query, 
-                                 keys = 'Variant_severity',
+                                 keys = 'Variant_consequence_calculated',
                                  type = 'FILTER',
-                                 categories = list("HIGH", "MODERATE"))
+                                 categories = list("missense_variant"))
 ```
 
 ### 2.2 Get Results
