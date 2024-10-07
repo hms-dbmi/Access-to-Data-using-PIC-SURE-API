@@ -68,7 +68,7 @@ One of the key challenges to conducting analyses with several studies is ensurin
 ## Sex and gender variables across studies
 <font color='darkgreen'>**Goal: Create harmonized variables for sex and BMI which combine data from multiple studies**</font> 
 
-These variables are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To acccount for these differences, we need to develop a way to search for multiple keywords at once.
+These variables are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To account for these differences, we need to develop a way to search for multiple keywords at once.
 
 Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by  using the ' | ' regular expression, allowing us to find all variables that include sex or gender. 
 
@@ -77,11 +77,11 @@ sex_df <- picsure::bdc.searchPicsure(session, "sex|gender")
 head(sex_df, 3)
 ```
 
-After reviewing the variables using the dataframe (or the [user interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login)), let's say we are interested in sex/gender variables from the following studies:
+After reviewing the variables using the dataframe (or the [user interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/)), let's say we are interested in sex/gender variables from the following studies:
 - ECLIPSE (Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints) (phs001252)
 - COPDGene (Genetic Epidemiology of COPD) (phs000179)
 
-We can find the study IDs in the Data Access Dashboard in the user interface.
+We can find the study IDs in the [Data Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/dashboard) in the user interface.
 
 We have already used the PIC-SURE search method to find variables which contain the keywords sex and gender. Let's filter these results to our desired studies of interest.
 
@@ -166,7 +166,7 @@ We will save the name associated to this variable so we can add it to our query 
 
 ```{r}
 # save the HPDS path associated to our variable of interest
-copdgene_sex_var = copdgene_sex_df[copdgene_sex_df$var_name == 'GENDER', 'name']
+copdgene_sex_var = copdgene_sex_df[copdgene_sex_df$var_name == 'gender', 'name']
 copdgene_sex_var
 ```
 
@@ -211,7 +211,7 @@ combined_query <- picsure::bdc.newQuery(session)
 
 Next, we will add the paths (names) for our selected variables of interest to the query.
 
-As a reminder, these are the paths associated with the sex/gender and BMI variables from the ECLIPSE and EOCOPD studies.
+As a reminder, these are the paths associated with the sex/gender and BMI variables from the ECLIPSE and COPDGene studies.
 
 We use the `.anyof` method to add these variables to the query because we are interested in results with observations in any of the variables of interest. If you are interested in learning more about the other query methods available, see the `1_PICSURE_API_101.ipynb` notebook. 
 
@@ -233,7 +233,7 @@ You may notice that the column names are not the most informative, we will renam
 ```{r}
 # rename columns
 colnames(combined_results) = c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
-                               'copdgene_sex', 'eocopd_bmi', 'eclipse_bmi', 'eclipse_sex')
+                               'copdgene_sex', 'copdgene_bmi', 'eclipse_bmi', 'eclipse_sex')
 ```
 
 We will also create a 'study' column to easier identify from which study a participant's data originated from.
@@ -248,7 +248,7 @@ head(combined_results)
 
 Finally, we will harmonize the sex and bmi variables by combining them into one single 'sex' column.
 
-Sex and BMI are reported in the same way in both EOCOPD and ECLIPSE, so we do not have to transform any of the participant level data.
+Sex and BMI are reported in the same way in both COPDGene and ECLIPSE, so we do not have to transform any of the participant level data.
 
 ```{r}
 combined_results <- combined_results %>%
@@ -319,7 +319,7 @@ Let's say we want to harmonize orthopnea variables from the following datasets:
 
 We can first get all concept paths related to our terms of interest (`orthopnea` or `pillows`) and then filter to our studies of interest.
 
-You can get the phs number associated with each study from the [Data Access Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/picsureui/).
+You can get the phs number associated with each study from the [Data Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/dashboard).
 
 ```{r}
 harmonized_df <- picsure::bdc.searchPicsure(session, 'orthopnea|pillows') 
