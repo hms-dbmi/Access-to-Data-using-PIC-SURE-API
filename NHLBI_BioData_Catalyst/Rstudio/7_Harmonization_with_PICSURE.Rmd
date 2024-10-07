@@ -79,7 +79,7 @@ head(sex_df, 3)
 
 After reviewing the variables using the dataframe (or the [user interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login)), let's say we are interested in sex/gender variables from the following studies:
 - ECLIPSE (Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints) (phs001252)
-- EOCOPD (Early Onset of COPD) (phs000946)
+- COPDGene (Genetic Epidemiology of COPD) (phs000179)
 
 We can find the study IDs in the Data Access Dashboard in the user interface.
 
@@ -146,28 +146,28 @@ eclipse_sex_var = colnames(filtered_eclipse_sex_results)[4]
 eclipse_sex_var
 ```
 
-### Which sex variable in EOCOPD should we use? 
+### Which sex variable in COPDGene should we use? 
 
 We will take a similar approach as above, where we first filter our dataframe of sex/gender variables to only those from the EOCOPD study.
 
 ```{r}
-# which sex/gender variables are part of EOCOPD?
-eocopd_vars <- sex_df %>% 
-    filter(grepl('phs000946', study_id))
-# create a subset of only EOCOPD sex/gender vars
-eocopd_sex_df <- eocopd_vars %>%
+# which sex/gender variables are part of COPDGene?
+copdgene_vars <- sex_df %>% 
+    filter(grepl('phs000179', study_id))
+# create a subset of only COPDGene sex/gender vars
+copdgene_sex_df <- copdgene_vars %>%
     select(var_name, var_description, values, name)
-eocopd_sex_df
+copdgene_sex_df
 ```
 
-Unlike the ECLIPSE data, we see that there is only one sex variable in EOCOPD. It is called 'GENDER'.
+Unlike the ECLIPSE data, we see that there is only one sex variable in COPDGene. It is called 'gender'.
 
 We will save the name associated to this variable so we can add it to our query later.
 
 ```{r}
 # save the HPDS path associated to our variable of interest
-eocopd_sex_var = eocopd_sex_df[eocopd_sex_df$var_name == 'GENDER', 'name']
-eocopd_sex_var
+copdgene_sex_var = copdgene_sex_df[copdgene_sex_df$var_name == 'GENDER', 'name']
+copdgene_sex_var
 ```
 
 ### Which BMI variables should we use?
@@ -175,30 +175,30 @@ eocopd_sex_var
 We will follow the approach outlined above to first search our data dictionary for all variables containing the terms 'body mass index'. 
 
 ```{r}
-bmi_df <- picsure::bdc.searchPicsure(session, 'body mass index') 
+bmi_df <- picsure::bdc.searchPicsure(session, 'body mass index|bmi') 
 ```
 
-We will then our results to include only those BMI variables which are part of ECLIPSE or EOCOPD and view the variables with their associated metadata. 
+We will then our results to include only those BMI variables which are part of ECLIPSE or COPDGene and view the variables with their associated metadata. 
 
 ```{r}
-# which bmi variables are part of ECLIPSE or EOCOPD?
-# create a subset of only the ECLIPSE / EOCOPD BMI vars
+# which bmi variables are part of ECLIPSE or COPDGene?
+# create a subset of only the ECLIPSE / COPDGene BMI vars
 bmi_df <- bmi_df %>%
-    filter(grepl('phs001252|phs000946', study_id)) %>%
+    filter(grepl('phs001252|phs000179', study_id)) %>%
     select(var_name, var_description, values, name)
 
 head(bmi_df)
 ```
 
 By examining metadata like the variable name and description, we are able to determine which variables we are interested in:
-- Body Mass Index [BMI ] for EOCOPD (\phs000946\pht005719\phv00266123\BMI\)
+- BMI from COPDGene (\phs000179\pht002239\phv00159593\BMI\)
 - Body mass index (kg/m2) from the bodycomp table for ECLIPSE (\phs001252\pht006373\phv00293610\VSBMI\) 
 
 We will save the HPDS_PATHs associated to the BMI variables of interest so we can add it to our query later.
 
 ```{r}
 # save HPDS_PATHs of interest
-eocopd_bmi_var <- "\\phs000946\\pht005719\\phv00266123\\BMI\\"
+copdgene_bmi_var <- "\\phs000179\\pht002239\\phv00159593\\BMI\\"
 eclipse_bmi_var <- "\\phs001252\\pht006373\\phv00293610\\VSBMI\\"
 ```
 
@@ -217,7 +217,7 @@ We use the `.anyof` method to add these variables to the query because we are in
 
 ```{r}
 # Build query using selected concept paths
-vars_of_interest <- c(eclipse_sex_var, eclipse_bmi_var, eocopd_sex_var, eocopd_bmi_var)
+vars_of_interest <- c(eclipse_sex_var, eclipse_bmi_var, copdgene_sex_var, copdgene_bmi_var)
 
 combined_query <- picsure::addClause(query = combined_query, 
                                      keys = vars_of_interest, 
@@ -233,7 +233,7 @@ You may notice that the column names are not the most informative, we will renam
 ```{r}
 # rename columns
 colnames(combined_results) = c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
-                               'eocopd_sex', 'eocopd_bmi', 'eclipse_bmi', 'eclipse_sex')
+                               'copdgene_sex', 'eocopd_bmi', 'eclipse_bmi', 'eclipse_sex')
 ```
 
 We will also create a 'study' column to easier identify from which study a participant's data originated from.
@@ -241,7 +241,7 @@ We will also create a 'study' column to easier identify from which study a parti
 ```{r}
 # convert consent code to study name
 combined_results <- combined_results %>%
-    mutate(study = ifelse(grepl('phs001252', consent), 'eclipse', 'eocopd'))
+    mutate(study = ifelse(grepl('phs001252', consent), 'eclipse', 'copdgene'))
 
 head(combined_results)
 ```
@@ -253,10 +253,10 @@ Sex and BMI are reported in the same way in both EOCOPD and ECLIPSE, so we do no
 ```{r}
 combined_results <- combined_results %>%
            # combine sex variables
-    mutate(sex = eocopd_sex, 
+    mutate(sex = copdgene_sex, 
            sex = ifelse(sex == '', eclipse_sex, sex),
            # combine bmi variables
-           bmi = eocopd_bmi,
+           bmi = copdgene_bmi,
            bmi = ifelse(is.nan(bmi), eclipse_bmi, bmi))
 
 head(combined_results)
@@ -264,7 +264,7 @@ head(combined_results)
 
 ### Analysis and visualization
 
-In this example, we are interested in comparing mean BMI across different studies. We will calculate the mean for each group (ECLIPSE males, ECLIPSE females, EOCOPD males, EOCOPD females) and display the results as a table and a bar chart.
+In this example, we are interested in comparing mean BMI across different studies. We will calculate the mean for each group (ECLIPSE males, ECLIPSE females, COPDGene males, COPDGene females) and display the results as a table and a bar chart.
 
 ```{r}
 # remove unneccessary columns and summarize
