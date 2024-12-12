@@ -74,7 +74,7 @@ More information about the variable harmonization process is available at https:
 First, let's explore what harmonized variables are available in PIC-SURE by searching for the keyword `harmonized`.
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized')  
+harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
 head(harmonized_df)
 ```
 
