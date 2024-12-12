@@ -69,7 +69,7 @@ In this example, we will retrieve all variables available in the TOPMed DCC Harm
 You can find information about the phs number associated with each study and what data are available from the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'DCC Harmonized', includeValues = TRUE)  
+harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized', includeValues = TRUE)  %>% filter(study_id == "DCC Harmonized data set")
 ```
 
 ## 1.2 Add categorical phenotypic variable (sex) to the query
