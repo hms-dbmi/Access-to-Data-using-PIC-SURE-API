@@ -91,7 +91,7 @@ More information about the variable harmonization process is available at https:
 Here, we find all 44 DCC harmonized variables. For more details on this process, see the `2_TOPMed_DCC_Harmonized_Variables_analysis` notebook.
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized')  
+harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
 harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
 dim(harmonized_df)
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
