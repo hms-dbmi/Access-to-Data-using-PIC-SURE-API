@@ -104,20 +104,17 @@ searchResults <- picsure::bdc.searchPicsure(session) # retrieve all the variable
 
 ```{r}
 studies <- unique(searchResults$study_id)
-```
-
-```{r}
 print("You are authorized to access the following studies:")
 print(studies)
 ```
 
-For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Digitalis Investigation Group (DIG) Trial: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_digitalis` in the PIC-SURE output above.
+For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Framingham Heart Study: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_framingham` in the PIC-SURE output above.
 
 ```{r}
-phs_number <- "tutorial-biolincc_digitalis"
+phs_number <- "tutorial-biolincc_framingham"
 ```
 
-Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number; in this case `tutorial-biolincc_digitalis`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
+Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number; in this case `tutorial-biolincc_framingham`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
 
 ```{r}
 my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, includeValues = TRUE) # Search for the phs accession number 
@@ -126,7 +123,7 @@ my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, inc
 We can now review the variables that were returned and some of the information associated with these variables.
 
 ```{r}
-nrow(my_variables_df) # Count number of rows to determine number of variables that matched our search
+nrow(my_variables_df) # How many variables did the search return?
 ```
 
 ```{r}
@@ -151,12 +148,8 @@ Data Organization in PIC-SURE
 | Study ID | phs corresponding to the study accession number | phs corresponding to the study accession number |
 | Study description | Description of the study from dbGaP | Description of the study from dbGaP |
 
-Now you can try to search for a term on your own. Below is sample code on how to search for the term `sex`. To practice searching the data dictionary, you can change "sex" to a term you are interested in. 
+*Note: The concept paths in PIC-SURE are used for querying. This is called `name` in the data dictionary shown above.*
 
-```{r}
-my_search_df <- picsure::bdc.searchPicsure(session, 'sex') # Change sex to be your term of interest
-head(my_search_df)
-```
 
 ## Using PIC-SURE to build a query and retrieve data
 You can also use the PIC-SURE API to build a query and retrieve data. With this functionality, you can filter based on specific variables, add others, and export the data as a dataframe into this notebook. 
@@ -164,7 +157,7 @@ You can also use the PIC-SURE API to build a query and retrieve data. With this 
 The first step is to set up the query object.
 
 ```{r}
-query_categorical_example <- picsure::bdc.newQuery(session)
+query_example <- picsure::bdc.newQuery(session)
 ```
 
 There are several methods that can be used to build a query, which can be specified by the `type` argument in the `picsure::addClause` function.
@@ -176,175 +169,142 @@ There are several methods that can be used to build a query, which can be specif
 | type = 'ANYOF' | return all variables included in the list; only records that contain at least one non-null value for input variables |
 | type = 'FILTER' | return input variable; only records that match filter criteria |
 
-### Build a query with a categorical variable
-Let's practice building a query by filtering on variables. First, let's select a categorical variable to use. We can identify one using the `is_categorical` column of the variable dataframe.
+As an example query, let's use the Framingham tutorial dataset to investigate the prevalence of hypertension and distribution of age of current smokers with body mass index greater than 20. 
 
 ```{r}
-categorical_vars <- my_variables_df[my_variables_df$data_type == 'categorical',] # Filter to only categorical variables
-head(categorical_vars$var_description) #View the first 5 examples
-#categorical_vars # Uncomment to view the full dataframe
+# Ensure that only Framingham tutorial variables are shown in the data dictionary, which can vary based on individual access
+tutorial_df <- my_variables_df[my_variables_df$study_id == phs_number,]
 ```
 
-Let's do a simple filter on the `SEX` variable to select only females.
+### Build a query with a categorical variable - Current smoker
+Let's practice building a query by filtering on variables. Based on the search for the Framingham tutorial dataset variables, we can save the concept path of the "Current cigarette smoking at exam" variable, which is a categorical variable. 
 
 ```{r}
-#categorical_vars[categorical_vars$var_description == "SEX", ] # Uncomment to view information about the variable
+smoke_variable_path <- tutorial_df[tutorial_df$var_description == "Current cigarette smoking at exam", "name"]
+smoke_variable_path
 ```
 
+We can take a look at the options of values to filter by using the `values` column of the data dictionary.
+
 ```{r}
-query_categorical_example <- picsure::addClause(query = query_categorical_example, # Query to build on
-                                                keys = "\\tutorial-biolincc_digitalis\\SEX\\", # Variable concept path to filter on
+tutorial_df[tutorial_df$name == smoke_variable_path, "values"]
+```
+
+Let's apply a filter on the "Current cigarette smoking at exam" variable to only select participants with "Current smoker." Note that though we are only filtering by one value, you can filter by multiple values by passing a list into `filter()`. Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function. 
+
+```{r}
+query_example <- picsure::addClause(query = query_example, # Query to build on
+                                                keys = smoke_variable_path, # Variable concept path to filter on
                                                 type = "FILTER", # The type of query, in this case a FILTER
-                                                categories = list("Female")) # Value(s) to filter on
+                                                categories = list("Current smoker")) # Value(s) to filter on
 ```
 
-Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function. 
-
-Now we can export our filtered data to a dataframe in this notebook.
+### Build a query with a continuous variable - BMI
+Let's practice building a query by filtering on a continuous variable, in this case, BMI. We can find the BMI concept path using a similar approach as above.
 
 ```{r}
-results_categorical <- picsure::runQuery(query_categorical_example, resultType = 'DATA_FRAME')
-head(results_categorical)
+bmi_variable_path <- tutorial_df[tutorial_df$var_id == "BMI", "name"]
+bmi_variable_path
 ```
+
+We can take a look at the minimum and maximum values of the variable using the `min` and `max` columns of the data dictionary.
+
+```{r}
+tutorial_df[tutorial_df$name == bmi_variable_path, c("min", "max")]
+```
+Let's apply a filter on the "Body Mass Index, weight in kilograms/height meters squared" variable to select only participants with values greater than 20. Note that while in this example only a `min` is specified, a `max` can also be defined for the filter.
+
+```{r}
+query_example <- picsure::addClause(query = query_example, # Query to filter on
+                                               keys = bmi_variable_path, # Variable concept path to filter on
+                                               type = "FILTER", # The type of query, in this case FILTER
+                                               min = 20) # Minimum of the range
+```
+
+### Adding variables to include in export - Age and Hypertension
+In addition to adding filters, specific variables can be included in the export for analysis. Let's do this for the "Age at exam (years)" and "Hypertensive. Defined as the first exam treated for high blood pressure or second exam in which either Systolic is 6 140 mmHg or Diastolic 6 90mmHg" variables.
+
+```{r}
+age_variable_path <- tutorial_df[tutorial_df$var_description == "Age at exam (years)", "name"]
+hyperten_variable_path <- tutorial_df[tutorial_df$var_id == "HYPERTEN", "name"]
+```
+
+Let's add these variables to our query. To do this, we can either use `select()`, `require()`, or `anyof()`. 
+
+`select()` will add these variables for all participants we have filtered thus far, regardless whether they have a value for the variables or not.
+
+`anyof()` will add these variables for all participants that have at least one non-null value for the variables added.
+
+`require()` will add these variables for all participants that have only non-null values for all variables added.
+
+
+For this, let's use `require()` to only select participants that have information for both of these variables. 
+
+```{r}
+query_example <- picsure::addClause(query = query_example, # Query to add to
+                                               keys = c(age_variable_path, hyperten_variable_path), # List of variables to add
+                                               type = "REQUIRE") # Query type REQUIRE
+```
+
+### Exporting participant-level data from the query
+The query has been constructed and can now be exported for analysis.
 
 In the data dictionary dataframe shown previously, each row represented a single concept path or variable. In the query dataframe, the concept paths are added as columns with each row representing a participant with data that matches your query. 
 
-The dataframe above should contain some automatically exported concept paths, such as `Patient ID`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept path we added to our query (`\tutorial-biolincc_digitalis\SEX\`). Additionally, all participants should have the value we used to filter for our added concept path.
-
-We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the categorical variable (in this case, both males and females) of interest using `require()`.
+The dataframe above should contain some automatically exported concept paths, such as `patient_id`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept paths we added to our query.
 
 ```{r}
-full_categorical_example <- picsure::bdc.newQuery(session) #Initialize a new query
-full_categorical_example <- picsure::addClause(query = full_categorical_example,
-                                               keys = "\\tutorial-biolincc_digitalis\\SEX\\",
-                                               type = "REQUIRE")
+example_results <- picsure::runQuery(query_example, resultType = 'DATA_FRAME')
+head(example_results)
+```
 
-full_results_categorical <- picsure::runQuery(full_categorical_example)
-head(full_results_categorical)
+As you can see in the results, there are some instances where study participants may have more than one value for a given variable. For example, this may be the case when a study participants answers questionnaires for multiple visits. 
+
+In the PIC-SURE output, this is shown as values being separated by a tab or `\t` value. These multiple values will need to be accounted for depending on the planned analysis.
+
+With this example, averages of the age and BMI values could be calculated and a new variable "ever smoker" could be created based on whether "current smoker" was ever answered for the CURSMOKE variable. The code below shows this example of how to handle these values.
+
+*Note: Approaches to handling multiple values will differ based on the approach.*
+
+```{r}
+clean_results <- example_results %>% 
+  select("\\tutorial-biolincc_framingham\\AGE\\", "\\tutorial-biolincc_framingham\\BMI\\", "\\tutorial-biolincc_framingham\\CURSMOKE\\", "\\tutorial-biolincc_framingham\\HYPERTEN\\") %>%
+  rename(AGE = "\\tutorial-biolincc_framingham\\AGE\\", BMI = "\\tutorial-biolincc_framingham\\BMI\\", CURSMOKE = "\\tutorial-biolincc_framingham\\CURSMOKE\\", HYPERTEN = "\\tutorial-biolincc_framingham\\HYPERTEN\\")
+head(clean_results)
 ```
 
 ```{r}
-# Visualize the results with pie charts
-df_full <- data.frame(table(full_results_categorical[,eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
-pie(df_full$Freq, labels = df_full$Var1, main = paste("Before filtering on SEX"))
+# Function that splits the values and calculates the mean
+mean_multiple_values <- function(df_values) {
+  sep_values <- str_split(df_values, "\t")
+  numeric_values <- as.numeric(sep_values[[1]])
+  return(mean(numeric_values))
+}
 
-df_filter <- data.frame(table(results_categorical[, eval("\\tutorial-biolincc_digitalis\\SEX\\")]))
-pie(df_filter$Freq, labels = df_filter$Var1, main = paste("After filtering on SEX"))
-```
-
-### Build a query with a continuous variable
-Similarly, we can create a query using a continuous variable. Let's first filter to continuous variables using the `data_type` column.
-
-```{r}
-continuous_vars <- my_variables_df[my_variables_df$data_type == 'continuous',] # Filter to only categorical variables
-head(continuous_vars$var_description) #View the first 5 examples
-#continuous_vars # Uncomment to view the full dataframe
-```
-
-Let's do a simple filter on age to include the age range from 30 to 50 years old.
-
-```{r}
-#continuous_vars[continuous_vars$var_name == "AGE", ] # Uncomment to view information about the variable
-```
-
-
-```{r}
-query_continuous_example <- picsure::bdc.newQuery(session) # Initialize a new query
-
-query_continuous_example <- picsure::addClause(query = query_continuous_example, # Query to filter on
-                                               keys = "\\tutorial-biolincc_digitalis\\AGE\\", # Variable concept path to filter on
-                                               type = "FILTER", # The type of query, in this case FILTER
-                                               min = 30, # Minimum of the range
-                                               max = 50) # Maximum of the range
-```
-
-Note that if you do not specify the `min` or `max` fields, the minimum or maximum of the variable will be used.
-
-Now we can export our filtered data to a dataframe in this notebook.
-
-```{r}
-results_continuous <- picsure::runQuery(query_continuous_example, resultType = 'DATA_FRAME')
-head(results_continuous)
-```
-
-We can see how this query filtering worked by comparing the resulting dataframe to the full unfiltered data for this variable. Let's build a query that retrieves the data from all participants that have data for the continuous variable (in this case, participants of all ages) of interest using `require()`.
-
-```{r}
-full_continuous_example <- picsure::bdc.newQuery(session) #Initialize a new query
-full_continuous_example <- picsure::addClause(query = full_continuous_example,
-                                               keys = "\\tutorial-biolincc_digitalis\\AGE\\",
-                                               type = "REQUIRE")
-
-full_results_continuous <- picsure::runQuery(full_continuous_example)
-head(full_results_continuous)
+# Apply the function to calculate the means to the AGE and BMI variables
+mean_age <- lapply(clean_results$AGE, mean_multiple_values)
+mean_bmi <- lapply(clean_results$BMI, mean_multiple_values)
 ```
 
 ```{r}
-# Visualize results with histograms
-hist(full_results_continuous[,eval("\\tutorial-biolincc_digitalis\\AGE\\")],
-     main = "Before filtering on AGE",
-     xlab = "Age (in years)")
+# Function that flags participants as smoker if they have an answer of "Current smoker"
+ever_smoker <- function(smoke_vals){
+  sep_smoke_vals <- str_split(smoke_vals, "\t")[[1]]
+  if ("Current smoker" %in% sep_smoke_vals) {
+    return("Smoker")
+  } else {
+    return("Non-smoker")
+  }
+}
+
+# Apply the function to identify smokers to the CURSMOKE variable
+ever_smoker <- lapply(clean_results$CURSMOKE, ever_smoker)
 ```
 
 ```{r}
-hist(results_continuous[,eval("\\tutorial-biolincc_digitalis\\AGE\\")], 
-     main = "After filtering on AGE",
-     xlab = "Age (in years)")
+# Take a look at the new results
+clean_results$mean_age <- as.numeric(mean_age)
+clean_results$mean_bmi <- as.numeric(mean_bmi)
+clean_results$ever_smoker <- as.character(ever_smoker)
+clean_results %>% select("mean_age", "mean_bmi", "ever_smoker", "HYPERTEN") %>% head()
 ```
-
-### Build a query with multiple variables
-You can also add multiple variables to a single query. Let's build a query with the first five variables for the study of interest.
-
-```{r}
-query_vars_readable <- my_variables_df[c(5:10), "var_description"]
-query_vars_concept_path <- my_variables_df[c(5:10), "name"]
-query_vars_readable
-```
-
-We can use the`anyof` function to add variables to the query. This will filter to participants that have data **for at least one of the variables added**.  
-
-```{r}
-query_anyof <- picsure::bdc.newQuery(session) # Initialize a new query
-query_anyof <- picsure::addClause(query = query_anyof, 
-                                keys = query_vars_concept_path,
-                                type = 'ANYOF') 
-results <-  picsure::runQuery(query_anyof)
-```
-
-```{r}
-head(results)
-```
-
-### Selecting consent groups
-
-PIC-SURE will limit results based on which study and consent groups you have been individually authorized to access. In some cases, such as instances where you can access multiple studies and/or consent groups, you may need to limit your results further to only a subset of the groups you have been authorized to access.
-
-Let's see the studies and consent groups you are authorized to access by navigating to the 'consents' portion of the query object.
-
-```{r}
-authQuery_consents <- picsure::bdc.newQuery(session) # Initialize a new query
-authQuery_consents$categoryFilters$`\\_consents`
-```
-
-The output shown above lists all of the phs accession numbers and consent codes that you are authorized to access. 
-
-To query on specific consent groups in this list, you must first clear the list of values within the `\\_consents\\` section and then manually replace them. Let's practice this by deleting the `\\_consents\\` field and adding it back with our selected consent code. We can use another publicly available dataset in PIC-SURE, "Childhood Asthma Management Program (CAMP: Dataset for Teaching Purposes)" with consent code `tutorial-biolincc_camp"
-
-*Note that trying to manually add a consent group which you are not authorized to access will results in errors downstream.*
-
-```{r}
-authQuery_consents <- picsure::deleteClause(query = authQuery_consents, key = '\\_consents\\')
-authQuery_consents$categoryFilters$`\\_consents`
-```
-
-```{r}
-consent_group_filter <- "tutorial-biolincc_camp"
-authQuery_consents <- picsure::bdc.addClause(query = authQuery_consents, 
-                                         keys = '\\_consents\\', 
-                                         categories = list(consent_group_filter), 
-                                         type = 'FILTER')
-authQuery_consents$categoryFilters$`\\_consents`
-```
-
-Now your query is set to select only variables and participants from `tutorial-biolincc_camp`. From here, you can build out your query as shown above.
-
