@@ -267,6 +267,7 @@ With this example, averages of the age and BMI values could be calculated and a 
 *Note: Approaches to handling multiple values will differ based on the approach.*
 
 ```{r}
+# Select rows of interest and rename them
 clean_results <- example_results %>% 
   select("\\tutorial-biolincc_framingham\\AGE\\", "\\tutorial-biolincc_framingham\\BMI\\", "\\tutorial-biolincc_framingham\\CURSMOKE\\", "\\tutorial-biolincc_framingham\\HYPERTEN\\") %>%
   rename(AGE = "\\tutorial-biolincc_framingham\\AGE\\", BMI = "\\tutorial-biolincc_framingham\\BMI\\", CURSMOKE = "\\tutorial-biolincc_framingham\\CURSMOKE\\", HYPERTEN = "\\tutorial-biolincc_framingham\\HYPERTEN\\")
