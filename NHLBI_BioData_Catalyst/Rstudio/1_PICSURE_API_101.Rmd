@@ -26,7 +26,6 @@ The R API is actively developed by the Avillach Lab at Harvard Medical School.
 PIC-SURE API GitHub repo:
 * https://github.com/hms-dbmi/pic-sure-r-adapter-hpds
 * https://github.com/hms-dbmi/pic-sure-r-client
-* https://github.com/hms-dbmi/pic-sure-biodatacatalyst-r-adapter-hpds
 
 
 
