@@ -24,10 +24,6 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 
 *Troubleshooting: if you encounter an error while installing packages or connecting to a PIC-SURE resource, try restarting your kernel and trying again.*
 
-```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
-```
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.

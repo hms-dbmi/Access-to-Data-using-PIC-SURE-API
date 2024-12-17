@@ -74,9 +74,9 @@ Postacute sequelae of SARS-CoV-2 infection (PASC), also known as long COVID is d
 The RECOVER biostatistics team has used this definition to derive PASC scores for the RECOVER Adult cohort, which will be used in this notebook. For more information about these PASC scores, please refer to Thaweethai et al.'s [Development of a Definition of Postacute Sequelae of SARS-CoV-2 Infection](https://jamanetwork.com/journals/jama/fullarticle/2805540).
 
 ### PASC Scores
-First, let's search for variables related to `derived PASC score`.
+First, let's search for variables related to `PASC score`.
 ```{r}
-pasc_vars <- picsure::bdc.searchPicsure(session, keyword = "derived PASC score", includeValues = TRUE)
+pasc_vars <- picsure::bdc.searchPicsure(session, keyword = "PASC score", includeValues = TRUE)
 head(pasc_vars)
 ```
 

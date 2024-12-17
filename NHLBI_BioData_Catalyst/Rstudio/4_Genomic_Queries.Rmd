@@ -35,6 +35,7 @@ install.packages(c("devtools", "dplyr"))
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(picsure)
+library(tidyr)
 ```
 
 ### Connecting to a PIC-SURE resource
@@ -69,7 +70,7 @@ In this example, we will retrieve all variables available in the TOPMed DCC Harm
 You can find information about the phs number associated with each study and what data are available from the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'DCC Harmonized', includeValues = TRUE)  
+harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized', includeValues = TRUE)  %>% filter(study_id == "DCC Harmonized data set")
 ```
 
 ## 1.2 Add categorical phenotypic variable (sex) to the query
@@ -266,6 +267,25 @@ copd_query <- picsure::addClause(query = copd_query,
                                  categories = list("missense_variant"))
 ```
 
+COPDGene, like many studies in BDC, has associated participant genomic data in the TOPMed version of the study. In order to map to these genomic files, we will need the sample identifier from the TOPMed study of COPDGene, which has an accession number of phs000951.
+
+```{r}
+sample_id_search <- picsure::bdc.searchPicsure(session, 'phs000951', includeValues = FALSE)
+sample_var <- sample_id_search %>% 
+  filter(var_description == "Sample ID") %>%
+  pull(name)
+print(sample_var)
+```
+
+To add this variable to the query, let's use `REQUIRE` to require participants to have genomic data from the TOPMed study. 
+
+```{r}
+copd_query <- picsure::addClause(query = copd_query,
+                                 keys = sample_var,
+                                 type = "REQUIRE")
+```
+
+
 ### 2.2 Get Results
 Now that the filtering is complete, we can use this final query to get counts and perform analysis on the data.
 
@@ -283,5 +303,16 @@ dim(copd_result)
 
 ```{r}
 head(copd_result)
+```
+
+The sample identifier column can be used to identify genomic data files from the associated TOPMed study for analysis. The following code can be used to get a list of the sample IDs associated with your cohort. Note that there are multiple samples associated with a single participant. In these cases, the IDs are separated by a tab or `\t` character.
+
+```{r}
+mapping_df <- copd_result %>%
+  select(patient_id, "\\phs000951\\pht005051\\phv00253403\\SAMPLE_ID\\") %>%
+  rename(sample_id = "\\phs000951\\pht005051\\phv00253403\\SAMPLE_ID\\") %>%
+  mutate(sample_id = strsplit(sample_id, "\t")) %>%
+  unnest(sample_id)
+mapping_df
 ```
 

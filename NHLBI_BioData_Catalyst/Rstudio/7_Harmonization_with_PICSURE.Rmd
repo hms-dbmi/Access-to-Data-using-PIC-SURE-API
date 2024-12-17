@@ -34,6 +34,7 @@ devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T
 library(dplyr)
 library(ggplot2)
 library(picsure)
+library(stringr)
 ```
 
 ```{r}
@@ -246,7 +247,7 @@ combined_results <- combined_results %>%
 head(combined_results)
 ```
 
-Finally, we will harmonize the sex and bmi variables by combining them into one single 'sex' column.
+We will harmonize the sex and bmi variables by combining them into one single column.
 
 Sex and BMI are reported in the same way in both COPDGene and ECLIPSE, so we do not have to transform any of the participant level data.
 
@@ -257,18 +258,31 @@ combined_results <- combined_results %>%
            sex = ifelse(sex == '', eclipse_sex, sex),
            # combine bmi variables
            bmi = copdgene_bmi,
-           bmi = ifelse(is.nan(bmi), eclipse_bmi, bmi))
+           bmi = ifelse(is.na(bmi), eclipse_bmi, bmi))
 
 head(combined_results)
 ```
+We can see that there are multiple values reported for each patient's BMI. 
+The following code will handle this by taking the mean reported BMI in cases when a patient has multiple BMI values reported.
+```{r}
+get_mean_from_multiple_values <- function(x) {
+  y <- as.numeric(mean(as.numeric(unlist(str_split(x, '\\t'))), na.rm = TRUE))
+  return(y)
+}
+
+combined_results <- combined_results %>% 
+  mutate(bmi = lapply(bmi, get_mean_from_multiple_values))
+```
+
 
 ### Analysis and visualization
 
 In this example, we are interested in comparing mean BMI across different studies. We will calculate the mean for each group (ECLIPSE males, ECLIPSE females, COPDGene males, COPDGene females) and display the results as a table and a bar chart.
 
 ```{r}
-# remove unneccessary columns and summarize
-plotdf = combined_results %>% 
+# remove unnecessary columns and summarize
+plotdf <- combined_results %>% 
+    mutate(bmi = as.numeric(bmi)) %>%
     select(sex, study, bmi) %>%
     group_by(sex, study) %>%
     summarise(mean = mean(bmi, na.rm = TRUE))
@@ -428,12 +442,14 @@ table(orthopnea_results$pneumonia)
 ```
 
 Here we create a consistent mapping:
+Notice that line 2 shows an example where there are multiple values recorded for a participant. In this case, they may have responded \"No/Not Recorded\" at one time but \"Yes\" another time. We will categorize this response as \"Yes\", since it indicates the participant did have Orthopnea at some time.
 
 ```{r}
 mapping_df <- data.frame('raw' = c(unique(orthopnea_results$orthopnea), 
                                    unique(orthopnea_results$pneumonia)),
-                        'harmonized' = c('Unknown', 'No', 'Yes', 'No', 'Yes', 'Unknown',
-                                         'No', 'Unknown', 'Yes', 'Unknown', 'No', 'Unknown', 'Yes')) %>%
+                        'harmonized' = c('Unknown', 'Yes', 'Yes', 'No', 'No', 'Yes',
+                                         'Unknown', 'Yes', 'No', 'Unknown', 'Unknown',
+                                         'No', 'Unknown', 'Yes')) %>%
 unique()
 
 mapping_df
