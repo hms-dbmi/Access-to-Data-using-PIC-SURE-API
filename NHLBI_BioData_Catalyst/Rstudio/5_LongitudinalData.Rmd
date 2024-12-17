@@ -116,7 +116,12 @@ filtered_lipid_df <- filtered_lipid_df %>%
     distinct()
 
 # Create summary table by pivoting the dataframe to the number of exams that are associated with each variable
-longitudinal_lipid_summary <- filtered_lipid_df %>% select(varname_noexam, exam_number) %>% pivot_wider(names_from = varname_noexam, values_from = exam_number, values_fn = length) %>% select_if(longitudinal_lipid_summary > 1)
+longitudinal_lipid_summary <- filtered_lipid_df %>% 
+  select(varname_noexam, exam_number) %>% 
+  pivot_wider(names_from = varname_noexam, values_from = exam_number, values_fn = length)
+
+data.frame(table(filtered_lipid_df$varname_noexam) ) %>% arrange(desc(Freq))
+
 ```
 
 Now that we know which longitudinal variables are available to us, we can choose a variable of interest and extract the patient and visit level data associated with it.
