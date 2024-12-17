@@ -35,6 +35,7 @@ install.packages(c("devtools", "dplyr"))
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(picsure)
+library(tidyr)
 ```
 
 ### Connecting to a PIC-SURE resource
