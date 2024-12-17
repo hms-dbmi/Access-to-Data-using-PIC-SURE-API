@@ -270,9 +270,8 @@ get_mean_from_multiple_values <- function(x) {
   return(y)
 }
 
-test <- combined_results %>% 
+combined_results <- combined_results %>% 
   mutate(bmi = lapply(bmi, get_mean_from_multiple_values))
-
 ```
 
 
@@ -281,8 +280,9 @@ test <- combined_results %>%
 In this example, we are interested in comparing mean BMI across different studies. We will calculate the mean for each group (ECLIPSE males, ECLIPSE females, COPDGene males, COPDGene females) and display the results as a table and a bar chart.
 
 ```{r}
-# remove unneccessary columns and summarize
-plotdf = combined_results %>% 
+# remove unnecessary columns and summarize
+plotdf <- combined_results %>% 
+    mutate(bmi = as.numeric(bmi)) %>%
     select(sex, study, bmi) %>%
     group_by(sex, study) %>%
     summarise(mean = mean(bmi, na.rm = TRUE))
