@@ -22,8 +22,7 @@ Using these two components, the API can be used to export the selected data into
 ## Step 2: Setting up your notebook
 
 ### Pre-requisites for the notebook
-* python 3.6 or later
-* pip python package manager, already available in most systems with a python interpreter installed (link to pip)
+* R 3.4 or later
 
 ### Install packages to connect to the PIC-SURE API
 The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
