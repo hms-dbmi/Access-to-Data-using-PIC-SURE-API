@@ -24,7 +24,7 @@ This tutorial notebook will demonstrate how to query and work with the *BDC* cro
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-#install.packages(c("devtools", "dplyr", "ggplot2"))
+install.packages(c("devtools", "dplyr", "ggplot2"))
 ```
 
 ```{r}
@@ -84,17 +84,16 @@ We can see that the returned variables are all part of the DCC Harmonized datase
 unique(harmonized_df$study_id)
 ```
 
-Our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
+Our variable results include 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
 
 ```{r}
 dim(harmonized_df)
 ```
 
 ```{r}
-# Discarding "subject ID",
-# the variables which only indicate age of the subject at which a given harmonized variable was been measured,
+# Discarding the variables which only indicate age of the subject at which a given harmonized variable was been measured,
 # and variables which indicate the units of a given harmonized variable
-harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
 dim(harmonized_df)
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
