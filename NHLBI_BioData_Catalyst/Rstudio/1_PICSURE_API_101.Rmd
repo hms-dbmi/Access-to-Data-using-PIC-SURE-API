@@ -113,10 +113,10 @@ For the rest of this example notebook, we will use one of the publicly available
 phs_number <- "tutorial-biolincc_framingham"
 ```
 
-Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number; in this case `tutorial-biolincc_framingham`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
+Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching for a key term, in this case `tutorial`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
 
 ```{r}
-my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, includeValues = TRUE) # Search for the phs accession number 
+my_variables_df <- picsure::bdc.searchPicsure(session, keyword = "tutorial", includeValues = TRUE) # Search for "tutorial"
 ```
 
 We can now review the variables that were returned and some of the information associated with these variables.
@@ -126,7 +126,7 @@ nrow(my_variables_df) # How many variables did the search return?
 ```
 
 ```{r}
-head(my_variables_df$var_description, 10) # Review the first 10 variable descriptions in the dataframe
+head(my_variables_df$var_id, 10) # Review the first 10 variable IDs in the dataframe
 ```
 
 
