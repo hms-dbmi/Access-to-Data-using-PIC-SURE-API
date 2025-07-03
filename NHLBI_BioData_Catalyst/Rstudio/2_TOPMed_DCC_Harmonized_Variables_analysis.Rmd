@@ -24,7 +24,7 @@ This tutorial notebook will demonstrate how to query and work with the *BDC* cro
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-#install.packages(c("devtools", "dplyr", "ggplot2"))
+install.packages(c("devtools", "dplyr", "ggplot2"))
 ```
 
 ```{r}
@@ -48,7 +48,7 @@ session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 
 ## About Harmonized Variables
 
-The data harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with working group members and phenotype experts on this endeavor. So far, 44 harmonized variables are accessible through PIC-SURE API (in addition to the age at which each variable value has been collected for a given subject).
+The data harmonization effort aims to produce "a high quality, lasting resource of publicly available and thoroughly documented harmonized phenotype variables". The TOPMed Data Coordinating Center collaborates with working group members and phenotype experts on this endeavor. To learn more about which variables are available on BioData Catalyst Powered by PIC-SURE, please refer to the [table of TOPMed DCC Variables in the BDC-PIC-SURE documentation](https://pic-sure.gitbook.io/nhlbi-biodata-catalyst-powered-by-pic-sure/appendix/appendix-2-table-of-topmed-dcc-harmonized-variables-in-pic-sure). 
 
 The following phenotypes are included as harmonized variables:
 
@@ -84,22 +84,19 @@ We can see that the returned variables are all part of the DCC Harmonized datase
 unique(harmonized_df$study_id)
 ```
 
-We can also see that although there are only 44 DCC Harmonized variables, we have found 125 'harmonized' variables in PIC-SURE. This is because our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
+Our variable results include 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
 
 ```{r}
 dim(harmonized_df)
 ```
 
 ```{r}
-# Discarding "subject ID",
-# the variables which only indicate age of the subject at which a given harmonized variable was been measured,
+# Discarding the variables which only indicate age of the subject at which a given harmonized variable was been measured,
 # and variables which indicate the units of a given harmonized variable
-harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
 dim(harmonized_df)
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
-
-We can now see our 44 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
 
 ## 2. Selecting variables and retrieving data from the database
 
@@ -140,7 +137,7 @@ Below, we wrangle the data to calculate the male/female sex ratio per study coho
 
 ```{r}
 mf_df <- demographic_results %>%
-    select(grep('sex|subcohort', colnames(demographic_results)))
+    select("\\DCC Harmonized data set\\demographic\\annotated_sex_1\\", "\\DCC Harmonized data set\\demographic\\subcohort_1\\")
 colnames(mf_df) <- c('sex', 'subcohort')
 mf_df <- mf_df %>%
     group_by(subcohort) %>%
@@ -168,7 +165,7 @@ Below, we wrangle the data to calculate the percentage of participants in given 
 
 ```{r}
 race_df <- demographic_results %>%
-    select(grep('race|subcohort', colnames(demographic_results)))
+    select("\\DCC Harmonized data set\\demographic\\race_us_1\\", "\\DCC Harmonized data set\\demographic\\subcohort_1\\")
 colnames(race_df) <- c('race', 'subcohort')
 race_df <- race_df %>%
     filter(subcohort != '', race != '') %>% # filter out blanks
