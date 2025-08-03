@@ -22,12 +22,12 @@ This notebook is an illustration example about how to query data using the R **P
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-#install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
+install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
 ```
 
 ```{r}
-Sys.setenv(TAR = "/bin/tar")
-options(unzip = "internal")
+#Sys.setenv(TAR = "/bin/tar")
+#options(unzip = "internal")
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(stringr)
@@ -92,7 +92,7 @@ Here, we find all 44 DCC harmonized variables. For more details on this process,
 
 ```{r}
 harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
-harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
 dim(harmonized_df)
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
@@ -103,7 +103,7 @@ Now that we've retrieved the variable information, we need to select our variabl
 ```{r}
 # Retrieve the dependent variable - total cholesterol
 cholesterol_variables <- harmonized_df %>%
-    filter(grepl('cholesterol', name))
+    filter(grepl('Blood mass concentration of total cholesterol', var_name))
 cholesterol_variables
 
 cholesterol_path <- cholesterol_variables %>% pull(name)
@@ -112,7 +112,7 @@ cholesterol_path <- cholesterol_variables %>% pull(name)
 ```{r}
 # Create full list of concept paths with cholesterol_path removed
 selected_vars <- harmonized_df %>% 
-    filter(!grepl('cholesterol', name)) %>%
+    filter(!grepl('Blood mass concentration of total cholesterol', var_name)) %>%
     pull(name)
 ```
 
@@ -144,9 +144,9 @@ head(facts)
 Now that we have retrieved the data, we will perform some data management steps to prepare for the statistical analysis. First, we will identify which variables are categorical and which are continuous using the `data_type` column of the harmonized dictionary. Categorizing variables can be challenging; the PIC-SURE API greatly simplifies this step for the user by defining variable data types.
 
 ```{r}
-categorical_df <- harmonized_df %>% filter(data_type == 'categorical')
+categorical_df <- harmonized_df %>% filter(data_type == 'Categorical')
 categorical_varnames <- categorical_df %>% pull(name)
-continuous_df <- harmonized_df %>% filter(data_type == 'continuous')
+continuous_df <- harmonized_df %>% filter(data_type == 'Continuous')
 continuous_varnames <-  continuous_df %>% pull(name)
 ```
 
@@ -154,7 +154,7 @@ continuous_varnames <-  continuous_df %>% pull(name)
 # remove cholesterol_path from continuous_varnames
 continuous_varnames <- continuous_varnames[-which(continuous_varnames == cholesterol_path)]
 # remove subgroup concept path from categorical_varnames
-categorical_varnames <- categorical_varnames[-which(categorical_varnames == "\\DCC Harmonized data set\\01 - Demographics\\A distinct subgroup within a study  generally indicating subjects who share similar characteristics due to study design. Subjects may belong to only one subcohort.\\")]
+categorical_varnames <- categorical_varnames[-which(categorical_varnames == "\\DCC Harmonized data set\\demographic\\subcohort_1\\")]
 ```
 
 To perform this PheWAS, we will frame two participant cohorts in the context of the dependent variable of interest. In this example, we are interested in blood cholesterol. However, `Blood mass concentation of total cholesterol` is a continuous variable. We shall convert this variable into a binary variable with two groups, Normal/Low and High cholesterol levels, by applying a [threshold of 200mg/dL](https://www.mayoclinic.org/diseases-conditions/high-blood-cholesterol/diagnosis-treatment/drc-20350806). 
@@ -168,8 +168,8 @@ facts$categorical_cholesterol <- cut(chol_vector, breaks = c(48, 200, 647),
 We will also specify the variable name for the covariate we are interested in, in this case sex.
 
 ```{r}
-sex_path <- colnames(facts)[grep('sex', colnames(facts))]
-sex_path
+print(colnames(facts)[grep('sex', colnames(facts))]) # See column names with "sex" to select path related to harmonized sex variable
+sex_path <- "\\DCC Harmonized data set\\demographic\\annotated_sex_1\\"
 ```
 
 We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS). We can utilize the `\\DCC Harmonized data set\\demographic\\subcohort_1\\` concept path in the DCC Harmonized data set to select the participants of interest.
@@ -179,6 +179,44 @@ subgroup_var <- '\\DCC Harmonized data set\\demographic\\subcohort_1\\' # Get co
 # Filter using FHS 
 fhs_subset <- facts %>% filter(grepl('FHS', get(subgroup_var)))
 ```
+
+Finally, we need to handle any columns that have multiple values per participant. In PIC-SURE data, multiple values are recorded using a tab, `\t`, as the delimiter. The functions below handle these by returning the mean of numeric values and the unique strings of categorical values. 
+
+```{r}
+process_mixed_cell <- function(cell) {
+  # Split by tab
+  items <- strsplit(as.character(cell), "\t")[[1]]
+  # Try converting to numeric
+  nums <- suppressWarnings(as.numeric(items))
+  if (all(!is.na(nums))) {
+    # All items are numeric
+    return(mean(nums))
+  } else {
+    # Treat as categorical
+    first <- items[1]
+    if (all(items == first)) {
+      return(first)
+    } else {
+      return(paste0("Inconsistent: [", paste(items, collapse = ", "), "]"))
+    }
+  }
+}
+
+process_tab_separated_columns <- function(df, cols = NULL) {
+  df_processed <- df
+  if (is.null(cols)) {
+    # Detect columns with tabs
+    cols <- names(df)[sapply(df, function(col) any(grepl("\t", as.character(col))))]
+  }
+  for (col in cols) {
+    df_processed[[col]] <- sapply(df[[col]], process_mixed_cell)
+  }
+  df_processed
+}
+
+fhs_subset <- process_tab_separated_columns(fhs_subset)
+```
+
 
 ### 4. Statistical analysis
 Two different association tests will be carried out according to variables data types:
