@@ -51,7 +51,6 @@ token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
 session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
-     
 ```
 
 ## Longitudinal Lipid Variable Example
