@@ -92,7 +92,7 @@ Here, we find all 44 DCC harmonized variables. For more details on this process,
 
 ```{r}
 harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
-harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
+harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
 dim(harmonized_df)
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
@@ -144,9 +144,9 @@ head(facts)
 Now that we have retrieved the data, we will perform some data management steps to prepare for the statistical analysis. First, we will identify which variables are categorical and which are continuous using the `data_type` column of the harmonized dictionary. Categorizing variables can be challenging; the PIC-SURE API greatly simplifies this step for the user by defining variable data types.
 
 ```{r}
-categorical_df <- harmonized_df %>% filter(data_type == 'categorical')
+categorical_df <- harmonized_df %>% filter(data_type == 'Categorical')
 categorical_varnames <- categorical_df %>% pull(name)
-continuous_df <- harmonized_df %>% filter(data_type == 'continuous')
+continuous_df <- harmonized_df %>% filter(data_type == 'Continuous')
 continuous_varnames <-  continuous_df %>% pull(name)
 ```
 
@@ -366,7 +366,7 @@ theme(axis.title.y = element_text(face="italic", size=30),
 ```
 
 ```{r}
-# Manatthan plot using geom_jitter --> more suitable when number of point per category is enough
+# Manhatthan plot using geom_jitter --> more suitable when number of point per category is enough
 ggplot(data=plot_df, aes(x=concept_code, y=log_adj_pvalues, 
                          shape=sex, color=category, label=graph_labels)) +
 geom_jitter(alpha=1, 
