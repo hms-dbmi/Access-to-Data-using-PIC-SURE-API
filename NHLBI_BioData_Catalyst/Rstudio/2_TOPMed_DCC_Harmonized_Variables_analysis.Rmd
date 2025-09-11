@@ -84,7 +84,7 @@ We can see that the returned variables are all part of the DCC Harmonized datase
 unique(harmonized_df$study_id)
 ```
 
-We can also see that although there are only 44 DCC Harmonized variables, we have found 125 'harmonized' variables in PIC-SURE. This is because our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
+We can also see that although there are only 78 DCC Harmonized variables, we have found 226 'harmonized' variables in PIC-SURE. This is because our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
 
 ```{r}
 dim(harmonized_df)
@@ -94,12 +94,12 @@ dim(harmonized_df)
 # Discarding "subject ID",
 # the variables which only indicate age of the subject at which a given harmonized variable was been measured,
 # and variables which indicate the units of a given harmonized variable
-harmonized_df <- harmonized_df[!grepl(pattern = "age_at|SUBJECT_ID|unit_", harmonized_df$var_name),]
-dim(harmonized_df)
+harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
+print(dim(harmonized_df))
 head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
 ```
 
-We can now see our 44 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
+We can now see our 78 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
 
 ## 2. Selecting variables and retrieving data from the database
 
