@@ -65,6 +65,12 @@ library(dplyr)
 library(picsure)
 ```
 
+```{r}
+install.packages("stringr")
+library(stringr)
+```
+
+
 ## Connecting to a PIC-SURE resource
 
 The following is required to get access to data through the PIC-SURE API: 
@@ -95,28 +101,21 @@ For example, the above output lists and briefly defines how to use the `searchPi
 
 ## Using the PIC-SURE variable dictionary
 
-Now that you have set up your connection to the PIC-SURE API, let's determine which study or studies you are authorized to access. The `searchPicsure` function can be used to search the data dictionary for a specific term or to retrieve information about all the variables you are authorized to access. 
+Now that you have set up your connection to the PIC-SURE API, let's determine which study or studies you are authorized to access. The `getStudies` function can be used to return a list of the study accession numbers you are authorized to access.
 
 ```{r}
-searchResults <- picsure::bdc.searchPicsure(session) # retrieve all the variables you have access to
+searchResults <- picsure::bdc.getStudies(session) # retrieve all the studies you have access to
+print(searchResults)
+```
+
+For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Framingham Heart Study: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_framingham` in the PIC-SURE output above. To find the variables related to this dataset, we will use the `searchPicsure` function to search for a term of interest - in this case, `tutorial`.
+
+```{r}
+search_term <- "tutorial"
 ```
 
 ```{r}
-studies <- unique(searchResults$study_id)
-print("You are authorized to access the following studies:")
-print(studies)
-```
-
-For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Framingham Heart Study: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_framingham` in the PIC-SURE output above.
-
-```{r}
-phs_number <- "tutorial-biolincc_framingham"
-```
-
-Now, let's find all of the variables associated with that study. We can search for these using the `searchPicsure` function and searching the phs accession number; in this case `tutorial-biolincc_framingham`. We are interested in the values associated with the categorical variables in this study, so we will make sure to include the argument `includeValues = TRUE`.
-
-```{r}
-my_variables_df <- picsure::bdc.searchPicsure(session, keyword = phs_number, includeValues = TRUE) # Search for the phs accession number 
+my_variables_df <- picsure::bdc.searchPicsure(session, keyword = "tutorial", includeValues = TRUE) # Search for "tutorial"
 ```
 
 We can now review the variables that were returned and some of the information associated with these variables.
@@ -126,7 +125,7 @@ nrow(my_variables_df) # How many variables did the search return?
 ```
 
 ```{r}
-head(my_variables_df$var_description, 10) # Review the first 10 variable descriptions in the dataframe
+head(my_variables_df) # Take a peek at some of the variables returned
 ```
 
 
@@ -172,6 +171,7 @@ As an example query, let's use the Framingham tutorial dataset to investigate th
 
 ```{r}
 # Ensure that only Framingham tutorial variables are shown in the data dictionary, which can vary based on individual access
+phs_number <- "tutorial-biolincc_framingham"
 tutorial_df <- my_variables_df[my_variables_df$study_id == phs_number,]
 ```
 

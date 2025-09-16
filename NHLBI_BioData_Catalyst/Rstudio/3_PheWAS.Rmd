@@ -88,7 +88,7 @@ Which phenotypic characteristics are included in the harmonized variables?
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-Here, we find all 44 DCC harmonized variables. For more details on this process, see the `2_TOPMed_DCC_Harmonized_Variables_analysis` notebook.
+Here, we find all 78 DCC harmonized variables. For more details on this process, see the `2_TOPMed_DCC_Harmonized_Variables_analysis` notebook.
 
 ```{r}
 harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
@@ -404,7 +404,7 @@ theme(axis.title.y = element_text(face="italic", size=30),
 ```
 
 ```{r}
-# Manatthan plot using geom_jitter --> more suitable when number of point per category is enough
+# Manhatthan plot using geom_jitter --> more suitable when number of point per category is enough
 ggplot(data=plot_df, aes(x=concept_code, y=log_adj_pvalues, 
                          shape=sex, color=category, label=graph_labels)) +
 geom_jitter(alpha=1, 

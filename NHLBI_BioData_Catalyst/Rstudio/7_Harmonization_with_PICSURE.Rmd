@@ -71,7 +71,7 @@ One of the key challenges to conducting analyses with several studies is ensurin
 
 These variables are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To account for these differences, we need to develop a way to search for multiple keywords at once.
 
-Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by  using the ' | ' regular expression, allowing us to find all variables that include sex or gender. 
+Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by using the ' | ' regular expression, allowing us to find all variables that include sex or gender. 
 
 ```{r}
 sex_df <- picsure::bdc.searchPicsure(session, "sex|gender")  
@@ -149,7 +149,7 @@ eclipse_sex_var
 
 ### Which sex variable in COPDGene should we use? 
 
-We will take a similar approach as above, where we first filter our dataframe of sex/gender variables to only those from the EOCOPD study.
+We will take a similar approach as above, where we first filter our dataframe of sex/gender variables to only those from the COPDGene study.
 
 ```{r}
 # which sex/gender variables are part of COPDGene?

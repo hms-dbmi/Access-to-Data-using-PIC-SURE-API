@@ -26,12 +26,12 @@ For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-install.packages(c("devtools", "dplyr"))
+#install.packages(c("devtools", "dplyr"))
 ```
 
 ```{r}
-#Sys.setenv(TAR = "/bin/tar")
-#options(unzip = "internal")
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
 devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
 library(dplyr)
 library(picsure)
@@ -46,7 +46,6 @@ token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
 session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
-     
 ```
 
 # Example 1: Build a query with genomic and phenotypic variables
@@ -91,6 +90,7 @@ sex_var %>% pull(values)
 We are only interested in Female values in this use case - let's apply this filter to our query accordingly.
 
 ```{r}
+my_query <- picsure::bdc.newQuery(session)
 my_query <- picsure::addClause(query = my_query, 
                                keys = sex_var %>% pull(name),
                                type = 'FILTER',
@@ -158,12 +158,12 @@ The gene list shown above provides a list of values that can be used for the `Ge
 ```{r}
 my_query <- picsure::addClause(query = my_query, 
                                keys = 'Gene_with_variant',
-                               type = 'FILTER',
+                               type = 'GENOMIC_FILTER',
                                categories = list('FTO'))
 
 my_query <- picsure::addClause(query = my_query,
                                keys = 'Variant_severity',
-                               type = 'FILTER',
+                               type = 'GENOMIC_FILTER',
                                categories = list("HIGH"))
 ```
 
@@ -247,7 +247,7 @@ A filter for the *SERPINA1* gene can be added in a way similar to the first quer
 ```{r}
 copd_query <- picsure::addClause(query = copd_query, 
                                  keys = 'Gene_with_variant',
-                                 type = 'FILTER',
+                                 type = 'GENOMIC_FILTER',
                                  categories = list('SERPINA1'))
 ```
 
@@ -263,7 +263,7 @@ print(consequences)
 ```{r}
 copd_query <- picsure::addClause(query = copd_query, 
                                  keys = 'Variant_consequence_calculated',
-                                 type = 'FILTER',
+                                 type = 'GENOMIC_FILTER',
                                  categories = list("missense_variant"))
 ```
 
