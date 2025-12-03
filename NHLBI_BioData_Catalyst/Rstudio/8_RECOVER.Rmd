@@ -160,6 +160,7 @@ clean <- results %>% select("Patient_ID", "headpain_0", "headpain_3",
                             "headpain_6", "headpain_9", "pasc_0",
                             "pasc_3", "pasc_6", "pasc_9")
 ```
+
 ```{r}
 # Clean up the dataframe
 valid_pasc <- c("PASC", "PASC Indeterminate")
@@ -175,7 +176,6 @@ df_filtered <- results %>%
 ```
 
 ```{r}
-
 # Set up vectors with repeating values
 status <- rep(c("No Head Pain, PASC", "No Head Pain, PASC Indeterminate", "Head Pain, PASC", "Head Pain, PASC Indeterminate"), times=4)
 visit <- c(rep("Month 0", times=4), rep("Month 3", times=4), rep("Month 6", times=4), rep("Month 9", times=4))
