@@ -1,0 +1,5 @@
+token.txt
+token_prod.txt
+.ipynb_checkpoints/
+__pycache__/
+.pytest_cache/
