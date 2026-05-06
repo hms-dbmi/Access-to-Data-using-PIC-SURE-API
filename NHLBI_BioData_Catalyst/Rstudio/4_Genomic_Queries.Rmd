@@ -41,7 +41,7 @@ library(tidyr)
 ### Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://predev.picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)

@@ -48,7 +48,7 @@ The following is required to get access to data through the PIC-SURE API:
 If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+PICSURE_network_URL = "https://predev.picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
 session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
