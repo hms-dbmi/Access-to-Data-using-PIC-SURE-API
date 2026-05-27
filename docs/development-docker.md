@@ -65,3 +65,19 @@ is required for an adapter ref change.
   (Run `docker volume ls` to confirm the exact prefixed names.)
 - Adapter ref changes are handled by the entrypoint stamps and do **not**
   need a volume reset.
+- **Port clashes with the sibling adapter stacks.** The
+  `pic-sure-python-adapter-hpds` and `pic-sure-r-adapter-hpds` repos each ship
+  their own compose files that also publish JupyterLab on `:8888` and RStudio
+  on `:8787`. Only one stack can bind a port at a time — if `docker compose up`
+  here appears to start but the URL shows the wrong environment, stop the other
+  stack (`docker compose down` in that repo) or remap the ports here, e.g.
+  `docker compose run --rm -p 8899:8888 notebook`.
+- **Some notebooks re-install the adapters themselves.** A few notebooks (e.g.
+  `NHLBI_BioData_Catalyst/R/ORCHID_COVID19.ipynb`) still carry their original
+  setup cells such as
+  `devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main")` or
+  `pip install git+...@main`. Inside this image those cells are unnecessary and
+  counter-productive: the environment already installs the adapters at the
+  configured refs, and the R cell additionally needs `devtools` (only `remotes`
+  is baked in). **Skip those install cells** so you keep the pinned adapter
+  versions.
