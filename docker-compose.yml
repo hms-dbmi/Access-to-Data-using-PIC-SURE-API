@@ -1,0 +1,80 @@
+# Docker environment for the PIC-SURE example notebooks.
+#
+# Three services share one image (docker/Dockerfile):
+#   dev       — interactive bash shell.
+#   notebook  — JupyterLab on http://127.0.0.1:8888 (Python + R kernels).
+#   rstudio   — RStudio Server on http://127.0.0.1:8787 (no auth).
+#
+# All bind-mount this repo at /workspace (editable) and share named
+# volumes for the Python venv, the R library, and the uv cache.
+#
+# Quick start:
+#   cp .env.example .env             # optional; sets UID/GID + refs
+#   docker compose build
+#   docker compose up notebook       # JupyterLab on :8888
+#   docker compose up rstudio        # RStudio on :8787
+#   docker compose run --rm dev      # shell
+
+x-common: &common
+  image: picsure-notebooks:latest
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+    args:
+      USER_UID: ${UID:-1000}
+      USER_GID: ${GID:-1000}
+      PY_ADAPTER_REF: ${PY_ADAPTER_REF:-main}
+      R_ADAPTER_REF: ${R_ADAPTER_REF:-query_v3}
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    - .:/workspace
+    - picsure-venv:/opt/venv
+    - picsure-r-library:/opt/R/library
+    - uv-cache:/home/rstudio/.cache/uv
+  working_dir: /workspace
+
+services:
+  dev:
+    <<: *common
+    stdin_open: true
+    tty: true
+    command: ["bash"]
+
+  notebook:
+    <<: *common
+    ports:
+      - "127.0.0.1:8888:8888"
+    command:
+      - jupyter
+      - lab
+      - --ip=0.0.0.0
+      - --port=8888
+      - --no-browser
+      - --ServerApp.token=
+      - --ServerApp.password=
+      - --ServerApp.root_dir=/workspace
+
+  rstudio:
+    <<: *common
+    # rocker's s6 init must start as root to set up its supervisor
+    # files; it drops to the `rstudio` user before launching
+    # rstudio-server. Bypass our entrypoint so adapter installs don't
+    # gate UI startup — open a Terminal pane and let the first
+    # dev/notebook run (shared volumes) install the adapters, or run
+    # the install commands manually.
+    entrypoint: ["/init"]
+    command: []
+    user: root
+    environment:
+      DISABLE_AUTH: "true"
+      ROOT: "false"
+      USER: rstudio
+    ports:
+      - "127.0.0.1:8787:8787"
+
+volumes:
+  picsure-venv:
+  picsure-r-library:
+  uv-cache:
