@@ -67,16 +67,28 @@ ARG PY_ADAPTER_REF=main
 ARG R_ADAPTER_REF=query_v3
 
 # Persistent locations live on named volumes (see docker-compose.yml).
+#
 # RETICULATE_PYTHON points R/reticulate at the same /opt/venv where the
-# Python adapter is installed, so PY_ADAPTER_REF drives both the Python
-# kernel and R; the R adapter's own git-pinned managed venv is bypassed.
+# Python adapter is installed, so PY_ADAPTER_REF is the single source of
+# truth for the Python adapter across both the Python kernel and R. In
+# reticulate's py_discover_config, RETICULATE_PYTHON is honored before
+# any managed-venv logic, so the R adapter's own git-pinned py_require()
+# spec in zzz.R (.PICSURE_PY_SPEC, hard-coded to @main) is effectively
+# inert here. RETICULATE_USE_MANAGED_VENV=no makes that opt-out explicit
+# rather than relying on the variable's absence.
+#
+# UV_PYTHON pins uv to the apt-installed interpreter so a stray `uv`
+# invocation in the dev shell never tries to fetch a managed Python
+# (which UV_PYTHON_DOWNLOADS=never would reject).
 ENV R_LIBS_USER=/opt/R/library \
     R_LIBS_SITE=/opt/R/library \
     UV_CACHE_DIR=/home/rstudio/.cache/uv \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=/usr/bin/python3 \
     VENV_DIR=/opt/venv \
     RETICULATE_PYTHON=/opt/venv/bin/python \
+    RETICULATE_USE_MANAGED_VENV=no \
     PY_ADAPTER_REF=${PY_ADAPTER_REF} \
     R_ADAPTER_REF=${R_ADAPTER_REF} \
     PATH=/opt/venv/bin:/home/rstudio/.local/bin:$PATH
