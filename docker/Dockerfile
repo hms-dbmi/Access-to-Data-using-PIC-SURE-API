@@ -111,21 +111,25 @@ RUN printf '\n%s\n' \
     '})' \
     >> /usr/local/lib/R/etc/Rprofile.site
 
-# JupyterLab + LSP in the system Python so the notebook server is always
-# present regardless of the /opt/venv volume state. The data-science
-# kernel itself lives in /opt/venv, below.
-RUN pip install --break-system-packages --no-cache-dir \
-        jupyterlab \
-        jupyterlab-lsp \
-        'python-lsp-server[all]'
-
-# Python data-science venv: the JupyterLab "Python 3 (PIC-SURE)" kernel
-# and everything the python notebooks import. The PIC-SURE python
-# adapter is added at entrypoint time from git. The kernelspec is
-# registered to /usr/local (image) so it persists even though the venv
-# interpreter lives on the named volume.
+# Python data-science venv at /opt/venv: the JupyterLab server, the
+# "Python 3 (PIC-SURE)" kernel, and everything the python notebooks
+# import. The PIC-SURE python adapter is added at entrypoint time.
+#
+# JupyterLab MUST live in this venv, not in the system Python. jupyter
+# launches the stock `python3` kernelspec via a bare `python` argv that
+# jupyter_client rewrites to the *server's* own sys.executable; a
+# system-Python server therefore starts notebook kernels in system
+# Python, where pandas/numpy/etc. are absent ("No module named
+# 'pandas'"). Running the server from the venv makes that rewrite
+# resolve to /opt/venv/bin/python. As belt-and-suspenders we also
+# re-register the `python3` kernelspec with an absolute interpreter path
+# (overwriting the stock one in /opt/venv/share) so notebooks — whose
+# saved kernel name is `python3` — bind to the venv unconditionally.
 RUN uv venv /opt/venv --python /usr/bin/python3 \
  && uv pip install --python /opt/venv/bin/python --no-cache \
+        jupyterlab \
+        jupyterlab-lsp \
+        'python-lsp-server[all]' \
         ipykernel \
         pandas \
         numpy \
@@ -135,8 +139,8 @@ RUN uv venv /opt/venv --python /usr/bin/python3 \
         statsmodels \
         scipy \
  && /opt/venv/bin/python -m ipykernel install \
-        --prefix=/usr/local \
-        --name picsure-py \
+        --prefix=/opt/venv \
+        --name python3 \
         --display-name "Python 3 (PIC-SURE)" \
  && chown -R rstudio:rstudio /opt/venv
 
