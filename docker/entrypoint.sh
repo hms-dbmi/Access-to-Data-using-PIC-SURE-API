@@ -28,8 +28,12 @@ fi
 
 if [ ! -f "${R_STAMP}" ]; then
     echo "==> Installing PIC-SURE R adapter (ref: ${R_REF})"
+    # remotes (not pak): pak's binary resolution is broken on arm64 (see
+    # docker/Dockerfile). install_github builds the package from source;
+    # its only Import (reticulate) is already in the image, and
+    # upgrade='never' keeps it from re-resolving existing deps.
     R --quiet --no-save -e \
-        "pak::pkg_install('github::hms-dbmi/pic-sure-r-adapter-hpds@${R_REF}')"
+        "remotes::install_github('hms-dbmi/pic-sure-r-adapter-hpds', ref = '${R_REF}', upgrade = 'never')"
     touch "${R_STAMP}"
 fi
 

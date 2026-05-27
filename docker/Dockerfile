@@ -135,13 +135,28 @@ RUN uv venv /opt/venv --python /usr/bin/python3 \
         --display-name "Python 3 (PIC-SURE)" \
  && chown -R rstudio:rstudio /opt/venv
 
-# R bootstrap + notebook stack. pak pulls binary packages from Posit
-# Package Manager. IRkernel is registered system-wide so JupyterLab
-# sees the R kernel. Bioconductor limma via BiocManager. This is the
-# slow layer (~10-20 min on a cold build).
-RUN R -e "install.packages('pak', repos = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')" \
- && R -e "pak::pkg_install(c('IRkernel', 'languageserver', 'reticulate', 'tidyverse', 'survival', 'survminer', 'cmprsk', 'quantreg', 'DescTools', 'arsenal', 'coin', 'kableExtra', 'ggtext', 'ggrepel', 'BiocManager'))" \
- && R -e "BiocManager::install('limma', update = FALSE, ask = FALSE)" \
+# R bootstrap + notebook stack via install.packages against Posit
+# Package Manager (the same approach the sibling R-adapter image uses).
+#
+# We deliberately do NOT use pak here: on arm64 (aarch64) Ubuntu, P3M
+# has no prebuilt binaries, so it serves source tarballs, and pak's
+# subprocess misclassifies the source tarball as a binary and aborts
+# with "is not a valid binary, it is missing <pkg>/Meta/package.rds".
+# install.packages handles the source fallback correctly (compiling
+# from source, which is why all the -dev libs above are present).
+# `remotes` is installed for the entrypoint's install_github of the R
+# adapter. IRkernel is registered system-wide so JupyterLab sees the R
+# kernel. Bioconductor limma via BiocManager. This is the slow layer
+# (source compilation on arm64 can take well over 20 min on a cold
+# build; cached afterward). The final setdiff() check fails the build
+# loudly if any package did not install, since install.packages only
+# warns on a failed compile.
+RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')); \
+          pkgs <- c('remotes', 'IRkernel', 'languageserver', 'reticulate', 'tidyverse', 'survival', 'survminer', 'cmprsk', 'quantreg', 'DescTools', 'arsenal', 'coin', 'kableExtra', 'ggtext', 'ggrepel', 'BiocManager'); \
+          install.packages(pkgs); \
+          BiocManager::install('limma', update = FALSE, ask = FALSE); \
+          missing <- setdiff(c(pkgs, 'limma'), rownames(installed.packages())); \
+          if (length(missing)) stop('Failed to install: ', paste(missing, collapse = ', '))" \
  && R -e "IRkernel::installspec(user = FALSE)" \
  && chown -R rstudio:rstudio /opt/R/library
 
