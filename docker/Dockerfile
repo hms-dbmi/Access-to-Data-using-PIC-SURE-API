@@ -1,0 +1,152 @@
+# syntax=docker/dockerfile:1.7
+#
+# Combined R + Python environment for the PIC-SURE example notebooks.
+# Runs every v3-adapter notebook (all R notebooks + the 9 ported
+# NHLBI_BioData_Catalyst/python notebooks) via JupyterLab and RStudio.
+#
+# Base: rocker/rstudio:4.4 — R 4.4 + RStudio Server + pandoc on Ubuntu
+# noble. We add a Python venv, JupyterLab, both Jupyter kernels, the
+# heavy R + Python notebook stacks (baked here), and the two PIC-SURE
+# adapters (installed from git at entrypoint time).
+
+FROM rocker/rstudio:4.4
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System build deps for the R notebook packages (curl/ssl/xml2/fonts/
+# harfbuzz/png/tiff/jpeg/icu/zmq, cmake for source builds), git +
+# tini, and Python for the Jupyter kernel + reticulate.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        openssh-client \
+        ca-certificates \
+        curl \
+        tini \
+        less \
+        vim-tiny \
+        cmake \
+        libcurl4-openssl-dev \
+        libssl-dev \
+        libxml2-dev \
+        libgit2-dev \
+        libssh2-1-dev \
+        libfontconfig1-dev \
+        libfreetype6-dev \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libpng-dev \
+        libtiff5-dev \
+        libjpeg-dev \
+        libicu-dev \
+        libzmq3-dev \
+        zlib1g-dev \
+        python3 \
+        python3-venv \
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pinned uv (no curl|sh). Builds the Python venv at /opt/venv and
+# installs the python adapter at entrypoint time.
+COPY --from=ghcr.io/astral-sh/uv:0.7.13 /uv /uvx /usr/local/bin/
+
+# Remap the rocker `rstudio` user (UID 1000) so bind-mounted files land
+# with host ownership on Linux. Mostly a no-op on macOS Docker Desktop.
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN if [ "$(id -u rstudio)" != "${USER_UID}" ]; then usermod  -u ${USER_UID} rstudio; fi \
+ && if [ "$(id -g rstudio)" != "${USER_GID}" ]; then groupmod -g ${USER_GID} rstudio; fi \
+ && chown -R ${USER_UID}:${USER_GID} /home/rstudio
+
+# Trust the bind-mounted workspace for all users.
+RUN git config --system --add safe.directory /workspace
+
+# Adapter git refs — overridable at build time and via .env at runtime.
+# R defaults to query_v3 (its v3 work is not yet on main); see
+# /workspace/TODO.md for the switch-to-main task.
+ARG PY_ADAPTER_REF=main
+ARG R_ADAPTER_REF=query_v3
+
+# Persistent locations live on named volumes (see docker-compose.yml).
+# RETICULATE_PYTHON points R/reticulate at the same /opt/venv where the
+# Python adapter is installed, so PY_ADAPTER_REF drives both the Python
+# kernel and R; the R adapter's own git-pinned managed venv is bypassed.
+ENV R_LIBS_USER=/opt/R/library \
+    R_LIBS_SITE=/opt/R/library \
+    UV_CACHE_DIR=/home/rstudio/.cache/uv \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    VENV_DIR=/opt/venv \
+    RETICULATE_PYTHON=/opt/venv/bin/python \
+    PY_ADAPTER_REF=${PY_ADAPTER_REF} \
+    R_ADAPTER_REF=${R_ADAPTER_REF} \
+    PATH=/opt/venv/bin:/home/rstudio/.local/bin:$PATH
+
+RUN mkdir -p /opt/R/library /opt/venv /home/rstudio/.cache/uv \
+ && chown -R rstudio:rstudio /opt/R/library /opt/venv /home/rstudio
+
+# Ensure the writable user library is on .libPaths() ahead of the
+# read-only system tree (append to rocker's Rprofile.site).
+RUN printf '\n%s\n' \
+    'local({' \
+    '  user_lib <- Sys.getenv("R_LIBS_USER", "/opt/R/library")' \
+    '  if (!dir.exists(user_lib)) dir.create(user_lib, recursive = TRUE, showWarnings = FALSE)' \
+    '  .libPaths(c(user_lib, .libPaths()))' \
+    '})' \
+    >> /usr/local/lib/R/etc/Rprofile.site
+
+# JupyterLab + LSP in the system Python so the notebook server is always
+# present regardless of the /opt/venv volume state. The data-science
+# kernel itself lives in /opt/venv, below.
+RUN pip install --break-system-packages --no-cache-dir \
+        jupyterlab \
+        jupyterlab-lsp \
+        'python-lsp-server[all]'
+
+# Python data-science venv: the JupyterLab "Python 3 (PIC-SURE)" kernel
+# and everything the python notebooks import. The PIC-SURE python
+# adapter is added at entrypoint time from git. The kernelspec is
+# registered to /usr/local (image) so it persists even though the venv
+# interpreter lives on the named volume.
+RUN uv venv /opt/venv --python /usr/bin/python3 \
+ && uv pip install --python /opt/venv/bin/python --no-cache \
+        ipykernel \
+        pandas \
+        numpy \
+        matplotlib \
+        seaborn \
+        matplotlib-venn \
+        statsmodels \
+        scipy \
+ && /opt/venv/bin/python -m ipykernel install \
+        --prefix=/usr/local \
+        --name picsure-py \
+        --display-name "Python 3 (PIC-SURE)" \
+ && chown -R rstudio:rstudio /opt/venv
+
+# R bootstrap + notebook stack. pak pulls binary packages from Posit
+# Package Manager. IRkernel is registered system-wide so JupyterLab
+# sees the R kernel. Bioconductor limma via BiocManager. This is the
+# slow layer (~10-20 min on a cold build).
+RUN R -e "install.packages('pak', repos = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')" \
+ && R -e "pak::pkg_install(c('IRkernel', 'languageserver', 'reticulate', 'tidyverse', 'survival', 'survminer', 'cmprsk', 'quantreg', 'DescTools', 'arsenal', 'coin', 'kableExtra', 'ggtext', 'ggrepel', 'BiocManager'))" \
+ && R -e "BiocManager::install('limma', update = FALSE, ask = FALSE)" \
+ && R -e "IRkernel::installspec(user = FALSE)" \
+ && chown -R rstudio:rstudio /opt/R/library
+
+# RStudio: open sessions directly in the bind-mounted repo.
+RUN echo "session-default-working-dir=/workspace"  >> /etc/rstudio/rsession.conf \
+ && echo "session-default-new-project-dir=/workspace" >> /etc/rstudio/rsession.conf
+
+RUN printf '\nif (interactive() && file.exists("/workspace")) setwd("/workspace")\n' \
+        >> /home/rstudio/.Rprofile \
+ && chown rstudio:rstudio /home/rstudio/.Rprofile
+
+USER rstudio
+WORKDIR /workspace
+
+COPY --chown=rstudio:rstudio docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Default entrypoint covers `dev` and `notebook`. The `rstudio` service
+# overrides ENTRYPOINT back to rocker's /init.
+ENTRYPOINT ["tini", "--", "/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]
