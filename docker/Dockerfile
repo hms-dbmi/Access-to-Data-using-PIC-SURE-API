@@ -15,7 +15,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # System build deps for the R notebook packages (curl/ssl/xml2/fonts/
 # harfbuzz/png/tiff/jpeg/icu/zmq, cmake for source builds), git +
-# tini, and Python for the Jupyter kernel + reticulate.
+# tini, and Python for the Jupyter kernel + reticulate. libpython3.12-dev
+# ships libpython3.12.so.1.0 — the embeddable shared library reticulate
+# must dlopen to run R's `library(picsure)`; the stdlib/minimal packages
+# alone do not include it, so without -dev reticulate reports
+# "Python shared library not found".
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         openssh-client \
@@ -43,6 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-venv \
         python3-pip \
+        libpython3.12-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Pinned uv (no curl|sh). Builds the Python venv at /opt/venv and
