@@ -53,7 +53,7 @@ supported target and their dependencies are not pre-provisioned.
 | --- | --- |
 | Notebooks supported | v3-adapter notebooks only |
 | Adapter install | From **git** (GitHub `hms-dbmi`), **not** editable, not local source |
-| Adapter git ref | Configurable build args, **default `main`** |
+| Adapter git ref | Configurable build args. `PY_ADAPTER_REF` default `main`; `R_ADAPTER_REF` default `query_v3` (temporary — see TODO.md) |
 | Repo files | Editable — bind-mounted read-write at `/workspace` |
 | Services | `dev` (bash), `notebook` (JupyterLab :8888), `rstudio` (RStudio :8787) |
 
@@ -90,8 +90,8 @@ docs/development-docker.md # how to use it
   shared by all containers and cached in the image layer.
 - **Python notebook stack installed at build time** into `/opt/venv`:
   `pandas numpy matplotlib seaborn matplotlib-venn statsmodels scipy`.
-- Build args `PY_ADAPTER_REF` / `R_ADAPTER_REF` (default `main`) and `USER_UID`
-  / `USER_GID`.
+- Build args `PY_ADAPTER_REF` (default `main`) / `R_ADAPTER_REF` (default
+  `query_v3`, temporary) and `USER_UID` / `USER_GID`.
 - `RETICULATE_PYTHON=/opt/venv/bin/python` and managed-venv disabled — see
   "Adapter installation" below.
 
@@ -192,6 +192,8 @@ No automated tests for infra. Manual acceptance:
 
 ## Open assumptions
 
-- "Installed using git" + "default main" means the GitHub `hms-dbmi` remotes at
-  `main`. The local working branches (`fix/code-review-findings`, `query_v3`)
-  are reachable by overriding the build args if `main` lacks the needed v3 work.
+- "Installed using git" means the GitHub `hms-dbmi` remotes. The Python adapter
+  defaults to `main`. The R adapter defaults to **`query_v3`** for now because
+  its v3 work is not yet on `main`; a root `TODO.md` (gitignored) tracks
+  switching `R_ADAPTER_REF` back to `main` before release. Either ref can be
+  overridden via build args.
