@@ -14612,14 +14612,12 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h2 id="Set-Up">Set Up<a class="anchor-link" href="#Set-Up">&#182;</a></h2><h3 id="Pre-requisites">Pre-requisites<a class="anchor-link" href="#Pre-requisites">&#182;</a></h3><ul>
-<li>python 3.6 or later</li>
+<li>python 3.10.20 or later</li>
 <li>pip python package manager, already available in most systems with a python interpreter installed (link to pip)</li>
 </ul>
 <h3 id="Install-packages">Install packages<a class="anchor-link" href="#Install-packages">&#182;</a></h3><p>The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:</p>
 <ul>
-<li>PIC-SURE Client</li>
-<li>PIC-SURE Adapter</li>
-<li><em>BDC-PIC-SURE</em> Adapter</li>
+<li><code>pic-sure-python-adapter-hpds</code></li>
 </ul>
 <p><strong>Note that if you are using the dedicated PIC-SURE environment within the <em>BDC Powered by Seven Bridges</em> platform, the necessary packages have already been installed.</strong></p>
 
@@ -14631,16 +14629,15 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[1]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Install packages</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Non-PIC-SURE imports</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="c1">#pip install matplotlib</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="c1"># BDC Powered by Terra users uncomment the following line to specify package install location</span>
-<span class="c1"># sys.path.insert(0, r&quot;/home/jupyter/.local/lib/python3.7/site-packages&quot;)</span>
 </pre></div>
 
      </div>
@@ -14648,103 +14645,21 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 </div>
 
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Install PIC-SURE packages</span>
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-python-client.git
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds.git
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Install PIC-SURE package</span>
+<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade --force-reinstall git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git@main
 </pre></div>
 
      </div>
 </div>
 </div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Collecting git+https://github.com/hms-dbmi/pic-sure-python-client.git
-  Cloning https://github.com/hms-dbmi/pic-sure-python-client.git to /tmp/pip-req-build-7mpjvwys
-  Running command git clone --filter=blob:none --quiet https://github.com/hms-dbmi/pic-sure-python-client.git /tmp/pip-req-build-7mpjvwys
-  Resolved https://github.com/hms-dbmi/pic-sure-python-client.git to commit 8cd1d3d89e8539baf972dee96dc00d88e4853004
-  Preparing metadata (setup.py) ... done
-Building wheels for collected packages: PicSureClient
-  Building wheel for PicSureClient (setup.py) ... done
-  Created wheel for PicSureClient: filename=PicSureClient-0.1.0-py2.py3-none-any.whl size=10726 sha256=6aa29b1fb17f0de3f0ce6080759c5565868427452da87e0f5144d3d686b2fe29
-  Stored in directory: /tmp/pip-ephem-wheel-cache-4apkuipr/wheels/90/65/c4/e74447484bdae71b64f3f0a500bc7b3d9d6ee7edc62ade6667
-Successfully built PicSureClient
-Installing collected packages: PicSureClient
-Successfully installed PicSureClient-0.1.0
-Collecting git+https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git
-  Cloning https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git to /tmp/pip-req-build-7hgdf_ka
-  Running command git clone --filter=blob:none --quiet https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git /tmp/pip-req-build-7hgdf_ka
-  Resolved https://github.com/hms-dbmi/pic-sure-python-adapter-hpds.git to commit 696907e7ea18e2d3b511b50a355df27ea869d4a7
-  Preparing metadata (setup.py) ... done
-Collecting httplib2
-  Downloading httplib2-0.31.2-py3-none-any.whl (91 kB)
-     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">91.1/91.1 kB</span> <span class="ansi-red-fg">13.9 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
-Collecting pyparsing&lt;4,&gt;=3.1
-  Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
-     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">122.8/122.8 kB</span> <span class="ansi-red-fg">24.8 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
-Building wheels for collected packages: PicSureHpdsLib
-  Building wheel for PicSureHpdsLib (setup.py) ... done
-  Created wheel for PicSureHpdsLib: filename=PicSureHpdsLib-0.9.0-py2.py3-none-any.whl size=22162 sha256=442f6c04970ba21e94f8c3519d3f6abfb6b97ed4940b08c725a43c2664930339
-  Stored in directory: /tmp/pip-ephem-wheel-cache-qfwv3_ae/wheels/75/32/ca/ca45a25b13de6d9ec7a4d584241d588f730f81fadf580ff34d
-Successfully built PicSureHpdsLib
-Installing collected packages: pyparsing, httplib2, PicSureHpdsLib
-  Attempting uninstall: pyparsing
-    Found existing installation: pyparsing 3.0.9
-    Uninstalling pyparsing-3.0.9:
-      Successfully uninstalled pyparsing-3.0.9
-Successfully installed PicSureHpdsLib-0.9.0 httplib2-0.31.2 pyparsing-3.3.2
-Collecting git+https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds.git
-  Cloning https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds.git to /tmp/pip-req-build-o9iu68zu
-  Running command git clone --filter=blob:none --quiet https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds.git /tmp/pip-req-build-o9iu68zu
-  Resolved https://github.com/hms-dbmi/pic-sure-biodatacatalyst-python-adapter-hpds.git to commit 4ae6757b1880341aa4c06838fd3dbf3a86db9d6a
-  Preparing metadata (setup.py) ... done
-Collecting httplib2
-  Using cached httplib2-0.31.2-py3-none-any.whl (91 kB)
-Collecting pyparsing&lt;4,&gt;=3.1
-  Using cached pyparsing-3.3.2-py3-none-any.whl (122 kB)
-Building wheels for collected packages: PicSureBdcAdapter
-  Building wheel for PicSureBdcAdapter (setup.py) ... done
-  Created wheel for PicSureBdcAdapter: filename=PicSureBdcAdapter-1.0.0-py3-none-any.whl size=12934 sha256=1cc5d3a8cbc5755a986baa9a538468685292030428a9446fa0990f169e48d7dc
-  Stored in directory: /tmp/pip-ephem-wheel-cache-95r66vus/wheels/e4/3c/b0/64cb444206d84ce321e561c3fdd04f9803f4798c9d759f48e7
-Successfully built PicSureBdcAdapter
-Installing collected packages: pyparsing, httplib2, PicSureBdcAdapter
-  Attempting uninstall: pyparsing
-    Found existing installation: pyparsing 3.3.2
-    Uninstalling pyparsing-3.3.2:
-      Successfully uninstalled pyparsing-3.3.2
-  Attempting uninstall: httplib2
-    Found existing installation: httplib2 0.31.2
-    Uninstalling httplib2-0.31.2:
-      Successfully uninstalled httplib2-0.31.2
-Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
-</pre>
-</div>
-</div>
-
-</div>
-
 </div>
 
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -14755,8 +14670,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PicSureClient</span>
-<span class="kn">import</span> <span class="nn">PicSureBdcAdapter</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">picsure</span>
 </pre></div>
 
      </div>
@@ -14773,10 +14687,9 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h2 id="Connecting-to-PIC-SURE">Connecting to PIC-SURE<a class="anchor-link" href="#Connecting-to-PIC-SURE">&#182;</a></h2><p>The following is required to get access to the PIC-SURE API:</p>
 <ul>
-<li>a network URL</li>
 <li>a user-specific security token</li>
 </ul>
-<p>The following code specifies the network URL as the <em>BDC Powered by PIC-SURE</em> URL and references the user-specific token saved as <code>token.txt</code>.</p>
+<p>The following code references the user-specific token saved as <code>token.txt</code> and connects to BioData Catalyst Powered by PIC-SURE.</p>
 <p>If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the <code>README.md</code> file and the <code>Workspace_setup.ipynb</code> file.</p>
 
 </div>
@@ -14790,13 +14703,12 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PICSURE_network_URL</span> <span class="o">=</span> <span class="s2">&quot;https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure&quot;</span>
-<span class="n">token_file</span> <span class="o">=</span> <span class="s2">&quot;token.txt&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">token_file</span> <span class="o">=</span> <span class="s2">&quot;token.txt&quot;</span>
 
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">token_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">my_token</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-    
-<span class="n">bdc</span> <span class="o">=</span> <span class="n">PicSureBdcAdapter</span><span class="o">.</span><span class="n">Adapter</span><span class="p">(</span><span class="n">PICSURE_network_URL</span><span class="p">,</span> <span class="n">my_token</span><span class="p">)</span>
+
+<span class="n">session</span> <span class="o">=</span> <span class="n">picsure</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">picsure</span><span class="o">.</span><span class="n">Platform</span><span class="o">.</span><span class="n">BDC_AUTHORIZED</span><span class="p">,</span> <span class="n">my_token</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -14818,14 +14730,8 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>+--------------------------------------+------------------------------------------------------+
-|  Resource UUID                       |  Resource Name                                       |
-+--------------------------------------+------------------------------------------------------+
-| ac004461-1b47-4832-80e2-22a4aecabe39 | open-hpds-v3                                         |
-| ca0ad4a9-130a-3a8a-ae00-e35b07f1108b | visualization                                        |
-| 02e23f52-f354-4e8b-992c-d37c8b9ba140 | auth-hpds                                            |
-| 36363664-6231-6134-2d38-6538652d3131 | dictionary                                           |
-+--------------------------------------+------------------------------------------------------+
+<pre>You&#39;re successfully connected to BDC Authorized as user emily_hughes@era.nih.gov!
+Your token expires on 2026-07-09T16:33:23Z.
 </pre>
 </div>
 </div>
@@ -14878,11 +14784,10 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Search for derived PASC score</span>
-<span class="n">dictionary</span> <span class="o">=</span> <span class="n">bdc</span><span class="o">.</span><span class="n">useDictionary</span><span class="p">()</span><span class="o">.</span><span class="n">dictionary</span><span class="p">()</span> <span class="c1"># Set up the dictionary</span>
-<span class="n">pasc_search</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;pasc&quot;</span><span class="p">)</span>
-<span class="n">pasc_vars</span> <span class="o">=</span> <span class="n">pasc_search</span><span class="o">.</span><span class="n">dataframe</span><span class="p">()</span>
-<span class="n">pasc_vars</span> <span class="o">=</span> <span class="n">pasc_vars</span><span class="p">[</span><span class="n">pasc_vars</span><span class="o">.</span><span class="n">columnmeta_study_id</span> <span class="o">==</span> <span class="s2">&quot;phs003463&quot;</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Search for derived PASC score in RECOVER Adult</span>
+<span class="n">facets</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">facets</span><span class="p">()</span>
+<span class="n">facets</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;dataset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;phs003463&quot;</span><span class="p">)</span>
+<span class="n">pasc_vars</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">searchDictionary</span><span class="p">(</span><span class="s2">&quot;pasc&quot;</span><span class="p">,</span> <span class="n">facets</span><span class="o">=</span><span class="n">facets</span><span class="p">)</span>
 <span class="n">pasc_vars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 
@@ -14924,153 +14829,98 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>studyId</th>
-      <th>dtId</th>
-      <th>varId</th>
-      <th>is_categorical</th>
-      <th>is_continuous</th>
-      <th>values</th>
-      <th>columnmeta_is_stigmatized</th>
-      <th>columnmeta_name</th>
+      <th>conceptPath</th>
+      <th>name</th>
+      <th>display</th>
       <th>description</th>
-      <th>columnmeta_min</th>
-      <th>...</th>
-      <th>columnmeta_study_id</th>
-      <th>is_stigmatized</th>
-      <th>derived_var_name</th>
-      <th>derived_study_abv_name</th>
-      <th>derived_study_description</th>
-      <th>columnmeta_var_group_id</th>
-      <th>derived_group_name</th>
-      <th>columnmeta_HPDS_PATH</th>
+      <th>dataType</th>
+      <th>studyId</th>
+      <th>values</th>
       <th>min</th>
       <th>max</th>
+      <th>allowFiltering</th>
+      <th>meta</th>
+      <th>studyAcronym</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_pg2023_infected_63</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[No PASC, PASC]</td>
-      <td>false</td>
       <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
       <td>Participants are infected and 63 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
+      <td>[No PASC, PASC]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_pg2023_infected_3</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[No PASC, PASC]</td>
-      <td>false</td>
       <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
       <td>Participants are infected and 3 months past in...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
+      <td>[No PASC, PASC]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_pg2023_infected_51</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[No PASC, PASC]</td>
-      <td>false</td>
       <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
       <td>Participants are infected and 51 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
+      <td>[No PASC, PASC]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_pg2023_infected_45</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[No PASC, PASC]</td>
-      <td>false</td>
       <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
       <td>Participants are infected and 45 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
+      <td>[No PASC, PASC]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_pg2023_infected_33</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[No PASC, PASC]</td>
-      <td>false</td>
       <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
       <td>Participants are infected and 33 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_pg2023 (Biostats Derived Visits infected,...</td>
+      <td>[No PASC, PASC]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
   </tbody>
 </table>
-<p>5 rows × 35 columns</p>
 </div>
 </div>
 
@@ -15087,7 +14937,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Here, we can see that there are many PASC-related variables in the RECOVER Adult dataset. The scores we are interested in are the <code>pasc_jama2024</code>, which are the variables generated by the RECOVER biostatistics team. We can find these by filtering the <code>varId</code> column to show rows that contain this text.</p>
+<p>Here, we can see that there are many PASC-related variables in the RECOVER Adult dataset. The scores we are interested in are the <code>pasc_jama2024</code>, which are the variables generated by the RECOVER biostatistics team. We can search for this term in the <code>display</code>.</p>
 
 </div>
 </div>
@@ -15100,8 +14950,8 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Limit to only variables with matching text in varId</span>
-<span class="n">biostats_pasc_vars</span> <span class="o">=</span> <span class="n">pasc_vars</span><span class="p">[</span><span class="n">pasc_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;pasc_jama2024&quot;</span><span class="p">)]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Limit to only variables with matching text in the legacy var ID (from meta)</span>
+<span class="n">biostats_pasc_vars</span> <span class="o">=</span> <span class="n">pasc_vars</span><span class="p">[</span><span class="n">pasc_vars</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;pasc_jama2024&quot;</span><span class="p">)]</span>
 <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 
@@ -15143,153 +14993,98 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>studyId</th>
-      <th>dtId</th>
-      <th>varId</th>
-      <th>is_categorical</th>
-      <th>is_continuous</th>
-      <th>values</th>
-      <th>columnmeta_is_stigmatized</th>
-      <th>columnmeta_name</th>
+      <th>conceptPath</th>
+      <th>name</th>
+      <th>display</th>
       <th>description</th>
-      <th>columnmeta_min</th>
-      <th>...</th>
-      <th>columnmeta_study_id</th>
-      <th>is_stigmatized</th>
-      <th>derived_var_name</th>
-      <th>derived_study_abv_name</th>
-      <th>derived_study_description</th>
-      <th>columnmeta_var_group_id</th>
-      <th>derived_group_name</th>
-      <th>columnmeta_HPDS_PATH</th>
+      <th>dataType</th>
+      <th>studyId</th>
+      <th>values</th>
       <th>min</th>
       <th>max</th>
+      <th>allowFiltering</th>
+      <th>meta</th>
+      <th>studyAcronym</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>135</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <th>144</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_jama2024_infected_3</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[PASC, PASC Indeterminate]</td>
-      <td>false</td>
       <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
       <td>Participants are infected and 3 months past in...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
+      <td>[PASC, PASC Indeterminate]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
-      <th>136</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <th>145</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_jama2024_infected_15</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[PASC, PASC Indeterminate]</td>
-      <td>false</td>
       <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
       <td>Participants are infected and 15 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
+      <td>[PASC, PASC Indeterminate]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
-      <th>137</th>
+      <th>146</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
+      <td>pasc_jama2024_infected_69</td>
+      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
+      <td>Participants are infected and 69 months past i...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>infected</td>
-      <td>pasc_jama2024_infected_57</td>
-      <td>True</td>
-      <td>False</td>
       <td>[PASC, PASC Indeterminate]</td>
-      <td>false</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
+      <td>RECOVER_Adult</td>
+    </tr>
+    <tr>
+      <th>147</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
+      <td>pasc_jama2024_infected_57</td>
       <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
       <td>Participants are infected and 57 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
+      <td>[PASC, PASC Indeterminate]</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
     <tr>
-      <th>138</th>
-      <td>phs003463</td>
-      <td>infected</td>
+      <th>148</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
       <td>pasc_jama2024_infected_45</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[PASC, PASC Indeterminate]</td>
-      <td>false</td>
       <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
       <td>Participants are infected and 45 months past i...</td>
-      <td></td>
-      <td>...</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
-      <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>139</th>
-      <td>phs003463</td>
-      <td>infected</td>
-      <td>pasc_jama2024_infected_39</td>
-      <td>True</td>
-      <td>False</td>
       <td>[PASC, PASC Indeterminate]</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
-      <td>Participants are infected and 39 months past i...</td>
-      <td></td>
-      <td>...</td>
-      <td>phs003463</td>
-      <td>false</td>
-      <td>pasc_jama2024 (Biostats Derived Visits infecte...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>infected</td>
-      <td>infected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\visi...</td>
-      <td>NaN</td>
-      <td>NaN</td>
     </tr>
   </tbody>
 </table>
-<p>5 rows × 35 columns</p>
 </div>
 </div>
 
@@ -15321,10 +15116,10 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Save PASC variables for baseline and first three followups</span>
-<span class="n">pasc_0</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_0$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">pasc_3</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_3$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">pasc_6</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_6$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">pasc_9</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_9$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pasc_0</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_0$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pasc_3</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_3$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pasc_6</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_6$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pasc_9</span> <span class="o">=</span> <span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">biostats_pasc_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_9$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 
      </div>
@@ -15353,9 +15148,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Search for headache variables</span>
-<span class="n">headpain_search</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;head pain&quot;</span><span class="p">)</span>
-<span class="n">headpain_vars</span> <span class="o">=</span> <span class="n">headpain_search</span><span class="o">.</span><span class="n">dataframe</span><span class="p">()</span>
-<span class="n">headpain_vars</span> <span class="o">=</span> <span class="n">headpain_vars</span><span class="p">[</span><span class="n">headpain_vars</span><span class="o">.</span><span class="n">studyId</span> <span class="o">==</span> <span class="s2">&quot;phs003463&quot;</span><span class="p">]</span>
+<span class="n">headpain_vars</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">searchDictionary</span><span class="p">(</span><span class="s2">&quot;head pain&quot;</span><span class="p">,</span> <span class="n">facets</span><span class="o">=</span><span class="n">facets</span><span class="p">)</span>
 <span class="n">headpain_vars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 
@@ -15397,153 +15190,98 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>studyId</th>
-      <th>dtId</th>
-      <th>varId</th>
-      <th>is_categorical</th>
-      <th>is_continuous</th>
-      <th>values</th>
-      <th>columnmeta_is_stigmatized</th>
-      <th>columnmeta_name</th>
+      <th>conceptPath</th>
+      <th>name</th>
+      <th>display</th>
       <th>description</th>
-      <th>columnmeta_min</th>
-      <th>...</th>
-      <th>columnmeta_data_type</th>
-      <th>derived_var_id</th>
-      <th>columnmeta_study_id</th>
-      <th>is_stigmatized</th>
-      <th>derived_var_name</th>
-      <th>derived_study_abv_name</th>
-      <th>derived_study_description</th>
-      <th>columnmeta_var_group_id</th>
-      <th>derived_group_name</th>
-      <th>columnmeta_HPDS_PATH</th>
+      <th>dataType</th>
+      <th>studyId</th>
+      <th>values</th>
+      <th>min</th>
+      <th>max</th>
+      <th>allowFiltering</th>
+      <th>meta</th>
+      <th>studyAcronym</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>232</th>
+      <th>0</th>
+      <td>\phs003463\RECOVER_Adult\surveys\pasc_symptoms...</td>
+      <td>rc-ra1:hit6_severe|inf|v0</td>
+      <td>When you have headaches, how often is the pain...</td>
+      <td>Answerdata Form: pasc_symptoms Field: hit6_severe</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_60</td>
+      <td>[Always, Never, Rarely, Sometimes, Very often]</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_60</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
     <tr>
-      <th>233</th>
+      <th>1</th>
+      <td>\phs003463\RECOVER_Adult\surveys\pasc_symptoms...</td>
+      <td>rc-ra1:hit6_severe|noninf|v0</td>
+      <td>When you have headaches, how often is the pain...</td>
+      <td>Answerdata Form: pasc_symptoms Field: hit6_severe</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_51</td>
+      <td>[Always, Never, Rarely, Sometimes, Very often]</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_51</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
     <tr>
-      <th>234</th>
+      <th>2</th>
+      <td>\phs003463\RECOVER_Adult\surveys\pasc_symptoms...</td>
+      <td>rc-ra1:hit6_severe|inf|v30</td>
+      <td>When you have headaches, how often is the pain...</td>
+      <td>Answerdata Form: pasc_symptoms Field: hit6_severe</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_30</td>
+      <td>[Always, Never, Rarely, Sometimes, Very often]</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey, ...</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_30</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
     <tr>
-      <th>235</th>
+      <th>3</th>
+      <td>\phs003463\RECOVER_Adult\surveys\pasc_symptoms...</td>
+      <td>rc-ra1:hit6_severe|inf|v6</td>
+      <td>When you have headaches, how often is the pain...</td>
+      <td>Answerdata Form: pasc_symptoms Field: hit6_severe</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_63</td>
+      <td>[Always, Never, Rarely, Sometimes, Very often]</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_63</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
     <tr>
-      <th>236</th>
+      <th>4</th>
+      <td>\phs003463\RECOVER_Adult\surveys\pasc_symptoms...</td>
+      <td>rc-ra1:hit6_severe|inf|v9</td>
+      <td>When you have headaches, how often is the pain...</td>
+      <td>Answerdata Form: pasc_symptoms Field: hit6_severe</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_42</td>
+      <td>[Always, Never, Rarely, Sometimes, Very often]</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_42</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
   </tbody>
 </table>
-<p>5 rows × 33 columns</p>
 </div>
 </div>
 
@@ -15573,7 +15311,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">headpain_now_vars</span> <span class="o">=</span> <span class="n">headpain_vars</span><span class="p">[</span><span class="n">headpain_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;pain_head___now&quot;</span><span class="p">)]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">headpain_now_vars</span> <span class="o">=</span> <span class="n">headpain_vars</span><span class="p">[</span><span class="n">headpain_vars</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;pain_head___now&quot;</span><span class="p">)]</span>
 <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 
@@ -15615,153 +15353,98 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>studyId</th>
-      <th>dtId</th>
-      <th>varId</th>
-      <th>is_categorical</th>
-      <th>is_continuous</th>
-      <th>values</th>
-      <th>columnmeta_is_stigmatized</th>
-      <th>columnmeta_name</th>
+      <th>conceptPath</th>
+      <th>name</th>
+      <th>display</th>
       <th>description</th>
-      <th>columnmeta_min</th>
-      <th>...</th>
-      <th>columnmeta_data_type</th>
-      <th>derived_var_id</th>
-      <th>columnmeta_study_id</th>
-      <th>is_stigmatized</th>
-      <th>derived_var_name</th>
-      <th>derived_study_abv_name</th>
-      <th>derived_study_description</th>
-      <th>columnmeta_var_group_id</th>
-      <th>derived_group_name</th>
-      <th>columnmeta_HPDS_PATH</th>
+      <th>dataType</th>
+      <th>studyId</th>
+      <th>values</th>
+      <th>min</th>
+      <th>max</th>
+      <th>allowFiltering</th>
+      <th>meta</th>
+      <th>studyAcronym</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>232</th>
-      <td>phs003463</td>
-      <td>noninfected</td>
+      <th>158</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
       <td>pain_head___now_noninfected_60</td>
-      <td>True</td>
-      <td>False</td>
+      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>Head pain/headache [at time of survey] Partici...</td>
+      <td>Categorical</td>
+      <td>phs003463</td>
       <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_60</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
-    </tr>
-    <tr>
-      <th>233</th>
-      <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_51</td>
+      <td>None</td>
+      <td>None</td>
       <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_51</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
     </tr>
     <tr>
-      <th>234</th>
-      <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_30</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey, ...</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_30</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
+      <th>159</th>
       <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
-    </tr>
-    <tr>
-      <th>235</th>
-      <td>phs003463</td>
-      <td>noninfected</td>
-      <td>pain_head___now_noninfected_63</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_63</td>
-      <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
-      <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
-      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
-    </tr>
-    <tr>
-      <th>236</th>
-      <td>phs003463</td>
-      <td>noninfected</td>
       <td>pain_head___now_noninfected_42</td>
-      <td>True</td>
-      <td>False</td>
-      <td>[does not have symptom NOW at time of survey]</td>
-      <td>true</td>
       <td>pain_head___now (Biostats Derived Symptoms non...</td>
       <td>Head pain/headache [at time of survey] Partici...</td>
-      <td></td>
-      <td>...</td>
-      <td>categorical</td>
-      <td>pain_head___now_noninfected_42</td>
+      <td>Categorical</td>
       <td>phs003463</td>
-      <td>true</td>
-      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>[does not have symptom NOW at time of survey]</td>
+      <td>None</td>
+      <td>None</td>
+      <td>True</td>
+      <td>None</td>
       <td>RECOVER_Adult</td>
-      <td>Researching COVID to Enhance Recovery (RECOVER...</td>
-      <td>noninfected</td>
-      <td>noninfected</td>
+    </tr>
+    <tr>
+      <th>160</th>
       <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
+      <td>pain_head___now_noninfected_45</td>
+      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>Head pain/headache [at time of survey] Partici...</td>
+      <td>Categorical</td>
+      <td>phs003463</td>
+      <td>[does not have symptom NOW at time of survey]</td>
+      <td>None</td>
+      <td>None</td>
+      <td>True</td>
+      <td>None</td>
+      <td>RECOVER_Adult</td>
+    </tr>
+    <tr>
+      <th>161</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
+      <td>pain_head___now_noninfected_57</td>
+      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>Head pain/headache [at time of survey] Partici...</td>
+      <td>Categorical</td>
+      <td>phs003463</td>
+      <td>[does not have symptom NOW at time of survey]</td>
+      <td>None</td>
+      <td>None</td>
+      <td>True</td>
+      <td>None</td>
+      <td>RECOVER_Adult</td>
+    </tr>
+    <tr>
+      <th>162</th>
+      <td>\phs003463\RECOVER_Adult\biostats_derived\symp...</td>
+      <td>pain_head___now_noninfected_69</td>
+      <td>pain_head___now (Biostats Derived Symptoms non...</td>
+      <td>Head pain/headache [at time of survey] Partici...</td>
+      <td>Categorical</td>
+      <td>phs003463</td>
+      <td>[does not have symptom NOW at time of survey]</td>
+      <td>None</td>
+      <td>None</td>
+      <td>True</td>
+      <td>None</td>
+      <td>RECOVER_Adult</td>
     </tr>
   </tbody>
 </table>
-<p>5 rows × 33 columns</p>
 </div>
 </div>
 
@@ -15793,10 +15476,10 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Save head pain variables for baseline and first three followups</span>
-<span class="n">headpain_0</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_0$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">headpain_3</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_3$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">headpain_6</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_6$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">headpain_9</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">HPDS_PATH</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">varId</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_9$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">headpain_0</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_0$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">headpain_3</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_3$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">headpain_6</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_6$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">headpain_9</span> <span class="o">=</span> <span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">conceptPath</span><span class="p">[</span><span class="n">headpain_now_vars</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;_infected_9$&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 
      </div>
@@ -15817,7 +15500,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -15826,41 +15509,17 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Build a query</span>
-<span class="n">authPicSure</span> <span class="o">=</span> <span class="n">bdc</span><span class="o">.</span><span class="n">useAuthPicSure</span><span class="p">()</span>
-<span class="n">pasc_headpain_query</span> <span class="o">=</span> <span class="n">authPicSure</span><span class="o">.</span><span class="n">query</span><span class="p">()</span> <span class="c1"># Initiate a query</span>
-
-<span class="c1"># Add variables as a &quot;require&quot; </span>
-<span class="n">pasc_headpain_query</span><span class="o">.</span><span class="n">require</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">pasc_0</span><span class="p">,</span> <span class="n">pasc_3</span><span class="p">,</span> <span class="n">pasc_6</span><span class="p">,</span> <span class="n">pasc_9</span><span class="p">,</span> <span class="n">headpain_0</span><span class="p">,</span> <span class="n">headpain_3</span><span class="p">,</span> <span class="n">headpain_6</span><span class="p">,</span> <span class="n">headpain_9</span><span class="p">])</span>
+<span class="n">require_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">pasc_0</span><span class="p">,</span> <span class="n">pasc_3</span><span class="p">,</span> <span class="n">pasc_6</span><span class="p">,</span> <span class="n">pasc_9</span><span class="p">,</span> <span class="n">headpain_0</span><span class="p">,</span> <span class="n">headpain_3</span><span class="p">,</span> <span class="n">headpain_6</span><span class="p">,</span> <span class="n">headpain_9</span><span class="p">]</span>
+<span class="c1"># REQUIRE applies per concept path; a single multi-path clause would OR them.</span>
+<span class="c1"># Require ALL eight timepoints by building one REQUIRE clause per path and AND-ing them.</span>
+<span class="n">require_clauses</span> <span class="o">=</span> <span class="p">[</span><span class="n">picsure</span><span class="o">.</span><span class="n">buildClause</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">picsure</span><span class="o">.</span><span class="n">PhenotypicFilterType</span><span class="o">.</span><span class="n">REQUIRE</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">require_paths</span><span class="p">]</span>
+<span class="n">require_group</span> <span class="o">=</span> <span class="n">picsure</span><span class="o">.</span><span class="n">buildClauseGroup</span><span class="p">(</span><span class="n">require_clauses</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">picsure</span><span class="o">.</span><span class="n">GroupOperator</span><span class="o">.</span><span class="n">AND</span><span class="p">)</span>
+<span class="n">pasc_headpain_query</span> <span class="o">=</span> <span class="n">picsure</span><span class="o">.</span><span class="n">buildQuery</span><span class="p">(</span><span class="n">phenotypicFilter</span><span class="o">=</span><span class="n">require_group</span><span class="p">,</span> <span class="n">includeConcepts</span><span class="o">=</span><span class="n">require_paths</span><span class="p">)</span>
 </pre></div>
 
      </div>
 </div>
 </div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
-
-
-
-
-<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>&lt;PicSureHpdsLib.PicSureHpdsAttrListKeys.AttrListKeys at 0x7fe788d6fac0&gt;</pre>
-</div>
-
-</div>
-
-</div>
-
 </div>
 
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -15872,7 +15531,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Retrieve results</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">pasc_headpain_query</span><span class="o">.</span><span class="n">getResultsDataFrame</span><span class="p">(</span><span class="n">low_memory</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">runQuery</span><span class="p">(</span><span class="n">pasc_headpain_query</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">picsure</span><span class="o">.</span><span class="n">QueryType</span><span class="o">.</span><span class="n">PARTICIPANT</span><span class="p">)</span>
 <span class="c1">#results.head() # Uncomment to peek at the dataframe</span>
 </pre></div>
 
@@ -16009,7 +15668,7 @@ Successfully installed PicSureBdcAdapter-1.0.0 httplib2-0.31.2 pyparsing-3.3.2
 
 
 <div class="jp-RenderedImage jp-OutputArea-output ">
-<img src="data:image/png;base64,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mZkD7d093dHNsouw6FIpK9z911XdFkk29aiJiIiIJJQKNREREZGE0qFPERERkYRSj5qIiIhIQpV2cbxqr2nTpt62bduqboaIiIhIuebPn/+lu+90rcwaW6i1bduWefPmVXUzRERERMplZiXeYUOHPkVEREQSSoWaiIiISEKpUBMRERFJqBp7jpqIiGTHli1bWLFiBZs2barqpohUO3Xr1qVVq1bstttuaS2vQk1ERCpkxYoVNGrUiLZt22JmVd0ckWrD3fnqq69YsWIF7dq1S+s5OvQpIiIVsmnTJvbZZx8VaSIVZGbss88+FeqNVqEmIiIVpiJNpHIq+rejQk1EREQkoXSOmoiIBOl508t8uWFzxtbXtOHuzPv14DKXMTOuvPJKbr/9dgDGjx/Phg0bGDt2bFrbyM/PZ968edxzzz1F8wYOHMj48ePp2bNnpdsOsHz5coYMGcLixYt3mt+xY0c6dOjA5s2bOeKII/jDH/5ArVol95ncf//91K9fn+HDh1eqHbVr1yYvL4+tW7fSsWNHJk6cSP369dm6dSvf+973uOSSS7jllluKlp86dSq/+c1v2L59O1u2bGHMmDFceumlADz66KOMGzcOd8fdufDCC/n5z39eqXZJxahHTUREgmSySEt3fXvssQdPP/00X375ZUa3nW0HHHAACxYsYNGiRSxdupRnn3221GUvu+yyShdpAPXq1WPBggUsXryY3Xffnfvvvx+A6dOn06FDB5588kncHYhG8o4cOZLnnnuOhQsX8ve//52BAwcCMG3aNO666y6mT5/OkiVLePfdd2ncuHGl2yUVo0JNRESqnTp16jBy5EjuvPPOnR779NNPOfroo+nSpQtHH300//rXvyq8/unTp9O3b1+6d+/OD3/4QzZs2ADAb3/7W3r16sUhhxzCyJEjiwqd+fPn07VrV/r27cu9996bVvv79evHsmXLePDBB+nVqxddu3bljDPOYOPGjQCMHTuW8ePHA1Fv3y9+8Qt69+7NQQcdxBtvvFGh1zNgwACWLVsGwOTJkxkzZgxt2rThnXfeAWD9+vVs3bqVffbZB4gK4Q4dOgBwyy23MH78eFq0aAFEl5e45JJLKrR9qTwVaiIiUi2NGjWKSZMmsW7duh3mjx49muHDh7No0SLOPfdcrrjiihKf/8QTT9CtW7eiqfD+0F9++SU33XQTr7zyCu+++y49e/bkjjvuKFr33LlzWbx4MQUFBUydOhWACy64gAkTJjB79uy02r5x40ZmzJhBXl4ep59+OnPnzmXhwoV07NiRhx9+uMTnbN26lTlz5nDXXXdxww03pLWdwudNmzaNvLw8CgoKmDFjBkOGDGHo0KFMnjwZgCZNmnDKKaew//77M3ToUCZNmsT27dsBWLx4MT169Eh7e5JZKtRERKRa2nPPPRk+fDgTJkzYYf7s2bMZNmwYAOeddx5vvvlmic8/++yzWbBgQdFUeG7aO++8w9KlS+nfvz/dunVj4sSJfPppdL/smTNn0qdPH/Ly8nj11VdZsmQJ69atY+3atRx55JFF2yzNxx9/TLdu3ejfvz8nnXQSJ5xwAosXL2bAgAHk5eUxadIklixZUuJzTz/9dAB69OjB8uXLy31/CgoK6NatGz179qRNmzZcdNFFTJ06lUGDBlG/fn3OOOMMnnnmGbZt2wbAQw89xIwZM+jduzfjx4/nwgsvLHcbkn0aTCAiItXWT37yE7p3784FF1xQ6jIVvRyCuzN48OCi3qZCmzZt4kc/+hHz5s2jdevWjB07lk2bNuHuaW+j8By1VOeffz7PPvssXbt2JT8/n9dee63E5+6xxx5ANEhg69at5W6r8By1VJMnT+att96ibdu2AHz11VfMnDmTY445BoC8vDzy8vI477zzaNeuHfn5+XTu3Jn58+dz1FFHpfUaJbPUoyYiItVWkyZNOOuss3Y4XNivXz8ef/xxACZNmsThhx9eoXUedthhvPXWW0XndG3cuJEPP/yw6CKlTZs2ZcOGDTz11FMA7LXXXjRu3Lio527SpEkV2t769etp3rw5W7ZsqfBzP//8c44++ui0lv3mm2948803+de//sXy5ctZvnw59957L5MnT2bDhg07FIgLFixg//33B+Daa6/l6quv5t///jcA33777U69mJI9KtRERCRI04a7V+n6fvazn+0w+nPChAk88sgjdOnShccee4zf//73FVpfs2bNyM/PZ+jQoXTp0oXDDjuMf/zjH+y1115ccskl5OXlcdppp9GrV6+i5zzyyCOMGjWKvn37Uq9evQpt78Ybb6RPnz4MHjyYgw8+uELPXbVqFXXqpHdw7Omnn+aoo44q6pkDOPXUU5kyZQrbtm1j3LhxdOjQgW7dunH99deTn58PwIknnsioUaM45phj6Ny5Mz169EirR08ywwpHrNQ0PXv29MITQ0VEJHPef/99OnbsWNXNEOCee+6hTZs2nHLKKTnd7j9WfcPmbdtzus3da9fi4OZ75nSb2VLS35CZzXf3nS7ip3PUREREqqnRo0dXyXY3b9tOl1Z7Ba1jw6at/OvrjbRpUp+GdcsvRxatWBu0vepKhz5FREQk5xrWrUObJvX519cb2bBJh1JLo0JNREREqoSKtfKpUBMREZEqo2KtbCrUREREpEqpWCudCjURERGpcirWSqZRnyIiEqT/ra/y+dqCjK2v5V71eOuasq+Cb2ZceeWV3H777QCMHz+eDRs2MHbs2LS2kZ+fz7x587jnnnuK5g0cOJDx48cX3UqqspYvX86QIUNYvHjxTvM7duxIhw4d2Lx5M0cccQR/+MMfqFWr5D6T+++/n/r16zN8+PBKtaN27drk5eWxdetWOnbsyMSJE6lfvz5bt27le9/7Hpdccgm33HJL0fJTp07lN7/5Ddu3b2fLli2MGTOGSy+9FIBHH32UcePG4e64OyecPpQbfn3tDqM1x44dS8OGDfn5z3+edhuLv+epxVrhaNC77rqLkSNHVuo9KM/KlSu54oorii5eXFGFbatfv36GW/YdFWoiIjVYposogAdPac6WlEslfL62gOW3nrTDMrM//opRf3qXe4d1p+8B+1Ro/W2veb7cZfbYYw+efvpprr32Wpo2bVqh9VelwltIbd26laOOOopnn3226B6exV122WVB20q9hdS5557L/fffz5VXXsn06dPp0KEDTz75JL/73e8wM7Zs2cLIkSOZM2cOrVq14ttvvy26n+i0adO46667mD59Oi1atGDTpk3cMuF/K3RpjYooXqzddddd/L//9/+oSMmybds2ateuXe5yLVq0qHSRBhS1TYWaiIhUSklFVKHKFlPvv/8+Hcu5hlbfA/bh3mHdK12sladOnTqMHDmSO++8k5tvvnmHxz799FMuvPBC1qxZQ7NmzXjkkUdo06ZNhdY/ffp0rr/+er799lsOOOAAHnnkERo2bMhvf/tbnnvuOQoKCujXrx//+7//i5kxf/58LrzwQurXr5/WLavq1KlDv379WLZsGQ8++CAPPPAAmzdv5sADD+Sxxx6jfv36O/RQDRw4kD59+jBz5kzWrl3Lww8/zIABA9J+PQMGDGDRokVAdL/PMWPG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025AVKT9eURUtGXBmjVrOOOMM+jVqxe9evXirbfeAmDOnDn069ePQw89lH79+hX1iBUUFHDOOefQpUsXzj77bAoKCsrdxhFHHMGyZctYvnw5AwYMoHv37nTv3r2ohya1hyo/P5/TTz+d448/nvbt23P11VdX6PUUbguiIuuQQw7h8ssvZ/LkyUXLrFq1ilatvrstduGN5f/0pz/Rt2/foiINYNCgQWX2npXV3kceeYSDDjqIC888qeh9he/e80ED+nLeyUfx7EuvsuSDZdx///3ceeeddOvWjTfeeKPU383YsWMZOXIkxx57LMOHD2fs2LGMGDGCY489lrZt2/L0009z583XkZeXx/HHH8+WLVuAHXs/GzZsyK9+9Su6du3KYYcdVtRr+Nxzz9GnTx8OPfRQjjnmGFavXs3y5cvTbluVK+kquDVhytWdCTJ9hfhUpV1BXFeRr7ky+butyBXolamaKxt3UNnpqurX71nxDfxzlvv/tIu+FpfG+mrVquVdu3Ytmlq3bu2jRo1yd/ehQ4f6G2+84e7un376qR988MHuHt0JYMuW6Ir3L7/8sp9++unu7n777bf7BRdc4O7uCxcu9Nq1a/vcuXN32uaRRx5ZNH/cuHF+1lln+X//+18vKChwd/cPP/zQCz97PvnkE+/cubO7uz/yyCPerl07X7t2rRcUFHibNm38X//6V5mvb8SIEf7nP//Z3d2ffPJJ7927t7u7X3TRRf7oo4/6unXrvEWLFr5582Z3d3/xxRe9cePGPnDgQL/pppv8888/d3f3n/70p37XXXeV+36m096VK1d669at/YsvvvB5H6/2fv36lfqeH9ThYF/y+Tq/9le/8dtuu61oO6X9bq6//nrv3r27b9y4sejn/v37++bNm33BggVer149v/fRJ93d/bTTTvNnnnlmp98J4FOmTHF396uuuspvvPFGd3f/+uuvffv27e7u/uCDD/qVV15ZtI102pYNFbkzgQ59BsrmYSYdxpIQyo+EyHp+UnvWyjoMWop69eoV3Wwdol6gwp6VV155ZYfzlr755hvWr1/PunXrGDFiBB999BFmVtQrM2vWLK644gog6okq7I0qybnnnku9evVo27Ytd999N1u2bGH06NEsWLCA2rVr8+GHH5b4vKOPPprGjaNDup06deLTTz+ldevWZb7Gq666iptuuolmzZrx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
+<img src="data:image/png;base64,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Du6e7uhmqSEsOlXKUnf/U2W3RZJPPWoiIiIiCaVCTURERCShtOtTREREJKHUoyYiIiKSUCWdIK9Ka9asmbdr166ymyEiIiJSptmzZ3/t7sWeK7NaFmrt2rUjPz+/spshIiIiUiYzK/EKG9r1KSIiIpJQKtREREREEkqFmoiIiEhCVctj1EREJHs2b97M0qVL2bhxY2U3RaRKqVevHq1bt2aHHXZI+zEq1EREpFyWLl1Ko0aNaNeuHWZW2c0RqRLcnW+++YalS5fSvn37tB+nXZ8iIlIuGzduZNddd1WRJlIOZsauu+5a7p5oFWoiIlJuKtJEyq8ifzcq1EREREQSSseoiYhIkN7XTuPrdZsytr5mDeuS/6cDSl3GzLj44ou56aabABg3bhzr1q1j7NixaW1jwoQJ5Ofnc/vttxfOGzx4MOPGjaN3794VbjvA4sWLOfzww5k/f/5P5nfs2JG99tqLTZs2MWjQIO68805q1Sq+z+Suu+5ip512YuTIkRVqR+3atcnLy2PLli107NiRiRMnstNOO7FlyxZatGjB6aefzvXXX1+4/NSpU/nzn//Mtm3b2Lx5MxdccAFnnXUWAA8++CA33HADZkadOnU4+eST+f3vf1+hdkn5qEdNRESCZLJIS3d9O+64I08++SRff/11RredbXvssQdz5sxh3rx5LFy4kKeffrrEZc8+++wKF2kA9evXZ86cOcyfP5+6dety1113ATBt2jT23HNPHn/8cdwdiEbyjh49milTpjB37lz+9a9/MXjwYACef/55br31Vl566SXef/99ZsyYQePGjSvcLikfFWoiIlLl1KlTh9GjR3PLLbf85L7FixczdOhQunbtyn777ccXX3xR7vW/9NJL9OvXj549e3L88cezbt06AK6++mr69OlDly5dGD16dGGhM3v2bLp160a3bt2444470mp///79WbRoEffccw99+vShW7duHHvssaxfvx6AsWPHMm7cOCDq7fvDH/7APvvsw5577smbb75ZruczcOBAFi1aBMDkyZO54IILaNu2Le+++y4Aa9euZcuWLey6665AVAjvtddeAPz1r39l3LhxtGzZsvC+M888s1zbl4pToSYiIlXSeeedx6RJk1i9evV283/7298yatQo5s2bx8knn8z5559f7OMfffRRunfvXjgVXCP666+/5tprr+Xll1/mvffeo3fv3tx8880AjBkzhlmzZjF//nw2bNjA1KlTATj11FMZP348c+fOTavt69ev55VXXiEvL49jjjmGWbNmMXfuXDp27Mh9991X7GO2bNnCzJkzufXWW7nqqqvS2k7B455//nny8vLYuHEjL7/8MkcccQTDhg1j8uTJADRt2pQjjzyS3XffnWHDhjFp0iS2bdsGwPz58+nVq1fa25PMUqEmIiJV0s4778zIkSO57bbbtpv/7rvvMnz4cABGjBjBW2+9VezjTzzxRObMmVM4FRybNmPGDBYuXMiAAQPo3r07EydO5PPPo2tmv/baa/Tt25e8vDxeffVVFixYwKpVq1i1ahWDBg0q3GZJPvnkE7p3786AAQM47LDDOOSQQ5g/fz4DBw4kLy+PSZMmsWDBgmIfe8wxxwDQq1cvFi9eXObrs2HDBrp3707v3r1p27Ytp59+OlOnTmXIkCHUr1+fY489lqeffpqtW7cCcO+99/LKK6+wzz77MG7cOE477bQytyHZp8EEIiJSZV144YX07NmTU089NWPrdHcOOOCAwt6mAhs3buTcc88lPz+fNm3aMHbs2HKfE6vgGLVUp5xyCk8//TTdunVjwoQJvP7668U+dscddwSiQQJbtmwpc1sFx6ilmjx5Mm+99Rbt2rUD4JtvvuHVV1/lgAOiwRt5eXnk5eUxYsQI2rdvz4QJE+jcuTOzZ89m6NCh5XqukhnqURMRkSqradOmnHDCCdvtLuzfvz+PPPIIAJMmTWLgwIHlWue+++7L22+/XXhM1/fff89HH31UWJQ1a9aMdevW8cQTTwDQpEkTmjRpUthzN2nSpHJtb+3atbRo0YLNmzeX+7HLli1jv/32S2vZNWvW8Oabb/LFF1+wePFiFi9ezB133MHkyZNZt27ddgXinDlz2H333QG4/PLLueSSS/jPf/4DwKZNm7j33nvL1U6pOBVqIiISpFnDupW6vt/97nfbjf4cP348DzzwAF27duWhhx7ib3/7W7nW17x5cyZMmMCwYcPo2rUr/fr148MPP6RJkyaceeaZdOnShYMOOog+ffoUPuaBBx7gvPPOo3v37oUDDNJ1zTXX0LdvXwYMGMDee+9drscuX76cOnXS2zn21FNPMXTo0MKeOYCjjjqKKVOmsHXrVm644Qb22msvunfvzpVXXsmECRMAOPTQQxkzZgz7778/nTt3pmfPnqxZs6Zc7ZSKs/IGqiro3bu3FxwUKiIimfXBBx/QsWPHym6GALfffjtt27blyCOPzNk2P1y+hk1bt+VsewXq1q7F3i12zvl2M624vx8zm+3uxZ7AT8eoiYiIVFFjxozJ+TY3bd1G19ZNgtezbuMWvvh2PW2b7kTDemWXI/OWrgreZlWkXZ8iIiKScw3r1aFt05344tv1rNtY9uCImkqFmoiIiFQKFWtlU6EmIiIilUbFWulUqImIiEilUrFWMhVqIiIiUi7ZKKZUrBVPoz5FRCTIgOtfZdmqDRlbX6sm9Xn7stLPgm9mXHzxxdx0000AjBs3jnXr1jF27Ni0tjFhwgTy8/O5/fbbC+cNHjyYcePGFV5KqqIWL17M4Ycfzvz5838yv2PHjuy1115s2rSJQYMGceedd1KrVvF9JnfddRc77bQTI0eOrFA7ateuTV5eHlu2bKFjx45MnDiRnXbaiS1bttCiRQtOP/10rr/++sLlp06dyp///Ge2bdvG5s2bueCCCzjrrLMAePDBB7nhhhswMza7ccQxJ3DlHy/bbrTm2LFjadiwIb///e/TbmPR1zy1WCsYDXrrrbcyevToCr0GZfnyyy85//zzC09eXF4Fbdtpp50y3LIfqVATEanGMl1EAdxzZAs2p5wqYdmqDSy+/rDtlnn3k2847+H3uGN4T/rtsWu51t/usmfLXGbHHXfkySef5PLLL6dZs2blWn9lKriE1JYtWxg6dChPP/104TU8izr77LODtpV6CamTTz6Zu+66i4svvphp06ax55578vjjj/PXv/41Kr42b2b06NHMnDmT1q1b88MPPxReT/T555/n1ltv5aWXXqJly5bkf7KCd198qlyn1iiPosXarbfeym9+8xvKU7Js3bqV2rVrl7lcy5YtK1ykAYVty2ahpl2fIiLVWEERVdw0+cx9adqgLpPP3LfEZYqbWu9Sn66tmxROxem3x67cMbwn5z38Hu9+8k3Gn1edOnUYPXo0t9xyy0/uW7x4MUOHDqVr167st99+fPHFF+Ve/0svvUS/fv3o2bMnxx9/POvWrQPg6quvpk+fPnTp0oXRo0cXXoVg9uzZdOvWjW7dunHHHXek1f7+/fuzaNEi7rnnHvr06UO3bt049thjWb9+PRD1UI0bNw6Iep7+8Ic/sM8++7Dnnnvy5ptvluv5DBw4sPCSWJMnT+aCCy6gbdu2vPvuu0B0GastW7aw665RUb3jjjuy1157AfDXv/6VcePG0bJlSwDq7rgjvz337FJ3U5bU3g0bNnDSSSfRsWNHjj76aDZs+PGfiNTX/NQRw2hadxt/ufFmvvzyS4YMGcLpJxzxk+VS35t27drxhz/8gZ49e/L444/Trl07Lr/88sIL07/33nscdNBB7LHHHtx1111AlJUuXboAUS/rMcccw8EHH0yHDh249NJLC9t2zjnn0Lt3bzp37syVV14JwG233VbYtiFDhpTathAq1EREaqhsF1PZXv95553HpEmTWL169Xbzf/vb3zJq1CjmzZvHySefzPnnn1/s4x999FG6d+9eOBVc0ebrr7/m2muv5eWXX+a9996jd+/e3HzzzUB0gtlZs2Yxf/58NmzYwNSpUwE49dRTGT9+PHPnzk2r7evXr+eVV14hLy+PY445hlmzZjF37lw6duy43XVLU23ZsoWZM2dy6623ctVVV6W1nYLHPf/88+Tl5bFx40ZefvlljjjiCIYNG1Z44fmmTZty5JFHsvvuuzNs2DAmTZrEtm3R1Qfmz59Pr169frLeso4pK669f//739lpp5344IMPuOqqq5g9ezZQ/Gt+95238cdLLqb5bi2Y8vw07ntsSqnvDcCuu+7Ke++9x0knnQRA27ZtmTNnDgMHDuSUU07hiSeeYMaMGYXFVlFz5szh0Ucf5f333+fRRx9lyZIlAFx33XXk5+czb9483njjDebNm8f5559Py5Ytee2113jttdfKbFtFqVATEanBqnKxtvPOOzNy5Ehuu+227ea/++67DB8+HIARI0YUXiy9qBNPPJE5c+YUTgXHSc2YMYOFCxcyYMAAunfvzsSJE/n8888BeO211+jbty95eXm8+uqrLFiwgFWrVrFq1SoGDRpUuM2SfPLJJ3Tv3p0BAwZw2GGHccghhzB//nwGDhxIXl4ekyZNYsGCBcU+tmAXaa9evQp3S5Zmw4YNhb1Jbdu25fTTT2fq1KkMGTKE+vXrc+yxx/L000+zdetWAO69915eeeUV9tlnH8aNG8dpp51W5jZSi7VNW7a/rFRx7Z0+fXq8GxO6du1K165dgZJf84b16lCnlhXuvi/tvYHoPU1VcGmtvLw8+vbtS6NGjWjevDk77rgjq1at+snz2W+//WjcuDH16tWjU6dOhet+7LHH6NmzJz169GDBggUsXLjwJ48tq20VpWPURERquNRiqiLHlFXm+i+88MJoV9mpp2Zsne7OAQccUNjbVGDjxo2ce+655Ofn06ZNG8aOHcvGjRvLte6CY9RSnXLKKTz99NN069aNCRMm8Prrrxf72IKLqdeuXZstW8oeFZl6jFqByZMn89Zbb9GuXTsAvvnmG1599VUOOOAAICpo8vLyGDFiBO3bt2fChAl07tyZ2bNnM3Ro8QM8Coq11Rs206DBj8Vaedpb0msOYBYNMFlTxnIADRo02O73gjbUqlVru4vR16pVq9g2pS5T0O7PPvuMcePGMWvWLHbZZRdOOeWUYt/3stpWUSrURBIkGwd+pyOdUXZSvVXVYq1p06accMIJ3HfffYU9QP379+eRRx5hxIgRTJo0iYEDB5Zrnfvuuy/nnXceixYt4he/+AXff/89y5Yt42c/+xkAzZo1Y926dTzxxBMcd9xxNGnShCZNmvDWW2/xy1/+kkmTJpVre2vXrqVFixZs3ryZSZMm0apVq7Qfu2zZMkaOHMkrr7xS5rJr1qzhzTffZMmSJYUFyQMPPMDkyZPp168f+fn5DB48GIh2Ae6+++4AXH755VxyySU8++yz/PznP2fzpk3ce++9nHHGGYXrblivDo3r78CqDZtKPbXGoEGDePjhhxk6dCjz589n3rx5QMmv+Z577kmjRo3wzRtgh3qlLpcta9asoUGDBjRu3JgVK1bw/PPPF75OjRo1Yu3atTRr1ixrbVOhJpIgxY2eK6+KjLZLZ5SdVH8VLaZaNalfrgwNu2dGmesrj9/97nfbnWZj/PjxnHrqqdx44400b96cBx54oFzra968ORMmTGDYsGH88MMPAFx77bXsueeenHnmmXTp0oWf//zn9OnTp/AxDzzwAKeddhpmxoEHHliu7V1zzTX07duX5s2b07dvX9auXZv2Y5cvX06dOul9lT/11FMMHTp0u16jo446iksvvZRbbrmFG264gbPOOov69evToEEDJkyYAMChhx7KihUr2H///XF3ftiyjXPPOvMn669bpxYNdqzLF9+uZ+s2L7YN55xzDqeeeiodO3akY8eOhce+lfaajx49moMPPpidd/0Zs955s8TlsqVbt2706NGDvffemzZt2jBgwIDC+wraVnCsWjbaZgUjVqqT3r17e8FBodnU59qXWbnuh6xvpyj1flRf7S57NrhQg/IXa5nariRPRd7bsvLzwQcf0LFjx1LXMW/pqhJHhErm3H777bRt27bwWKxcKOu9XbdxS1ZO3VFdMlXc34+ZzXb3Yk/gpx61ACvX/UDTBnWzspsASv6wVO+HlCXbu7GkelN+qo4xY8ZUdhN+oriT1krFadRnoKo6WkqqP+VHQig/EkKXg8ocFWqBqvLQdqn+lB8JofxICBVrmaFCLQNUrEmSKT8SQvmRECrWwqlQy5BcFmtSvanYl6RRfiSEirUwKtQyKFfFmlRv6pmVJErNzw+bt1Z2c6SKUbFWcRqKkWG5OGmkVG9V8aSjUjMU5Ofbrz5n3cYtP47mu7EDfP/Vdst2DdlQg5/BJR+XukjDhg23u+D1hAkTyM/P3+58ahU1ePBgxo0bV3hJqdT5y5cvp169ejRs2JD777+/8MLlRX355Zecf/75PPHEExVqwymnnMIbb7xB48aNqVWrFnfccQf9+vUDoqsxPP744yxZsoRataL+lhUrVnD66aezZMkSNm/eTLt27XjuuecA+Oijj7jwwgv5+OOPadSoEb/4xS8YP348u+22W4XaVlEaDVox6lHLAvVcSAgd8yhJ1m+PXWnaoO72PSNFirRgmV5fBk2aNIm5c+cyatQoLrnkkhKXa9myZYWLtAI33ngjc+bM4frrr+ess84CYNu2bTz11FO0adOGN954o3DZK664ggMOOIC5c+eycOFCrr/+eiC67NVhhx3GOeecw8cff8x7773Hueeey8qVK4PaVlHqWSs/FWpZoi9DCaFiTZJsxx1qJ/rLduXKlRx77LH06dOHPn368PbbbwMwc+ZM+vXrR48ePejfvz///ve/geji5SeddBIdO3bk6KOPZsOGsi/jNmjQIBYtWsTixYsZOHAgPXv2pGfPnrzzzjsALF68mC5dugBRb98xxxzDwQcfTIcOHbj00kvL9XwKtgXw+uuv07lzZ84555ztrim5fPlyWrduXfh7wcXOH374Yfr168cRRxxReN/gwYML21YZVKyVT9YKNTOrZ2YzzWyumS0ws6vi+e3N7P/MbJGZPWpmdeP5O8a/L4rvb5eyrsvj+f82s4Oy1eZM05ehhNAAFcmUbOQn9cu2MmzYsIHu3bsXTldccUXhfRdccAEXXXQRs2bN4h//+EfhNSn33ntv3nzzTf71r39x9dVX88c//hGAv//97+y000588MEHXHXVVcyePbvM7U+ZMoW8vDx+9rOfMW3aNN577z0effRRzj///GKXnzNnDo8++ijvv/8+jz76KEuWLEn7uRZsC6KLqg8bNoyjjz6aZ599ls2bNwNw3nnncfrppzNkyBCuu+46vvzySwDmz59feJmmJFGxlr5s9qj9AAx1925Ad+BgM9sX+B/gFnf/BfAdcHq8/OnAd/H8W+LlMLNOwElAZ+Bg4E4zq53FdmeUijUJoQEqkgnZyk/Bl21lqF+/PnPmzCmcrr766sL7Xn75ZcaMGUP37t058sgjWbNmDevWrWP16tUcf/zxdOnShYsuuogFCxYAMH36dH7zm98AUU9UQW9UcU4++WS6d+/O22+/zbhx49i8eTNnnnkmeXl5HH/88SxcuLDYx+233340btyYevXq0alTJz7//PMyn+Mll1xC9+7dufvuu7nvvvvYtGkTzz33HL/+9a/Zeeed6du3Ly+++CIABx10EJ9++ilnnnkmH374IT169Ki03ZvpUrGWnqwVah4pONJzh3hyYChQsON+IvDr+PZR8e/E9+9nZhbPf8Tdf3D3z4BFwD7Zanc2qFiTELko1qR6y2Z+knhA+LZt25gxY0ZhEbds2TIaNmzIn//8Z4YMGcL8+fOZMmUKGzduLPe6J02axJw5c3j66adp06YNt9xyC7vtthtz584lPz+fTZs2Ffu41Auh165dmy1byi5MCo5RmzZtGl26dOHFF19k1apV5OXl0a5dO956663tdn82bdqU4cOH89BDD9GnTx+mT59O586d0+ohrCwq1sqW1WPUzKy2mc0BvgKmAZ8Aq9y94N1YCrSKb7cClgDE968Gdk2dX8xjUrc12szyzSw/if9FqFiTEMqPhKhp+TnwwAMZP3584e9z5swBYPXq1bRqFX19TJgwofD+QYMG8fDDDwPRrsJ58+alva3Vq1fTokULatWqxUMPPcTWreU7dcnIkSOZOXNmWstOnjyZe++9l8WLF7N48WI+++wzpk2bxvr163n11VdZvz7aDb127Vo++eQT2rZty/Dhw3nnnXd49tkfrxE9ffp05s+fX652ZpOKtdJltVBz963u3h1oTdQLtncWt3W3u/d2997NmzfP1maC1LQPS8ks5UdCZDU/DX6WqPXddttt5Ofn07VrVzp16sRdd90FwKWX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
 "
 class="
 jp-needs-light-background
