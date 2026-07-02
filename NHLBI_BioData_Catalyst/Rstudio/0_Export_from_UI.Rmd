@@ -22,7 +22,7 @@ Using these two components, the API can be used to export the selected data into
 ## Step 2: Setting up your notebook
 
 ### Pre-requisites for the notebook
-* R 3.4 or later
+* R 4.1 or later
 
 ### Install packages to connect to the PIC-SURE API
 The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
@@ -42,31 +42,30 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
-library(picsure)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(dplyr)
 ```
 
 ## Connecting to a PIC-SURE resource
 The following is required to get access to data through the PIC-SURE API: 
-- Network URL
 - User-specific security token
 
-The following code specifies the network URL as the BioData Catalyst Powered by PIC-SURE URL and references the user-specific token saved as `token.txt`.
+The following code connects to the *BDC-PIC-SURE* platform using the token saved in `token.txt`.
 
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file and the `Workspace_setup.ipynb` file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 ## Step 3: Export data from a query built in the PIC-SURE UI using the Query ID
 
-You are able to retrieve the results of a query that you have previously built using the [PIC-SURE UI](https://picsure.biodatacatalyst.nhlbi.nih.gov/). After you have built your query and filtered to your cohort of interest, click the **Prepare Data for Analysis** button. This will allow you to copy your query ID and bring it into a Jupyter notebook. **Note that query IDs are not permanent and may expire.**
+You are able to retrieve the results of a query that you have previously built using the [PIC-SURE UI](https://picsure.biodatacatalyst.nhlbi.nih.gov/). After you have built your query and filtered to your cohort of interest, click the "Prepare Data for Analysis" button and copy the Query ID.
+
+Paste the copied Query ID into the `queryID` variable in the cell below, then run `picsure::runQueryByID` to retrieve the results as a data frame. A real Query ID from the UI is required to execute this cell.
 
 
 ```{r}
@@ -75,95 +74,33 @@ queryID <- 'Paste your Query ID here'
 ```
 
 ```{r}
-# save the data as a dataframe
-results <- picsure::getResultByQueryUUID(session, queryID)
+# `queryID` is copied from the PIC-SURE UI ("Copy Query ID").
+results <- picsure::runQueryByID(session, queryID, type = picsure::QueryType$PARTICIPANT)
 
-# view the first few records
+# View the first few records
 head(results)
 ```
 
 The data has now been exported as a dataframe saved as `results` and is ready for analysis.
 
-## Bonus: Edit from a query built in the PIC-SURE UI using the Query ID
-You can now use the PIC-SURE API to edit queries that were built in the PIC-SURE UI. To do this, follow the same steps outlined above to build a query, package the data, and retrieve a Query ID. 
-```{r}
-# To run this using your notebook you must replace it with the ID value of a query that you have run.
-queryID <- 'paste your query ID here'
-query <- picsure::bdc.getQueryByUUID(session, queryID)
-```
+## Bonus: Inspect a query built in the PIC-SURE UI
+You can load a saved query from the PIC-SURE UI into R to inspect it or use it as the starting point for a new query composed in R.
 
-You can use the following code to view the filters and variables added for export. There are several different fields shown in this output.
-
-| Field | Meaning | Output | Example |
-|--------|-------------------|-------|-------|
-| query\$fields | All variables included in the list (no record subsetting) | Automatically generated PIC-SURE variables; variables added to export | `\\_Topmed Study Accession with Subject ID\\`, <br />`\\_Parent Study Accession with Subject ID\\`, <br />`\\phs000820\\pht004333\\phv00219059\\sampleID\\` |
-| query\$requiredFields | All variables; only records that do not contain null values for input variables | Variables filters to all values (such as selecting both "Is a tumor" and "Is not a tumor" for a "Tumor status" variable) | `\\phs000820\\pht004333\\phv00219063\\is_tumor\\` |
-| query\$anyRecordOf | All variables; only records that contain at least one non-null value for input variables | Variables added from the Dataset modal | `\\phs000820\\pht004332\\phv00219058\\AfibYes\\` |
-| query\$categoryFilters | Only records that match filter criteria for added categorical variables | Automatically generated PIC-SURE variables; variables that have been filtered (such as selecting only "Male" for a "Sex" variable | `$\\_consents\\ \| ['phs000820.c1']`,<br /> `categorical \| '\\phs000820\\pht004332\\phv00219057\\sex\\' \| 'Male'`|
-| query\$numericFilters | Only records that match filter criteria for added numeric variables | Variables that have been filtered (such as selecting participants between 30 and 70 years old | `\\phs000820\\pht004332\\phv00219056\\age\\": "min": "30", "max": "70"`|
+`picsure::loadQueryByID` returns an R object representing the query; use `str()` to examine its structure. To run modified versions of the query, compose new clause and group objects in R and pass them to `picsure::buildQuery` and `picsure::runQuery` (see the editing example further below).
 
 ```{r}
-# View all of the selected "fields" added to the query
-query$fields
+# Load the saved query object from the UI (uses the same queryID as above).
+query <- picsure::loadQueryByID(session, queryID)
 
+# Inspect the structure of the returned query object.
+str(query)
 ```
 
-```{r}
-# View all of the "requiredFields" added to the query
-query$requiredFields
-```
+### Inspecting a loaded query in v3
 
-```{r}
-# View all of the "anyRecordOf" fields added to the query
-query$anyRecordOf
-```
+In the v3 adapter there is no live mutable query object that exposes `$requiredFields` or `$categoryFilters` slots. Instead, the query structure is reflected through standard R objects:
 
-```{r}
-# View all of the "categoryFilters" fields added to the query
-query$categoryFilters
+- `str(query)` on the result of `picsure::loadQueryByID` shows the full parsed query structure.
+- To build or modify a query in R, construct clause objects with `picsure::buildClause`, optionally group them with `picsure::buildClauseGroup`, and assemble them into a query with `picsure::buildQuery`. You can then inspect the resulting R list/object with `str()` before running it.
 
-# Note - this includes a PIC-SURE required field called "\\_consents\\", which informs which studies and consent codes you are authorized to access. For more information about this field, view the "1_PICSURE_API_101" notebook.
-```
-
-```{r}
-# View all of the "numericFilters" fields added to the query
-query$numericFilters
-```
-
-Now that the query has been loaded, you can use the PIC-SURE API code to add new, edit existing, or delete clauses. 
-
-There are several methods that can be used to build a query, which can be specified by the `type` argument in the `picsure::addClause` function. 
-
-| type | functionality |
-|--------|-------------------|
-| type = 'SELECT' | return all variables included in the list (no record subsetting)|
-| type = 'REQUIRE' | return all variables included in the list; only records that do not contain null values for input variables |
-| type = 'ANYOF' | return all variables included in the list; only records that contain at least one non-null value for input variables |
-| type = 'FILTER' | return input variable; only records that match filter criteria |
-
-
-Additionally, the `picsure::deleteClause` function can be used to delete fields of the query. 
-
-*Note: Please review the `1_PICSURE_API_101` notebook for more information and detailed examples about how to add to a query.*
-
-```{r}
-# EXAMPLE CODE
-# Note: This code may not work with your query and is only intended to show how to set up code. Please adjust to your query and research purposes.
-
-# Let's say we have a "Gender of participant" filtering to "Male" but want to also add "Female". We could accomplish this using the following code:
-query <- picsure::addClause(query = query, 
-                             keys = "\\phs000820\\pht004332\\phv00219057\\sex\\",
-                             type = "FILTER",
-                             categories = list("Male", "Female"))
-
-# Similarly, we can edit an existing age range of 30 to 70 to be 35 to 75.
-query <- picsure::addClause(query = query, 
-                             keys = '\\phs000820\\pht004332\\phv00219056\\age\\',
-                             type = "FILTER", 
-                             min = 35,
-                             max = 75)
-
-# We can also delete variables and filters from the query altogether.
-query <- picsure::deleteClause(query = query, '\\phs000820\\pht004333\\phv00219063\\is_tumor\\')
-```
-
+See the editing example in the next section and the `1_PICSURE_API_101` notebook for detailed examples.
