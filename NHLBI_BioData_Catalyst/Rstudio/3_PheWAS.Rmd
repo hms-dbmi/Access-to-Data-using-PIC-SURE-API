@@ -12,7 +12,7 @@ This notebook is an illustration example about how to query data using the R **P
 ## Environment set-up
 
 ### System requirements
-- R 4.0 or later
+- R 4.1 or later
 
 ### Install packages
 
@@ -22,28 +22,26 @@ This notebook is an illustration example about how to query data using the R **P
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
+#install.packages(c("devtools", "dplyr", "ggplot2", "stringr", "ggrepel"))
 ```
 
 ```{r}
-#Sys.setenv(TAR = "/bin/tar")
-#options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(dplyr)
 library(stringr)
 library(ggplot2)
 library(ggrepel)
-library(picsure)
 ```
 
 ## Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 # PheWAS analysis
@@ -91,10 +89,14 @@ More information about the variable harmonization process is available at https:
 Here, we find all 78 DCC harmonized variables. For more details on this process, see the `2_TOPMed_DCC_Harmonized_Variables_analysis` notebook.
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
-harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
+facets <- picsure::facets(session) # Set up facets object
+picsure::addFacet(facets, "dataset_id", "DCC Harmonized data set") # Add a facet to filter for the DCC Harmonized data set
+facets$view() # We can confirm that the facet was added
+harmonized_df <- picsure::searchDictionary(session, facets = facets) # Search the dictionary using the facet we just set up
+harmonized_df <- harmonized_df[!grepl("age_at|SUBJECT_ID|unit_", harmonized_df$conceptPath), ]
+harmonized_df <- harmonized_df[harmonized_df$studyId == "DCC Harmonized data set", ]
 dim(harmonized_df)
-head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
+head(harmonized_df[, c('name', 'description', 'conceptPath', 'studyId')])
 ```
 
 ### 2. Using the PIC-SURE API to select variables and retrieve data
@@ -102,18 +104,17 @@ Now that we've retrieved the variable information, we need to select our variabl
 
 ```{r}
 # Retrieve the dependent variable - total cholesterol
-cholesterol_variables <- harmonized_df %>%
-    filter(grepl('Blood mass concentration of total cholesterol', var_name))
-cholesterol_variables
+cholesterol_variable <- harmonized_df %>% filter(grepl("total_cholesterol", conceptPath))
+cholesterol_variable
 
-cholesterol_path <- cholesterol_variables %>% pull(name)
+cholesterol_path <- (cholesterol_variable %>% pull(conceptPath))[1]
 ```
 
 ```{r}
 # Create full list of concept paths with cholesterol_path removed
-selected_vars <- harmonized_df %>% 
-    filter(!grepl('Blood mass concentration of total cholesterol', var_name)) %>%
-    pull(name)
+selected_vars <- harmonized_df %>%
+    filter(!conceptPath %in% cholesterol_path) %>%
+    pull(conceptPath)
 ```
 
 We are ready to create our query and retrieve the dataframe. This query will consist of two parts:
@@ -121,43 +122,19 @@ We are ready to create our query and retrieve the dataframe. This query will con
 2. **Select all remaining harmonized variables (`selected_vars`).** We will then add all of the remaining harmonized variables to the query, which will allow us to retrieve this information.
 
 ```{r}
-# Initialize a query
-myquery <- picsure::bdc.newQuery(session) # Initialize a new query
-myquery <- picsure::addClause(query = myquery, 
-                                keys = cholesterol_path,
-                                type = 'ANYOF') # Use anyof for the cholesterol variable to filter out the NA values
-
-```
-
-```{r}
-myquery <- picsure::addClause(query = myquery, 
-                                keys = selected_vars,
-                                type = 'ANYOF')
-```
-
-```{r}
-facts <- picsure::runQuery(myquery)
+# Build and run the query: ANYRECORD filter on cholesterol, include the rest as output columns
+chol_group <- picsure::buildClauseGroup(
+  list(picsure::buildClause(cholesterol_path, type = picsure::PhenotypicFilterType$ANYRECORD)),
+  operator = picsure::GroupOperator$OR
+)
+myquery <- picsure::buildQuery(phenotypicFilter = chol_group, includeConcepts = selected_vars)
+facts <- picsure::runQuery(session, myquery, type = picsure::QueryType$PARTICIPANT)
 head(facts)
+
 ```
 
 ### 3. Data-management
-Now that we have retrieved the data, we will perform some data management steps to prepare for the statistical analysis. First, we will identify which variables are categorical and which are continuous using the `data_type` column of the harmonized dictionary. Categorizing variables can be challenging; the PIC-SURE API greatly simplifies this step for the user by defining variable data types.
-
-```{r}
-categorical_df <- harmonized_df %>% filter(data_type == 'Categorical')
-categorical_varnames <- categorical_df %>% pull(name)
-continuous_df <- harmonized_df %>% filter(data_type == 'Continuous')
-continuous_varnames <-  continuous_df %>% pull(name)
-```
-
-```{r}
-# remove cholesterol_path from continuous_varnames
-continuous_varnames <- continuous_varnames[-which(continuous_varnames == cholesterol_path)]
-# remove subgroup concept path from categorical_varnames
-categorical_varnames <- categorical_varnames[-which(categorical_varnames == "\\DCC Harmonized data set\\demographic\\subcohort_1\\")]
-```
-
-To perform this PheWAS, we will frame two participant cohorts in the context of the dependent variable of interest. In this example, we are interested in blood cholesterol. However, `Blood mass concentation of total cholesterol` is a continuous variable. We shall convert this variable into a binary variable with two groups, Normal/Low and High cholesterol levels, by applying a [threshold of 200mg/dL](https://www.mayoclinic.org/diseases-conditions/high-blood-cholesterol/diagnosis-treatment/drc-20350806). 
+Now that we have retrieved the data, we will perform some data management steps to prepare for the statistical analysis. To perform this PheWAS, we will frame two participant cohorts in the context of the dependent variable of interest. In this example, we are interested in blood cholesterol. However, `Blood mass concentation of total cholesterol` is a continuous variable. We will convert this variable into a binary variable with two groups, Normal/Low and High cholesterol levels, by applying a [threshold of 200mg/dL](https://www.mayoclinic.org/diseases-conditions/high-blood-cholesterol/diagnosis-treatment/drc-20350806). 
 
 ```{r}
 chol_vector <- facts %>% pull(eval(cholesterol_path))
@@ -165,21 +142,21 @@ facts$categorical_cholesterol <- cut(chol_vector, breaks = c(48, 200, 647),
                   labels = c("Normal/Low", "High"))
 ```
 
-We will also specify the variable name for the covariate we are interested in, in this case sex.
+We will also specify the variable name for the covariate we are interested in, in this case Sex.
 
 ```{r}
-print(colnames(facts)[grep('sex', colnames(facts))]) # See column names with "sex" to select path related to harmonized sex variable
-sex_path <- "\\DCC Harmonized data set\\demographic\\annotated_sex_1\\"
+sex_path <- colnames(facts)[grep('sex', colnames(facts))]
+sex_path
 ```
 
-We will also select our cohorts of interest. In this example, we are interested in participants from the Framingham Heart Study (FHS). We can utilize the `\\DCC Harmonized data set\\demographic\\subcohort_1\\` concept path in the DCC Harmonized data set to select the participants of interest.
+We will also select our cohorts of interest. In this example, we are interested in participants from the Multi-Ethnic Study of Atherosclerosis (MESA). We can utilize the `\\DCC Harmonized data set\\demographic\\subcohort_1\\` concept path in the DCC Harmonized data set to select the participants of interest.
 
 ```{r}
 subgroup_var <- '\\DCC Harmonized data set\\demographic\\subcohort_1\\' # Get concept path for distinct subgroups
-# Filter using FHS 
-fhs_subset <- facts %>% filter(grepl('FHS', get(subgroup_var)))
+# Filter using MESA 
+mesa_subset <- facts %>% filter(grepl('MESA', get(subgroup_var)))
+print(table(mesa_subset %>% pull(eval(subgroup_var))))
 ```
-
 Finally, we need to handle any columns that have multiple values per participant. In PIC-SURE data, multiple values are recorded using a tab, `\t`, as the delimiter. The functions below handle these by returning the mean of numeric values and the unique strings of categorical values. 
 
 ```{r}
@@ -214,7 +191,35 @@ process_tab_separated_columns <- function(df, cols = NULL) {
   df_processed
 }
 
-fhs_subset <- process_tab_separated_columns(fhs_subset)
+mesa_subset <- process_tab_separated_columns(mesa_subset)
+```
+
+Before we do the analysis, there are columns of empty data. These may exist for several reasons, such as the data for the harmonized variable not being collected for the given study. To handle this and to keep this example analysis simple, we will only keep columns that have no NaNs.
+
+```{r}
+mesa_subset <- mesa_subset[, colSums(is.na(mesa_subset)) == 0] # Remove columns of data that have any NaNs.
+```
+
+Finally, we will identify which variables are categorical and which are continuous using the `dataType` column of the harmonized dictionary. This is an example of how the PIC-SURE API greatly simplifies this step for the user, as categorizing variables can be tricky.
+
+```{r}
+categorical_df <- harmonized_df %>% filter(dataType == 'Categorical')
+categorical_varnames <- categorical_df %>% pull(conceptPath)
+continuous_df <- harmonized_df %>% filter(dataType == 'Continuous')
+continuous_varnames <- continuous_df %>% pull(conceptPath)
+```
+
+```{r}
+# Make sure paths are in mesa_subset, remove cholesterol_path from continuous_varnames
+continuous_varnames <- continuous_varnames[
+  continuous_varnames %in% names(mesa_subset)
+]
+continuous_varnames <- continuous_varnames[-which(continuous_varnames == cholesterol_path)]
+# Make sure paths are in mesa_subset, remove subgroup concept path from categorical_varnames
+categorical_varnames <- categorical_varnames[
+  categorical_varnames %in% names(mesa_subset)
+]
+categorical_varnames <- categorical_varnames[-which(categorical_varnames == "\\DCC Harmonized data set\\demographic\\subcohort_1\\")]
 ```
 
 
@@ -325,32 +330,33 @@ run_phewas <- function(facts, dependent_var, continuous_varnames, categorical_va
 ```
 
 We then use our previously defined wrapper function to run the PheWAS 2 times:
-- Testing all harmonized variables against cholesterol in females in the FHS study
-- Testing all harmonized variables against cholesterol in males in the FHS study
+- Testing all harmonized variables against cholesterol in females in the MESA study
+- Testing all harmonized variables against cholesterol in males in the MESA study
 
 ```{r}
-fhs_female_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Female'),
+mesa_female_df <- run_phewas(mesa_subset %>% filter(get(sex_path) == 'Female'),
                                      "categorical_cholesterol", 
                                      continuous_varnames, 
                                      categorical_varnames, 
                                      case_value="High", 
                                      control_value="Normal/Low") %>%
     mutate(sex = 'Female',
-           study = 'FHS')
+           study = 'MESA')
 
-fhs_male_df <- run_phewas(fhs_subset %>% filter(get(sex_path) == 'Male'),
+mesa_male_df <- run_phewas(mesa_subset %>% filter(get(sex_path) == 'Male'),
                                      "categorical_cholesterol", 
                                      continuous_varnames, 
                                      categorical_varnames, 
                                      case_value="High", 
                                      control_value="Normal/Low") %>%
     mutate(sex = 'Male',
-           study = 'FHS')
+           study = 'MESA')
 ```
 
 ```{r}
-combined_df <- rbind(fhs_female_df, fhs_male_df)
-head(combined_df)
+combined_df <- rbind(mesa_female_df, mesa_male_df)
+combined_df <- combined_df[is.na(combined_df$pval) | combined_df$pval != 0, ] # Removing pvalues equal to 0
+combined_df
 ```
 
 Because we are running many statistical tests, we need to perform a p-value adjustment. Here, we use the Holm-Bonferroni method with an alpha of 0.01.
@@ -424,9 +430,9 @@ my_theme
 
 ```{r}
 # View top 5 p-values for each study/sex combination
-print("FHS Females:")
-arrange(fhs_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
-print("FHS Males:")
-arrange(fhs_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
+print("MESA Females:")
+arrange(mesa_female_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
+print("MESA Males:")
+arrange(mesa_male_df, pval)[1:5,] %>% select(simplified_varname, pval, sex, study)
 ```
 
