@@ -16,7 +16,7 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 # Environment set-up
 
 ### Pre-requisites
-- R 3.4 or later
+- R 4.1 or later
 
 ### Install Packages
 
@@ -33,26 +33,22 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
-library(dplyr)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(picsure)
+library(dplyr)
 ```
 
 ## Connecting to a PIC-SURE resource
 
 The following is required to get access to data through the PIC-SURE API: 
-- Network URL
-- Resource id
-- User-specific security token
+- A valid user-specific security token
 
 If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 # Sickle Cell Example
@@ -60,10 +56,11 @@ session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 Let's search the data dictionary in PIC-SURE to find all the variables in the `HCT for SCD` study, which is associated to PHS study number `phs002385`. 
 
 ```{r}
-df <- picsure::bdc.searchPicsure(session, 'phs002385')
-```
+facets <- picsure::facets(session) # Set up facets object
+picsure::addFacet(facets, "dataset_id", "phs002385") # Add a facet to filter for the HCT for SCD study
 
-```{r}
+df <- picsure::searchDictionary(session, facets = facets)
+print(dim(df))
 head(df)
 ```
 
@@ -77,64 +74,48 @@ Let's say we are interested in the age at which patients from the following coho
 We will use regular expressions to search the variable descriptions within the HCT for SCD study to find these variables.
 
 ```{r}
-variables_of_interest <- df[grepl('Sex|Avascular necrosis|Year of transplant$', df$var_description),]
+variables_of_interest <- df[grepl('Sex|Avascular necrosis|Year of transplant$', df$description),]
 
-sex_var <- df[grepl('Sex', df$var_description),'name']
-avascular_necrosis_var <- df[grepl('Avascular necrosis', df$var_description),'name']
-transplant_yr_var <- df[grepl('Year of transplant$', df$var_description),'name']
+sex_var                <- df[grepl("Sex", df$description), "conceptPath"][1]
+avascular_necrosis_var <- df[grepl("Avascular necrosis", df$description), "conceptPath"][1]
+transplant_yr_var      <- df[grepl("Year of transplant$", df$description), "conceptPath"][1]
 
 variables_of_interest
 ```
 
-Now we can create a new query using the `name` associated with our variables of interest and apply our filters to retrieve the cohort of interest.
+Now we can create a new query using the `conceptPath` associated with our variables of interest and apply our filters to retrieve the cohort of interest.
 
 ```{r}
-myquery <- picsure::bdc.newQuery(session) # Initialize a new query
+# age at transplant — included as an output column only (not a row filter)
+age_transplant_var <- df[grepl("age at transplant, years$", df$description), "conceptPath"][1]
 
-# Filter to Males
-myquery <- picsure::bdc.addClause(query = myquery, 
-                                  keys = sex_var,
-                                  type = 'FILTER',
-                                  categories = list('Male'))
+# Build filter clauses
+sex_clause       <- picsure::buildClause(sex_var, type = picsure::PhenotypicFilterType$FILTER, categories = c("Male"))
+necrosis_clause  <- picsure::buildClause(avascular_necrosis_var, type = picsure::PhenotypicFilterType$FILTER, categories = c("Yes"))
+transplant_clause <- picsure::buildClause(transplant_yr_var, type = picsure::PhenotypicFilterType$FILTER, min = 1999, max = 2019)
 
-# Filter to patients with Avascular Necrosis
-myquery <- picsure::bdc.addClause(query = myquery, 
-                                  keys = avascular_necrosis_var,
-                                  type = 'FILTER',
-                                  categories = list('Yes'))
-                                  
+# Combine filters with AND logic
+filter_tree <- picsure::buildClauseGroup(list(sex_clause, necrosis_clause, transplant_clause), operator = picsure::GroupOperator$AND)
 
-# Filter to patients with year of transplant after 1999
-myquery <- picsure::bdc.addClause(query = myquery, 
-                                  keys = transplant_yr_var,
-                                  type = 'FILTER',
-                                  min = 1999, max = 2019)
+# Build the query; age_transplant_var is requested as an output column via includeConcepts
+myquery <- picsure::buildQuery(phenotypicFilter = filter_tree, includeConcepts = c(age_transplant_var))
 ```
 
-We are also interested in the patients' age at which they received their transplant. However, we do not want to filter our cohort based on these values. We can use the `SELECT` query type to add this variable to the query without filtering.
-
-Using this cohort, we can add the variable of interest: "Patient age at transplant, years"
-
-```{r}
-age_transplant_var <- df[grepl('age at transplant, years$', df$var_description),'name']
-myquery <- picsure::bdc.addClause(query = myquery, 
-                                  keys = age_transplant_var,
-                                  type = 'SELECT')
-```
+We are also interested in the patients' age at which they received their transplant. However, we do not want to filter our cohort based on these values. We use `includeConcepts` in `buildQuery` to request this variable as an output column without applying it as a filter criterion.
 
 ## Retrieving the data
 
-Now that the query object is built, we will use the `query.run` function to retrieve the data corresponding to our query
+Now that the query object is built, we will use the `runQuery` function to retrieve the data corresponding to our query
 
 ```{r}
-results <-  picsure::runQuery(myquery)
+results <- picsure::runQuery(session, myquery, type = picsure::QueryType$PARTICIPANT)
 head(results)
 ```
 
 Once the data has been retrieved as a dataframe, you can use R functions to conduct analyses and create visualizations, such as this:
 
 ```{r}
-hist(results[,5], breaks = 10, 
+hist(results[,2], breaks = 10, 
      xlab = 'Age received transplant, yrs old', 
      main = "Histogram of the ages at which males with Avascular Necrosis \nreceived their transplant in the HCT for SCD study")
 ```
