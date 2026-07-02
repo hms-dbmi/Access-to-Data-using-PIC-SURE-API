@@ -14,7 +14,7 @@ This tutorial notebook will demonstrate how to query and work with the *BDC* stu
 # Environment set-up
 
 ### System Requirements
-R >= 3.4
+R >= 4.1
 
 ### Install packages
 
@@ -30,10 +30,10 @@ R >= 3.4
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
+library(picsure)
 library(dplyr)
 library(ggplot2)
-library(picsure)
 library(stringr)
 ```
 
@@ -47,11 +47,9 @@ library(limma)
 ## Connecting to a PIC-SURE Network
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 -----
@@ -69,126 +67,145 @@ One of the key challenges to conducting analyses with several studies is ensurin
 ## Sex and gender variables across studies
 <font color='darkgreen'>**Goal: Create harmonized variables for sex and BMI which combine data from multiple studies**</font> 
 
-These variables are labelled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To account for these differences, we need to develop a way to search for multiple keywords at once.
+These variables are labeled differently for each of these studies. For example, some use the keyword `sex` while others use `gender`. To account for these differences, we need to develop a way to search for multiple keywords at once.
 
-Let's start by searching for `sex` and `gender` to gain a better understanding of the variables that exist in PIC-SURE with these terms. The `bdc::find.in.dictionary()` function can take in regular expressions. Here, we take advantage of this by using the ' | ' regular expression, allowing us to find all variables that include sex or gender. 
+Let's start by searching for `sex` and apply faceted search for ECLIPSE (Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints) (phs001252) and COPDGene (Genetic Epidemiology of COPD) (phs000179) as our studies of interest.
 
 ```{r}
-sex_df <- picsure::bdc.searchPicsure(session, "sex|gender")  
-head(sex_df, 3)
+facets <- picsure::facets(session)
+picsure::addFacet(facets, "dataset_id", c("phs000179", "phs001252"))
+sex_df <- picsure::searchDictionary(session, "sex", facets = facets)
+print(dim(sex_df))
+head(sex_df)
 ```
 
-After reviewing the variables using the dataframe (or the [user interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/)), let's say we are interested in sex/gender variables from the following studies:
-- ECLIPSE (Evaluation of COPD Longitudinally to Identify Predictive Surrogate Endpoints) (phs001252)
-- COPDGene (Genetic Epidemiology of COPD) (phs000179)
-
-We can find the study IDs in the [Data Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/dashboard) in the user interface.
-
-We have already used the PIC-SURE search method to find variables which contain the keywords sex and gender. Let's filter these results to our desired studies of interest.
+### Which sex variable in ECLIPSE should we use?
+We can see that there are many sex variables in ECLIPSE originating from various data tables. We will examine the data associated with these variables to determine which one to use for our analysis.
 
 ```{r}
-# which sex / gender variables are part of ECLIPSE?
-# create a subset of only ECLIPSE sex/gender vars
+# which sex variables are part of ECLIPSE?
+# create a subset of only ECLIPSE sex vars
 eclipse_sex_df <- sex_df %>%
-    filter(grepl('phs001252', study_id)) %>%
-    select(var_name, var_description, values, name)
-
+    filter(grepl('phs001252', studyId)) %>%
+    select(studyId, name, description, values, conceptPath)
 eclipse_sex_df
 ```
 
-Many studies may have multiple variables with similar names and descriptions that come from different data tables. This will vary from study to study based on how the original study was conducted and organized. 
-
-We will approach this complication by examining the data associated with each sex / gender variables in ECLIPSE and determining which would be the best fit for our analysis.
-
-Because we want to examine the patient level data, we will create a query using all sex/gender variables in ECLIPSE. We will add these variables to our query using the `anyof` method, as we are interested in all observations with a value for any of our chosen variables.
+We can see that there is a variable called `BICAT` or "Biomarker". This variable was selected because one of the values associated with this variable is "Sex hormone binding globulin" and was returned with our search. However, this is not a sex variable and we should remove this.
 
 ```{r}
-eclipse_sex_query <- picsure::bdc.newQuery(session) # Initialize a new query
+eclipse_sex_df <- eclipse_sex_df %>% filter(name != "BICAT")
+```
 
-eclipse_sex_query <- picsure::bdc.addClause(query = eclipse_sex_query, 
-                                            keys = eclipse_sex_df$name,
-                                            type = 'ANYOF')
+Many studies may have multiple variables with similar names and descriptions that come from different data tables. This will vary from study to study based on how the original study was conducted and organized.
 
-eclipse_sex_results <-  picsure::runQuery(eclipse_sex_query)
+We will approach this complication by examining the data associated with each sex variable in ECLIPSE and determining which would be the best fit for our analysis.
+
+Because we want to examine the patient level data, we will create a query using all sex variables in ECLIPSE. We will add these variables to our query using `picsure::PhenotypicFilterType$ANYRECORD` clauses combined with `picsure::GroupOperator$OR`, as we are interested in all observations with a value for any of our chosen variables.
+
+```{r}
+# Build and run query for all ECLIPSE sex variables
+anyof_clauses <- lapply(eclipse_sex_df$conceptPath, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD))
+anyof_group <- picsure::buildClauseGroup(anyof_clauses, operator = picsure::GroupOperator$OR)
+eclipse_sex_query <- picsure::buildQuery(phenotypicFilter = anyof_group)
+eclipse_sex_results <- picsure::runQuery(session, eclipse_sex_query, type = picsure::QueryType$PARTICIPANT)
 head(eclipse_sex_results)
 ```
 
-By previewing the resulting dataframe, we can see that not all of the sex and gender variables are complete for our participant subset. 
+We used `picsure::runQuery()` with `type = picsure::QueryType$PARTICIPANT` to organize our participant level results in a data frame that is easy to work with. By previewing the resulting data frame, we can see that not all of the sex variables are complete for our participant subset.
 
-Let's see which sex/gender variables are the most complete for our dataset by counting the number of empty values in each one. 
+Let's see which sex variables are the most complete for our dataset by counting the number of empty values in each one.
 
 ```{r}
-# first let's see which sex/gender variables are the most complete for our dataset by counting the number of NA values
-complete_df <- as.data.frame(colSums(eclipse_sex_results == ''))
+# count the number of empty values in each concept column
+concept_cols <- setdiff(colnames(eclipse_sex_results), 'patient_id')
+complete_df <- as.data.frame(colSums(eclipse_sex_results[, concept_cols, drop = FALSE] == '', na.rm = TRUE))
 colnames(complete_df) <- 'n_empty'
 complete_df
 ```
 
-We can see that there are a few variables with 0 NA values, we would like to focus on these.
+We can see that there are a few variables with 0 empty values, we would like to focus on these.
 
 ```{r}
-filtered_eclipse_sex_results <- eclipse_sex_results %>%
-    select(complete_df %>% filter(n_empty == 0) %>% rownames)
+# focus on those variables which do not have any empty values
+non_empty_cols <- complete_df %>% filter(n_empty == 0) %>% rownames
+filtered_eclipse_sex_results <- eclipse_sex_results %>% select(all_of(c('patient_id', non_empty_cols)))
 head(filtered_eclipse_sex_results)
 ```
 
-Now we have filtered our dataset to only include sex/gender variables in ECLIPSE which have complete data. Let's check to see if the values in each variable (column) differ, or if they all have the same data.
+Now we have filtered our dataset to only include sex variables in ECLIPSE which have complete data. Let's check to see if the values in each variable (column) differ, or if they all have the same data.
 
 ```{r}
-# in this example, we notice that all our filtered variables have equivalent data for each patient:
-unique(apply(filtered_eclipse_sex_results[,-c(1:3)], 1, n_distinct))
-
+# in this example, we notice that all our filtered variables have equivalent data for each patient
+for (col in setdiff(colnames(filtered_eclipse_sex_results), 'patient_id')) {
+    cat(col, '\n')
+    print(unique(filtered_eclipse_sex_results[[col]]))
+}
 ```
 
-We can see that all the values in the filtered, complete ECLIPSE sex/gender variables are the same, so we will simply select the first variable to use in our analysis.
+We can see that all the values in the filtered, complete ECLIPSE sex variables are the same, so we will simply select the first variable to use in our analysis.
+
+We can look up a variable in the search result data frame to learn more about it.
 
 ```{r}
-eclipse_sex_var = colnames(filtered_eclipse_sex_results)[4]
-eclipse_sex_var
+eclipse_sex_var <- colnames(filtered_eclipse_sex_results)[2]
+sex_df[sex_df$conceptPath == eclipse_sex_var, ]
 ```
 
-### Which sex variable in COPDGene should we use? 
-
-We will take a similar approach as above, where we first filter our dataframe of sex/gender variables to only those from the COPDGene study.
+### Which sex variable in COPDGene should we use?
+We will then repeat the same approach to select a sex variable from the COPDGene study.
 
 ```{r}
-# which sex/gender variables are part of COPDGene?
-copdgene_vars <- sex_df %>% 
-    filter(grepl('phs000179', study_id))
-# create a subset of only COPDGene sex/gender vars
-copdgene_sex_df <- copdgene_vars %>%
-    select(var_name, var_description, values, name)
+# which sex variables are part of COPDGene?
+# create a subset of only COPDGene sex vars
+copdgene_sex_df <- sex_df %>%
+    filter(grepl('phs000179', studyId)) %>%
+    select(studyId, name, description, values, conceptPath)
 copdgene_sex_df
 ```
 
-Unlike the ECLIPSE data, we see that there is only one sex variable in COPDGene. It is called 'gender'.
-
-We will save the name associated to this variable so we can add it to our query later.
+```{r}
+# Remove the non-sex variables
+copdgene_sex_df <- copdgene_sex_df %>% filter(!name %in% c("phv00569257", "phv00569446"))
+```
 
 ```{r}
-# save the HPDS path associated to our variable of interest
-copdgene_sex_var = copdgene_sex_df[copdgene_sex_df$var_name == 'gender', 'name']
-copdgene_sex_var
+# Build and run query for all COPDGene sex variables
+copdgene_paths <- copdgene_sex_df$conceptPath
+anyof_clauses <- lapply(copdgene_paths, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD))
+anyof_group <- picsure::buildClauseGroup(anyof_clauses, operator = picsure::GroupOperator$OR)
+copdgene_sex_query <- picsure::buildQuery(phenotypicFilter = anyof_group, includeConcepts = copdgene_paths)
+copdgene_sex_results <- picsure::runQuery(session, copdgene_sex_query, type = picsure::QueryType$PARTICIPANT)
+head(copdgene_sex_results)
+```
+
+```{r}
+# count the number of empty values in each concept column
+copdgene_concept_cols <- setdiff(colnames(copdgene_sex_results), 'patient_id')
+colSums(copdgene_sex_results[, copdgene_concept_cols, drop = FALSE] == '', na.rm = TRUE)
+```
+
+```{r}
+# check that all our variables have equivalent data for each patient
+for (col in setdiff(colnames(copdgene_sex_results), 'patient_id')) {
+    cat(col, '\n')
+    print(unique(copdgene_sex_results[[col]]))
+}
+```
+
+```{r}
+# Save the first sex var from COPDGene
+copdgene_sex_var <- colnames(copdgene_sex_results)[2]
+sex_df[sex_df$conceptPath == copdgene_sex_var, ]
 ```
 
 ### Which BMI variables should we use?
 
-We will follow the approach outlined above to first search our data dictionary for all variables containing the terms 'body mass index'. 
+We will follow the approach outlined above to first search our data dictionary for all variables containing the terms 'bmi'. 
 
 ```{r}
-bmi_df <- picsure::bdc.searchPicsure(session, 'body mass index|bmi') 
-```
-
-We will then our results to include only those BMI variables which are part of ECLIPSE or COPDGene and view the variables with their associated metadata. 
-
-```{r}
-# which bmi variables are part of ECLIPSE or COPDGene?
-# create a subset of only the ECLIPSE / COPDGene BMI vars
-bmi_df <- bmi_df %>%
-    filter(grepl('phs001252|phs000179', study_id)) %>%
-    select(var_name, var_description, values, name)
-
-head(bmi_df)
+bmi_df <- picsure::searchDictionary(session, "bmi", facets = facets)
+bmi_df
 ```
 
 By examining metadata like the variable name and description, we are able to determine which variables we are interested in:
@@ -199,32 +216,36 @@ We will save the HPDS_PATHs associated to the BMI variables of interest so we ca
 
 ```{r}
 # save HPDS_PATHs of interest
-copdgene_bmi_var <- "\\phs000179\\pht002239\\phv00159593\\BMI\\"
-eclipse_bmi_var <- "\\phs001252\\pht006373\\phv00293610\\VSBMI\\"
+copdgene_bmi_var = "\\phs000179\\pht002239\\phv00159593\\BMI\\"
+eclipse_bmi_var = "\\phs001252\\pht006373\\phv00293610\\VSBMI\\"
 ```
 
 ### Query PIC-SURE for selected variables
-First, we will create a new query:
+We build a query from the selected concept paths and run it against PIC-SURE. As a reminder, these are the paths associated to the sex and BMI variables from ECLIPSE and COPDGene. Our goal is to build a query that returns participants with sex *and* BMI information for either COPDGene *or* ECLIPSE.
+
+Based on this, here is our plan to build a PIC-SURE query:
+- ECLIPSE participants with any record for sex *and* BMI
+
+or
+
+- COPDGene participants with any record for sex *and* BMI
+
+We use `picsure::PhenotypicFilterType$ANYRECORD` clauses combined with `picsure::GroupOperator$AND` because we are interested in participants with information for both sex and BMI. Then, these can be combined into a clause group using `picsure::GroupOperator$OR`. If you are interested in learning more about the other query methods available, see the `1_PICSURE_API_101.ipynb` notebook.
 
 ```{r}
-combined_query <- picsure::bdc.newQuery(session)
-```
+eclipse_group <- picsure::buildClauseGroup(
+    lapply(c(eclipse_sex_var, eclipse_bmi_var), function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD)),
+    operator = picsure::GroupOperator$AND
+)
+copdgene_group <- picsure::buildClauseGroup(
+    lapply(c(copdgene_sex_var, copdgene_bmi_var), function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD)),
+    operator = picsure::GroupOperator$AND
+)
 
-Next, we will add the paths (names) for our selected variables of interest to the query.
+full_group <- picsure::buildClauseGroup(list(eclipse_group, copdgene_group), operator = picsure::GroupOperator$OR)
 
-As a reminder, these are the paths associated with the sex/gender and BMI variables from the ECLIPSE and COPDGene studies.
-
-We use the `.anyof` method to add these variables to the query because we are interested in results with observations in any of the variables of interest. If you are interested in learning more about the other query methods available, see the `1_PICSURE_API_101.ipynb` notebook. 
-
-```{r}
-# Build query using selected concept paths
-vars_of_interest <- c(eclipse_sex_var, eclipse_bmi_var, copdgene_sex_var, copdgene_bmi_var)
-
-combined_query <- picsure::addClause(query = combined_query, 
-                                     keys = vars_of_interest, 
-                                     type = "ANYOF")
-
-combined_results <- picsure::runQuery(combined_query)
+combined_query <- picsure::buildQuery(phenotypicFilter = full_group)
+combined_results <- picsure::runQuery(session, combined_query, type = picsure::QueryType$PARTICIPANT)
 head(combined_results)
 ```
 
@@ -232,64 +253,72 @@ head(combined_results)
 You may notice that the column names are not the most informative, we will rename them below.
 
 ```{r}
-# rename columns
-colnames(combined_results) = c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
-                               'copdgene_sex', 'copdgene_bmi', 'eclipse_bmi', 'eclipse_sex')
+# rename concept-path columns to readable labels (order-independent)
+combined_results <- combined_results %>%
+    rename(
+        eclipse_sex  = !!eclipse_sex_var,
+        eclipse_bmi  = !!eclipse_bmi_var,
+        copdgene_sex = !!copdgene_sex_var,
+        copdgene_bmi = !!copdgene_bmi_var
+    )
 ```
 
 We will also create a 'study' column to easier identify from which study a participant's data originated from.
 
 ```{r}
-# convert consent code to study name
+# label participant with study
 combined_results <- combined_results %>%
-    mutate(study = ifelse(grepl('phs001252', consent), 'eclipse', 'copdgene'))
-
+    mutate(study = ifelse(is.na(copdgene_sex) | copdgene_sex == '', 'ECLIPSE', 'COPDGENE'))
 head(combined_results)
 ```
 
-We will harmonize the sex and bmi variables by combining them into one single column.
+Finally, we will harmonize the sex and bmi variables by combining them into one single 'sex' column.
 
 Sex and BMI are reported in the same way in both COPDGene and ECLIPSE, so we do not have to transform any of the participant level data.
 
 ```{r}
+# combine sex variables
 combined_results <- combined_results %>%
-           # combine sex variables
-    mutate(sex = copdgene_sex, 
-           sex = ifelse(sex == '', eclipse_sex, sex),
-           # combine bmi variables
-           bmi = copdgene_bmi,
-           bmi = ifelse(is.na(bmi), eclipse_bmi, bmi))
-
+    mutate(sex = ifelse(is.na(copdgene_sex) | copdgene_sex == '', eclipse_sex, copdgene_sex)) %>%
+    select(-copdgene_sex, -eclipse_sex)
 head(combined_results)
 ```
-We can see that there are multiple values reported for each patient's BMI. 
-The following code will handle this by taking the mean reported BMI in cases when a patient has multiple BMI values reported.
 ```{r}
-get_mean_from_multiple_values <- function(x) {
-  y <- as.numeric(mean(as.numeric(unlist(str_split(x, '\\t'))), na.rm = TRUE))
-  return(y)
-}
-
-combined_results <- combined_results %>% 
-  mutate(bmi = lapply(bmi, get_mean_from_multiple_values))
+# combine bmi variables
+combined_results <- combined_results %>%
+    mutate(bmi = ifelse(is.na(copdgene_bmi) | copdgene_bmi == '', eclipse_bmi, copdgene_bmi)) %>%
+    select(-copdgene_bmi, -eclipse_bmi)
+head(combined_results)
 ```
-
 
 ### Analysis and visualization
 
 In this example, we are interested in comparing mean BMI across different studies. We will calculate the mean for each group (ECLIPSE males, ECLIPSE females, COPDGene males, COPDGene females) and display the results as a table and a bar chart.
 
+In some instances, a single study participant may have multiple values for a given variable. When this is the case, the values are separated by a "tab", or `\t` character. We can do some cleaning to separate these values - let's take the mean BMI for each individual with multiple values.
+
 ```{r}
-# remove unnecessary columns and summarize
-plotdf <- combined_results %>% 
-    mutate(bmi = as.numeric(bmi)) %>%
+get_mean_from_multiple_values <- function(x) {
+    y <- as.numeric(mean(as.numeric(unlist(str_split(x, '\t'))), na.rm = TRUE))
+    return(y)
+}
+```
+
+```{r}
+combined_results$bmi <- sapply(combined_results$bmi, get_mean_from_multiple_values)
+
+plotdf <- combined_results %>% select(sex, study, bmi)
+head(plotdf)
+```
+```{r}
+# remove unneccessary columns and summarize
+plotdf = combined_results %>% 
     select(sex, study, bmi) %>%
     group_by(sex, study) %>%
     summarise(mean = mean(bmi, na.rm = TRUE))
 
 plotdf
 ```
-
 ```{r}
 plotdf %>%
 ggplot(aes(x = sex, y = mean, fill = study)) +
@@ -297,220 +326,180 @@ ggplot(aes(x = sex, y = mean, fill = study)) +
     theme_bw()
 ```
 
+
 ## Orthopnea variables across studies
-<font color='darkgreen'>**Goal: Create harmonized variables for orthopnea and pneumonia which combine data from multiple studies, and compare participant distributions across these phenotypes**</font> 
+<font color='darkgreen'>**Goal: Create harmonized variables for orthopnea and pneumonia which combine data from multiple studies, and compare participant distributions across these phenotypes**</font>
 
 In this example, we will be harmonizing variables related to `orthopnea`. Orthopnea is shortness of breath that occurs when individuals lie flat. Because of this, people with orthopnea have to sleep propped up in bed or sitting in a chair. You can read more about this condition [here](https://www.sleepfoundation.org/sleep-apnea/orthopnea).
 
-Let's start by doing a search in PIC-SURE for concept paths containing `orthopnea`.
+Let's start by doing a search in PIC-SURE for concept paths containing `orthopnea` from these studies:
+- FHS (phs000007)
+- MESA (phs000209)
+- CHS (phs000287)
 
 ### Search and find orthopnea variables
 
 ```{r}
-orthopnea_dataframe <- picsure::bdc.searchPicsure(session, 'orthopnea') 
-
-head(orthopnea_dataframe) %>% select(var_name, var_description, values, study_id)
+facets <- picsure::facets(session)
+picsure::addFacet(facets, "dataset_id", c("phs000007", "phs000209", "phs000287"))
+orthopnea_dataframe <- picsure::searchDictionary(session, "orthopnea", facets = facets)
+print(dim(orthopnea_dataframe))
+head(orthopnea_dataframe)
 ```
 
-As shown in the resulting dataframe, orthopnea is often recorded as a something like `sleep on two or more pillows to help you breathe?`
+As shown in the resulting dataframe, orthopnea is often recorded as something like `sleep on two or more pillows to help you breathe?`
 
 Let's do a search for `pillows` in PIC-SURE to explore those concept paths.
 
 ```{r}
-pillows_dataframe <- picsure::bdc.searchPicsure(session, 'pillows') 
-
-head(pillows_dataframe) %>% select(var_name, var_description, values, study_id)
+pillows_dataframe <- picsure::searchDictionary(session, "pillows", facets = facets)
+head(pillows_dataframe)
 ```
 
-As shown in the resulting dataframe, there are some concept paths related to orthopnea that were not captured by the previous `orthopnea` search, such as `Do you sleep on 2 or more pillows to improve your breathing?` from the Jackson Heart Study (JHS) Cohort (phs000286). In fact, the JHS dataset was not returned at all when we searched for `orthopnea`. 
+As shown in the resulting dataframe, there are some concept paths related to orthopnea that were not captured by the previous `orthopnea` search, such as `SLEEP ON TWO OR MORE PILLOWS TO HELP BREATHE` from the MESA study.
 
 This is problematic for researchers studying these types of variables, since the concept paths of interest may not always be captured by a single search term. To account for this, researchers must conduct exploratory searches to determine potential search terms.
 
-Let's say we want to harmonize orthopnea variables from the following datasets: 
-- FHS (phs000007)
-- MESA (phs000209)
-- WHI (phs000200)
-
-We can first get all concept paths related to our terms of interest (`orthopnea` or `pillows`) and then filter to our studies of interest.
-
-You can get the phs number associated with each study from the [Data Dashboard](https://picsure.biodatacatalyst.nhlbi.nih.gov/dashboard).
-
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'orthopnea|pillows') 
-harmonized_df <- harmonized_df %>%
-    filter(grepl('phs000007|phs000209|phs000200', study_id))
-harmonized_df %>% select(var_name, var_description, values, study_id) %>% head
+pillows_dataframe[pillows_dataframe$name == "phv00099056", ]
 ```
-
 ```{r}
-harmonized_df %>% 
-    filter(grepl('phs000007', study_id),
-          var_description == 'ORTHOPNEA')
-```
-
-After browsing the available variables, we decided to choose the following:
-
-```{r}
-orthopnea_variables_of_interest <- harmonized_df %>%
-    filter((var_description %in% c('F136 Orthopnea', 
-                                  'SLEEP ON 2+ PILLOWS TO HELP BREATHING')) |
-           var_name %in% 'G3A163')
+orthopnea_variables_of_interest <- orthopnea_dataframe[orthopnea_dataframe$name == 'phv00021018', ]
+pillows_variables_of_interest <- pillows_dataframe[pillows_dataframe$name %in% c('phv00099056', 'phv00087203'), ]
 
 # save variable paths for querying data
-orthopnea_variable_paths_of_interest = orthopnea_variables_of_interest$name
-
-orthopnea_variables_of_interest %>% select(var_name, var_description, values, study_id)
+orthopnea_variable_paths_of_interest <- c(orthopnea_variables_of_interest$conceptPath, pillows_variables_of_interest$conceptPath)
 ```
 
 ### Search and find pneumonia variables
 As part of our research, let's say we are interested in exploring the relationship between pneumonia and orthopnea. Let's save concept paths related to `pneumonia` as well. 
 
 ```{r}
-# search pic-sure for 'pneumonia'
-harmonized_df <- picsure::bdc.searchPicsure(session, "pneumonia")
-harmonized_df <- harmonized_df %>%
-    # filter to variables found in FHS, MESA, WHI
-    filter(grepl('phs000007|phs000209|phs000200', study_id))
-harmonized_df %>% select(var_name, var_description, values, study_id) %>% head()
+# search for 'pneumonia'
+harmonized_df <- picsure::searchDictionary(session, "pneumonia", facets = facets)
+print(dim(harmonized_df))
+harmonized_df %>% select(name, description, values, studyId)
 ```
 
 After browsing the available variables, we decided to choose the following:
 
 ```{r}
-pneumonia_variables_of_interest = harmonized_df %>%
-    filter(grepl('phv00021300|phv00087211|phv00283208', var_id))
+pneumonia_variables_of_interest <- harmonized_df %>%
+    filter(grepl('phv00021300|phv00087211|phv00099077', conceptPath))
 
 # save variable paths for querying data
-pneumonia_variable_paths_of_interest = pneumonia_variables_of_interest$name
+pneumonia_variable_paths_of_interest <- pneumonia_variables_of_interest$conceptPath
 
-pneumonia_variables_of_interest %>% select(var_name, var_description, values, study_id)
+pneumonia_variables_of_interest %>% select(values, studyId, description, name)
 ```
 
 ### Query PIC-SURE for selected variables
+Our goal is to retrieve participant-level data across several studies for orthopnea and pneumonia. With this in mind, here is our plan to create the PIC-SURE query:
+- participants with any record for orthopnea in FHS *or* MESA *or* CHS
+
+and
+
+- participants with any record for pneumonia in FHS *or* MESA *or* CHS
+
+We use `picsure::PhenotypicFilterType$ANYRECORD` clauses combined with `picsure::GroupOperator$OR` because we are interested in participants with information across studies. Then, these can be combined into a clause group using `picsure::GroupOperator$AND`. If you are interested in learning more about the other query methods available, see the `1_PICSURE_API_101.ipynb` notebook.
 
 ```{r}
-orthopnea_query <- picsure::bdc.newQuery(session)
-vars_of_interest <- c(orthopnea_variable_paths_of_interest, pneumonia_variable_paths_of_interest)
-orthopnea_query <- picsure::addClause(query = orthopnea_query, 
-                                      keys = vars_of_interest, 
-                                      type = "ANYOF")
-orthopnea_results <- picsure::runQuery(orthopnea_query)
+# Build and run query for orthopnea and pneumonia variables
+orthopnea_group <- picsure::buildClauseGroup(
+    lapply(orthopnea_variable_paths_of_interest, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD)),
+    operator = picsure::GroupOperator$OR
+)
+pneumonia_group <- picsure::buildClauseGroup(
+    lapply(pneumonia_variable_paths_of_interest, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD)),
+    operator = picsure::GroupOperator$OR
+)
+full_group <- picsure::buildClauseGroup(list(orthopnea_group, pneumonia_group), operator = picsure::GroupOperator$AND)
+
+query <- picsure::buildQuery(phenotypicFilter = full_group)
+results <- picsure::runQuery(session, query, type = picsure::QueryType$PARTICIPANT)
 ```
 
 ```{r}
-# rename columns
-colnames(orthopnea_results) <- c('patient_id', 'parent_accession', 'topmed_accession', 'consent', 
-                             'fhs_orthopnea', 'fhs_pneumonia', 'whi_pneumonia', 
-                             'whi_orthopnea', 'mesa_orthopnea', 'mesa_pneumonia')
-head(orthopnea_results)
+# Label each concept-path column by its study (derived from the phs accession in the path)
+study_from_path <- function(p) {
+    if (grepl('phs000007', p)) {
+        'fhs'
+    } else if (grepl('phs000287', p)) {
+        'chs'
+    } else if (grepl('phs000209', p)) {
+        'mesa'
+    } else {
+        'unknown'
+    }
+}
+rename_map <- c()
+for (p in orthopnea_variable_paths_of_interest) rename_map[p] <- paste0(study_from_path(p), '_orthopnea')
+for (p in pneumonia_variable_paths_of_interest) rename_map[p] <- paste0(study_from_path(p), '_pneumonia')
+
+new_names <- colnames(results)
+for (i in seq_along(new_names)) {
+    if (new_names[i] %in% names(rename_map)) new_names[i] <- rename_map[[new_names[i]]]
+}
+colnames(results) <- new_names
+head(results)
 ```
 
 ### Clean and wrangle data
 
 ```{r}
-orthopnea_results <- orthopnea_results %>%
-    # convert consent code to study name
-    mutate(study = ifelse(grepl('phs000007', consent), 'fhs',
-                         ifelse(grepl('phs000209', consent), 'mesa', 'whi')),
-          # combine orthopnea variables
-          orthopnea = ifelse(study == 'fhs', fhs_orthopnea,
-                             ifelse(study == 'mesa', mesa_orthopnea,
-                                    ifelse(study == 'whi', whi_orthopnea,
-                                           'OTHER'))),
-          # combine orthopnea variables
-          pneumonia = ifelse(study == 'fhs', fhs_pneumonia,
-                             ifelse(study == 'mesa', mesa_pneumonia,
-                                    ifelse(study == 'whi', whi_pneumonia,
-                                           'OTHER'))))
-
-
-head(orthopnea_results)
+# Record study acronym
+results$study <- ''
+results$study[!is.na(results$chs_pneumonia)  & results$chs_pneumonia  != ''] <- 'CHS'
+results$study[!is.na(results$mesa_pneumonia) & results$mesa_pneumonia != ''] <- 'MESA'
+results$study[!is.na(results$fhs_pneumonia)  & results$fhs_pneumonia  != ''] <- 'FHS'
+head(results)
 ```
-
-As you may have noticed, the orthopnea and pneumonia variables are encoded differently between these studies. 
-
-This means that we see a range of vales that need to be harmonized (printed below)
-
-We need to create a consistent encoding across these studies. 
 
 ```{r}
-print('Orthopnea values: ')
-table(orthopnea_results$orthopnea)
-
-print('Pneumonia values: ')
-table(orthopnea_results$pneumonia)
+# combine orthopnea variables
+results$orthopnea <- ifelse(is.na(results$fhs_orthopnea) | results$fhs_orthopnea == '', results$chs_orthopnea, results$fhs_orthopnea)
+results$orthopnea <- ifelse(is.na(results$orthopnea) | results$orthopnea == '', results$mesa_orthopnea, results$orthopnea)
+head(results)
+```
+```{r}
+# combine pneumonia variables
+results$pneumonia <- ifelse(is.na(results$fhs_pneumonia) | results$fhs_pneumonia == '', results$chs_pneumonia, results$fhs_pneumonia)
+results$pneumonia <- ifelse(is.na(results$pneumonia) | results$pneumonia == '', results$mesa_pneumonia, results$pneumonia)
+head(results)
 ```
 
-Here we create a consistent mapping:
-Notice that line 2 shows an example where there are multiple values recorded for a participant. In this case, they may have responded \"No/Not Recorded\" at one time but \"Yes\" another time. We will categorize this response as \"Yes\", since it indicates the participant did have Orthopnea at some time.
+As you may have noticed, the orthopnea and pneumonia variables are encoded across these studies. Let's take a look at the range of values (printed below).
 
 ```{r}
-mapping_df <- data.frame('raw' = c(unique(orthopnea_results$orthopnea), 
-                                   unique(orthopnea_results$pneumonia)),
-                        'harmonized' = c('Unknown', 'Yes', 'Yes', 'No', 'No', 'Yes',
-                                         'Unknown', 'Yes', 'No', 'Unknown', 'Unknown',
-                                         'No', 'Unknown', 'Yes')) %>%
-unique()
-
-mapping_df
-        
+print(table(results$orthopnea))
+print(table(results$pneumonia))
 ```
-
-And apply it to our hamonized orthopnea and pneumonia columns
-
-```{r}
-orthopnea_results <- left_join(orthopnea_results, mapping_df, by = c('orthopnea' = 'raw'))
-orthopnea_results$orthopnea <- orthopnea_results$harmonized
-orthopnea_results <- left_join(orthopnea_results, mapping_df, by = c('pneumonia' = 'raw'))
-orthopnea_results$pneumonia <- orthopnea_results$harmonized.y
-
-
-table(orthopnea_results$orthopnea)
-table(orthopnea_results$pneumonia)
-```
-
-Now that the variables have been encoded in the same way, we can use this dataframe for analysis and visualizations. 
 
 ### Visualize
-
 ```{r}
-final_df <- orthopnea_results
+results$orthopnea[is.na(results$orthopnea) | results$orthopnea == ''] <- 'DO NOT KNOW'
+results$pneumonia[is.na(results$pneumonia) | results$pneumonia == ''] <- 'DO NOT KNOW'
+head(results)
 ```
 
 ```{r}
-final_df %>% 
-    filter(study == 'fhs') %>%
-    select(pneumonia, orthopnea)  %>%
-    mutate(pneumonia = ifelse(pneumonia == 'Yes', 1, 0),
-           orthopnea = ifelse(orthopnea == 'Yes', 1, 0)) %>%
-    as.matrix %>%
-    vennCounts %>%
-    vennDiagram(main = 'FHS Dataset')
+# FHS figure
+results %>% filter(study == 'FHS') %>% select(pneumonia, orthopnea) %>%
+    mutate(pneumonia = ifelse(pneumonia == 'YES', 1, 0), orthopnea = ifelse(orthopnea == 'YES', 1, 0)) %>%
+    as.matrix %>% vennCounts %>% vennDiagram(main = 'FHS Dataset')
 
-final_df %>% 
-    filter(study == 'mesa') %>%
-    select(pneumonia, orthopnea)  %>%
-    mutate(pneumonia = ifelse(pneumonia == 'Yes', 1, 0),
-           orthopnea = ifelse(orthopnea == 'Yes', 1, 0)) %>%
-    as.matrix %>%
-    vennCounts %>%
-    vennDiagram(main = 'MESA Dataset')
+# MESA figure
+results %>% filter(study == 'MESA') %>% select(pneumonia, orthopnea) %>%
+    mutate(pneumonia = ifelse(pneumonia == 'YES', 1, 0), orthopnea = ifelse(orthopnea == 'YES', 1, 0)) %>%
+    as.matrix %>% vennCounts %>% vennDiagram(main = 'MESA Dataset')
 
-final_df %>% 
-    filter(study == 'whi') %>%
-    select(pneumonia, orthopnea)  %>%
-    mutate(pneumonia = ifelse(pneumonia == 'Yes', 1, 0),
-           orthopnea = ifelse(orthopnea == 'Yes', 1, 0)) %>%
-    as.matrix %>%
-    vennCounts %>%
-    vennDiagram(main = 'WHI Dataset')
+# CHS figure
+results %>% filter(study == 'CHS') %>% select(pneumonia, orthopnea) %>%
+    mutate(pneumonia = ifelse(pneumonia == 'YES', 1, 0), orthopnea = ifelse(orthopnea == 'YES', 1, 0)) %>%
+    as.matrix %>% vennCounts %>% vennDiagram(main = 'CHS Dataset')
 
-final_df %>% 
-    select(pneumonia, orthopnea)  %>%
-    mutate(pneumonia = ifelse(pneumonia == 'Yes', 1, 0),
-           orthopnea = ifelse(orthopnea == 'Yes', 1, 0)) %>%
-    as.matrix %>%
-    vennCounts %>%
-    vennDiagram(main = 'Combined results across FHS, MESA, and WHI')
+# Combined figure
+results %>% select(pneumonia, orthopnea) %>%
+    mutate(pneumonia = ifelse(pneumonia == 'YES', 1, 0), orthopnea = ifelse(orthopnea == 'YES', 1, 0)) %>%
+    as.matrix %>% vennCounts %>% vennDiagram(main = 'Combined results across FHS, MESA, and CHS')
 ```
-
