@@ -14,15 +14,11 @@ Researchers can utilize BioData Catalyst Powered by PIC-SURE to search terms, ap
 
 #### Pre-requisites
 
--   R 3.4 or later
+-   R 4.1 or later
 
 #### Install packages
 
-The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
-
--   PIC-SURE Client
--   PIC-SURE Adapter
--   *BDC-PIC-SURE* Adapter
+The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically the PIC-SURE Adapter.
 
 **Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
@@ -36,111 +32,108 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(dplyr)
-library(picsure)
 ```
 ## Connecting to a PIC-SURE resource
-
 The following is required to get access to data through the PIC-SURE API: 
-- Network URL
 - User-specific security token
 
-The following code specifies the network URL as the *BDC Powered by PIC-SURE* URL and references the user-specific token saved as `token.txt`.
+The following code references the user-specific token saved as `token.txt`.
 
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file and the `Workspace_setup.ipynb` file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 ## Using the RECOVER Adult Cohort
-The RECOVER Adult dataset includes many variables related to Long COVID and COVID-19 symptoms. For a complete view of all RECOVER variables in PIC-SURE, you can refer to the [PIC-SURE RECOVER Data Dictionary spreadsheet](https://docs.google.com/spreadsheets/d/1A-BGTOjEgaPRG0KqSNWLuFFHMRkflSMh4Y_wYL2AGag/edit?usp=sharing).
 
-PIC-SURE can also be used in the coding interface to conduct searches for variables, apply filters to build cohorts, and export the data in an analysis-ready format.
+The RECOVER Adult dataset includes many variables related to Long COVID and COVID-19 symptoms. For a complete view of all RECOVER variables in PIC-SURE, you can refer to the [PIC-SURE RECOVER Data Dictionary spreadsheet](https://docs.google.com/spreadsheets/d/1A-BGTOjEgaPRG0KqSNWLuFFHMRkflSMh4Y_wYL2AGag/edit?usp=sharing). 
+
+PIC-SURE can also be used in the coding interface to conduct searches for variables, apply filters to build cohorts, and export the data in an analysis-ready format. 
 
 For the purposes of this example notebook, let's use variables related to:
-- Postacute sequelae of SARS-CoV-2 infection (PASC)
-- Headaches or head pain
+* Postacute sequelae of SARS-CoV-2 infection (PASC)
+* Headaches or head pain 
 
-Postacute sequelae of SARS-CoV-2 infection (PASC), also known as long COVID is defined as ongoing, relapsing, or new symptoms or conditions present 30 or more days after infection. A recent publication developed a preliminary rule for defining PASC based on a score derived from the most frequently reported symptoms from those with long COVID. A PASC score between 0 and 34 is assigned based on a person's symptoms, where a greater score indicates more PASC symptoms. The publication also defined a cutoff based on this score to identify individuals as PASC positive or PASC negative:
-- PASC score < 12: PASC negative
-- PASC score >= 12: PASC positive
+Postacute sequelae of SARS-CoV-2 infection (PASC), also known as *long COVID* is defined as ongoing, relapsing, or new symptoms or conditions present 30 or more days after infection. A recent publication developed a preliminary rule for defining PASC based on a score derived from the most frequently reported symptoms from those with long COVID. A PASC score between 0 and 34 is assigned based on a person's symptoms, where a greater score indicates more PASC symptoms. The publication also defined a cutoff based on this score to identify individuals as PASC positive or PASC negative:
+* PASC score < 12: PASC negative
+* PASC score >= 12: PASC positive
 
 The RECOVER biostatistics team has used this definition to derive PASC scores for the RECOVER Adult cohort, which will be used in this notebook. For more information about these PASC scores, please refer to Thaweethai et al.'s [Development of a Definition of Postacute Sequelae of SARS-CoV-2 Infection](https://jamanetwork.com/journals/jama/fullarticle/2805540).
 
 ### PASC Scores
 First, let's search for variables related to `pasc`.
 ```{r}
-pasc_vars <- picsure::bdc.searchPicsure(session, keyword = "pasc", includeValues = FALSE)
+# Search for derived PASC score in RECOVER Adult
+facets <- picsure::facets(session)
+picsure::addFacet(facets, "dataset_id", "phs003463")
+pasc_vars <- picsure::searchDictionary(session, "pasc", facets = facets)
 head(pasc_vars)
 ```
 
-Here, we can see that there are many PASC-related variables in the RECOVER Adult dataset. The scores we are interested in are the `pasc_jama2024`, which are the variables generated by the RECOVER biostatistics team.
+Here, we can see that there are many PASC-related variables in the RECOVER Adult dataset. The scores we are interested in are the `pasc_jama2024`, which are the variables generated by the RECOVER biostatistics team. We can search for this term in the `display`.
 ```{r}
-# Limit to only variables with pasc_jama2024 in the var_name
-biostats_pasc_vars <- pasc_vars %>% filter(grepl("pasc_jama2024", var_name))
+# Limit to only variables with pasc_jama2024 in the display
+biostats_pasc_vars <- pasc_vars %>% filter(grepl("pasc_jama2024", display))
 head(biostats_pasc_vars)
 ```
 
 As shown above, there are derived PASC scores as different times during the data collection, indicated by `months past index date` in the description. Let's use the 0, 3, 6, and 9 months past index date variables from `infected` participants.
 ```{r}
-# Save PASC variables for 0, 3, 6, and 9 months post-index
-pasc_0 <- biostats_pasc_vars %>% filter(grepl("_infected_0$", var_id)) %>% pull(name)
-pasc_3  <- biostats_pasc_vars %>% filter(grepl("_infected_3$", var_id)) %>% pull(name)
-pasc_6  <- biostats_pasc_vars %>% filter(grepl("_infected_6$", var_id)) %>% pull(name)
-pasc_9  <- biostats_pasc_vars %>% filter(grepl("_infected_9$", var_id)) %>% pull(name)
+# Save PASC variables for baseline and first three followups
+pasc_0 <- biostats_pasc_vars %>% filter(grepl("_infected_0$", name)) %>% pull(conceptPath)
+pasc_3 <- biostats_pasc_vars %>% filter(grepl("_infected_3$", name)) %>% pull(conceptPath)
+pasc_6 <- biostats_pasc_vars %>% filter(grepl("_infected_6$", name)) %>% pull(conceptPath)
+pasc_9 <- biostats_pasc_vars %>% filter(grepl("_infected_9$", name)) %>% pull(conceptPath)
 ```
 
 ### Headache / Head Pain
 Next, let's search for variables related to `head pain`.
 ```{r}
 # Search for headache variables
-headpain_vars <- picsure::bdc.searchPicsure(session, keyword = "head pain", includeValues = TRUE)
-headpain_vars <- headpain_vars %>% filter(study_id == "phs003463")
+headpain_vars <- picsure::searchDictionary(session, "head pain", facets = facets)
 head(headpain_vars)
 ```
 
 We can see that there are many variables related to head pain, such as `pain_head___around` for head pain around the time of index and `pain_head___now` for head pain at the time of the survey. Let's use the `pain_head___now` variables.
 ```{r}
-headpain_now_vars <- headpain_vars %>% filter(grepl("pain_head___now", var_id))
+headpain_now_vars <- headpain_vars %>% filter(grepl("pain_head___now", display))
 head(headpain_now_vars)
 ```
 
 As shown above, there are derived head pain now scores at different times during the data collection. Let's use the 0, 3, 6, and 9 months past index date information for infected participants.
 ```{r}
 # Save head pain variables for baseline and first three followups
-headpain_0 <- headpain_now_vars %>% filter(grepl("_infected_0$", var_id)) %>% pull(name)
-headpain_3  <- headpain_now_vars %>% filter(grepl("_infected_3$", var_id)) %>% pull(name)
-headpain_6  <- headpain_now_vars %>% filter(grepl("_infected_6$", var_id)) %>% pull(name)
-headpain_9  <- headpain_now_vars %>% filter(grepl("_infected_9$", var_id)) %>% pull(name)
+headpain_0 <- headpain_now_vars %>% filter(grepl("\\pain_head___now\\_infected_0$", name)) %>% pull(conceptPath)
+headpain_3 <- headpain_now_vars %>% filter(grepl("\\pain_head___now\\_infected_3$", name)) %>% pull(conceptPath)
+headpain_6 <- headpain_now_vars %>% filter(grepl("\\pain_head___now\\_infected_6$", name)) %>% pull(conceptPath)
+headpain_9 <- headpain_now_vars %>% filter(grepl("\\pain_head___now\\_infected_9$", name)) %>% pull(conceptPath)
 ```
 
 ### Build a Query
-Now that we have our variables selected, we can build a query. For more information on how to apply filters to a query, please refer to the `1_PICSURE_API_101` file.
+Now that we have our variables selected, we can build a query. For more information on how to apply filters to a query, please refer to the `1_PICSURE_API_101` notebook. 
 
-For this query, we will be requiring that participants have information for all selected variables: PASC scores and head pain information for months 0, 3, 6, and 9 for infected individuals.
+For this query, we will be requiring that participants have information for all selected variables: PASC scores and head pain information for baseline and first three followups.
 ```{r}
-# Build a query
-pasc_headpain_query <- picsure::bdc.newQuery(session)
-
-# Add variables as a "require"
-pasc_headpain_query <- picsure::addClause(query = pasc_headpain_query,
-                                          keys = c(pasc_0, pasc_3, pasc_6, pasc_9, headpain_0, headpain_3, headpain_6, headpain_9),
-                                          type = "REQUIRE")
+# Build a query requiring ALL selected variables (one REQUIRE clause per path, combined with AND)
+require_paths <- c(pasc_0, pasc_3, pasc_6, pasc_9, headpain_0, headpain_3, headpain_6, headpain_9)
+require_clauses <- lapply(require_paths, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$REQUIRE))
+require_group <- picsure::buildClauseGroup(require_clauses, operator = picsure::GroupOperator$AND)
+pasc_headpain_query <- picsure::buildQuery(phenotypicFilter = require_group)
 ```
 
 ```{r}
 # Retrieve results
-results <- picsure::runQuery(pasc_headpain_query, resultType = "DATA_FRAME")
+results <- picsure::runQuery(session, pasc_headpain_query, type = picsure::QueryType$PARTICIPANT)
 # head(results) # Uncomment to peek at the dataframe
 ```
 
-The export has all variables added to the query as columns, with each RECOVER Adult study participants as rows. This is saved as an R dataframe and can be used for analysis.
+The export has all variables added to the query as columns, with each RECOVER Adult study participant as rows. This is saved as an R dataframe and can be used for analysis.
 
 ### Analysis
 Let's make a visualization to quickly observe the correlation between PASC scores and head pain. 
@@ -151,14 +144,15 @@ library(tidyr)
 ```
 
 ```{r}
-# Rename columns to simpler names and select only those necessary for plotting
-colnames(results) <- c("Patient_ID", "Parent", "Topmed", "consents",
-                       "headpain_0", "headpain_3", "headpain_6", "headpain_9",
-                       "pasc_0", "pasc_3","pasc_6", "pasc_9")
+# Rename concept-path columns to short names (order-independent, keyed on concept path)
+results <- results %>% rename(
+  pasc_0 = !!pasc_0, pasc_3 = !!pasc_3, pasc_6 = !!pasc_6, pasc_9 = !!pasc_9,
+  headpain_0 = !!headpain_0, headpain_3 = !!headpain_3, headpain_6 = !!headpain_6, headpain_9 = !!headpain_9
+)
 
-clean <- results %>% select("Patient_ID", "headpain_0", "headpain_3",
-                            "headpain_6", "headpain_9", "pasc_0",
-                            "pasc_3", "pasc_6", "pasc_9")
+clean <- results %>% select(patient_id, headpain_0, headpain_3,
+                             headpain_6, headpain_9, pasc_0,
+                             pasc_3, pasc_6, pasc_9)
 ```
 
 ```{r}
