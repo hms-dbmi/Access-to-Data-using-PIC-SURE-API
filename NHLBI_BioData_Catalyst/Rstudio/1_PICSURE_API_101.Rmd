@@ -10,7 +10,7 @@ This is a tutorial notebook aimed to get the user quickly up and running with th
 ## PIC-SURE R API
 ### What is PIC-SURE?
 
-As part of the *BDC* ecosystem, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
+As part of the *NHLBI BioData Catalyst® (BDC)* ecosystem, the Patient Information Commons Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed related studies funded by the National Heart Lung and Blood Institute (NHLBI).
 
 Original data exposed through PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on the downstream analyses and to facilitate reproducible science.
 
@@ -25,8 +25,6 @@ The R API is actively developed by the Avillach Lab at Harvard Medical School.
 
 PIC-SURE API GitHub repo:
 * https://github.com/hms-dbmi/pic-sure-r-adapter-hpds
-* https://github.com/hms-dbmi/pic-sure-r-client
-
 
 
  -------
@@ -38,15 +36,11 @@ PIC-SURE API GitHub repo:
 ### Environment set-up
 
 #### Pre-requisites
-- R 3.4 or later
+- R 4.1 or later
 
 #### Install packages
 
-The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically:
-
-- PIC-SURE Client
-- PIC-SURE Adapter
-- *BDC-PIC-SURE* Adapter
+The first step to using the PIC-SURE API is to install the packages needed. The following code installs the PIC-SURE API components from GitHub, specifically the PIC-SURE R Adapter.
 
 **Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges (BDC-Seven Bridges)* platform, the necessary packages have already been installed.**
 
@@ -60,9 +54,8 @@ The first step to using the PIC-SURE API is to install the packages needed. The 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(dplyr)
-library(picsure)
 ```
 
 ```{r}
@@ -70,23 +63,23 @@ install.packages("stringr")
 library(stringr)
 ```
 
-
 ## Connecting to a PIC-SURE resource
+The following is required to get access to data through the PIC-SURE API:
+- the platform that should be connected (e.g., BDC Authorized)
+- a personalized access token
 
-The following is required to get access to data through the PIC-SURE API: 
-- Network URL
-- User-specific security token
+The following code connects to the *BDC-PIC-SURE* platform using the `picsure::connect` function and references the user-specific token saved as `token.txt`.
 
-The following code specifies the network URL as the *BDC Powered by PIC-SURE* URL and references the user-specific token saved as `token.txt`.
-
-If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file.
+If you have not already retrieved your user-specific token, please refer to the "Get your security token" section of the `README.md` file and the `Workspace_setup.ipynb` file.
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(
+  platform = picsure::Platform$BDC_AUTHORIZED,
+  token    = my_token
+)
 ```
 
 ### Getting help with the PIC-SURE API
@@ -94,19 +87,12 @@ session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
 You can get help with PIC-SURE library functions by using the `?` operator
 
 ```{r}
-?picsure::bdc.searchPicsure
+?picsure::searchDictionary
 ```
 
-For example, the above output lists and briefly defines how to use the `searchPicsure` function.
+For example, the above output lists and briefly defines how to use the `searchDictionary` function.
 
 ## Using the PIC-SURE variable dictionary
-
-Now that you have set up your connection to the PIC-SURE API, let's determine which study or studies you are authorized to access. The `getStudies` function can be used to return a list of the study accession numbers you are authorized to access.
-
-```{r}
-searchResults <- picsure::bdc.getStudies(session) # retrieve all the studies you have access to
-print(searchResults)
-```
 
 For the rest of this example notebook, we will use one of the publicly available datasets on PIC-SURE. This dataset is the "Framingham Heart Study: Dataset for Teaching Purposes", which is listed as `tutorial-biolincc_framingham` in the PIC-SURE output above. To find the variables related to this dataset, we will use the `searchPicsure` function to search for a term of interest - in this case, `tutorial`.
 
@@ -115,7 +101,7 @@ search_term <- "tutorial"
 ```
 
 ```{r}
-my_variables_df <- picsure::bdc.searchPicsure(session, keyword = "tutorial", includeValues = TRUE) # Search for "tutorial"
+my_variables_df <- picsure::searchDictionary(session, search_term, include_values = TRUE) # Search for variables related to 'tutorial'
 ```
 
 We can now review the variables that were returned and some of the information associated with these variables.
@@ -128,6 +114,17 @@ nrow(my_variables_df) # How many variables did the search return?
 head(my_variables_df) # Take a peek at some of the variables returned
 ```
 
+The `conceptPath` column contains the concept paths for specific variables, which are used for building cohorts and selecting participant-level data. Let's take a look at the first ten concept paths in our search results.
+
+```{r}
+head(my_variables_df$conceptPath, 10) # What are the first ten concept paths in my search results?
+```
+We can also view additional information for individual variables by filtering the data dictionary on `conceptPath`. Let's take a look at the details from the first concept path.
+
+```{r}
+first_var <- my_variables_df$conceptPath[1] # Save the concept path for the first variable
+my_variables_df[my_variables_df$conceptPath == first_var, ] # Show information for that first concept path
+```
 
 PIC-SURE integrates clinical and genomic datasets across BDC, including TOPMed and TOPMed-related studies, COVID-19 studies, and BioLINCC studies. Each variable is organized as a concept path that contains information about the study, variable group, and variable. Though the specifics of the concept paths are dependent on the type of study, the overall information included is the same. 
 
@@ -148,112 +145,155 @@ Data Organization in PIC-SURE
 
 *Note: The concept paths in PIC-SURE are used for querying. This is called `name` in the data dictionary shown above.*
 
-
-## Using PIC-SURE to build a query and retrieve data
-You can also use the PIC-SURE API to build a query and retrieve data. With this functionality, you can filter based on specific variables, add others, and export the data as a dataframe into this notebook. 
-
-The first step is to set up the query object.
+Now you can try to search for a term on your own. Below is sample code on how to search for the term `sex`. To practice searching the data dictionary, you can change `"sex"` to a term you are interested in. You will see the results displayed as a data frame. Note - the results displayed will show results from all studies you have access to.
 
 ```{r}
-query_example <- picsure::bdc.newQuery(session)
+my_search <- picsure::searchDictionary(session, "sex") # Change "sex" to a term you are interested in
+#head(my_search) # Show the variables that match my search result
 ```
 
-There are several methods that can be used to build a query, which can be specified by the `type` argument in the `picsure::addClause` function.
+
+## Using PIC-SURE to build a query and export results
+You can also use the PIC-SURE API to build a query and retrieve data. With this functionality, you can filter based on specific variables, add others, and export the data as a data frame into this notebook.
+
+### Building a query with clauses and clause groups
+The PIC-SURE R API supports constructing simple and complex queries using individual filter clauses, logical operators (`AND`, `OR`), and nested filter groups.
+
+A **clause** represents a single filtering condition on a variable, such as filtering to specific categorical values or a numeric range. Use `picsure::buildClause()` to create individual clauses.
+
+Multiple clauses can be combined into a **clause group** using `picsure::buildClauseGroup()`. Clause groups allow filters to be joined using either an `AND` or `OR` operator, enabling you to express more complex query logic. Clause groups can also contain other clause groups, making it possible to create nested filtering logic.
+
+Once the filtering logic has been defined, use `picsure::buildQuery()` to assemble the final query. The `phenotypicFilter` argument specifies the clauses or clause groups to include in the query. The `includeConcepts` argument adds variables to the output without applying any additional filtering.
+
+In summary, the general workflow for constructing a query is:
+
+1. Create one or more clauses with `picsure::buildClause()`.
+2. Combine clauses into clause groups with `picsure::buildClauseGroup()`.
+3. Optionally nest clause groups to create more advanced logic.
+4. Build the final query with `picsure::buildQuery()`, specifying additional output variables using `includeConcepts`.
+5. Run the query to export the specified participant-level data for a cohort using `picsure::runQuery()`.
+
+There are several clause types that can be used to build a query, which can be specified by the `type` argument in the `picsure::buildClause` function.
 
 | type | functionality |
 |--------|-------------------|
-| type = 'SELECT' | return all variables included in the list (no record subsetting)|
-| type = 'REQUIRE' | return all variables included in the list; only records that do not contain null values for input variables |
-| type = 'ANYOF' | return all variables included in the list; only records that contain at least one non-null value for input variables |
-| type = 'FILTER' | return input variable; only records that match filter criteria |
+| `picsure::PhenotypicFilterType$FILTER` | return input variable; only records that match filter criteria |
+| `picsure::PhenotypicFilterType$REQUIRE` | return all variables included; only records that do not contain null values for input variables |
+| `picsure::PhenotypicFilterType$ANYRECORD` | return all variables included; only records that contain at least one non-null value for input variables |
 
-As an example query, let's use the Framingham tutorial dataset to investigate the prevalence of hypertension and distribution of age of current smokers with body mass index greater than 20. 
+### Example with PIC-SURE data
+As an example query, let's use the Framingham tutorial dataset to investigate the prevalence of hypertension and distribution of age of current smokers with body mass index greater than 20.
+
+In other words, we want to create a query that filters to study participants that are:
+* Current smokers `AND`
+* Have BMI greater than 20 `AND`
+* Have some measurement for hypertension `AND`
+* Have some measurement for age
+
+Let's start by retrieving the variables for the `tutorial-biolincc_framingham` study from our initial search.
 
 ```{r}
 # Ensure that only Framingham tutorial variables are shown in the data dictionary, which can vary based on individual access
-phs_number <- "tutorial-biolincc_framingham"
-tutorial_df <- my_variables_df[my_variables_df$study_id == phs_number,]
+phs_number = "tutorial-biolincc_framingham"
+tutorial_df <- my_variables_df[my_variables_df$studyId == phs_number,]
 ```
 
 ### Build a query with a categorical variable - Current smoker
-Let's practice building a query by filtering on variables. Based on the search for the Framingham tutorial dataset variables, we can save the concept path of the "Current cigarette smoking at exam" variable, which is a categorical variable. 
+For the first part of our query, we are interested in current smokers. Based on the search for the Framingham tutorial dataset variables, we can save the concept path of the "Current cigarette smoking at exam" variable, which is a categorical variable.
 
 ```{r}
-smoke_variable_path <- tutorial_df[tutorial_df$var_description == "Current cigarette smoking at exam", "name"]
-smoke_variable_path
+smoke_variable_path <- tutorial_df[tutorial_df$description == "Current cigarette smoking at exam", "conceptPath"]
+smoke_variable_path # See the concept path
 ```
 
 We can take a look at the options of values to filter by using the `values` column of the data dictionary.
 
 ```{r}
-tutorial_df[tutorial_df$name == smoke_variable_path, "values"]
+tutorial_df[tutorial_df$conceptPath == smoke_variable_path, "values"]
 ```
 
 Let's apply a filter on the "Current cigarette smoking at exam" variable to only select participants with "Current smoker." Note that though we are only filtering by one value, you can filter by multiple values by passing a list into `filter()`. Note that though we are only filtering by one value, you can filter by multiple values by passing a list into the `filter` function. 
 
 ```{r}
-query_example <- picsure::addClause(query = query_example, # Query to build on
-                                                keys = smoke_variable_path, # Variable concept path to filter on
-                                                type = "FILTER", # The type of query, in this case a FILTER
-                                                categories = list("Current smoker")) # Value(s) to filter on
+smoke_clause <- picsure::buildClause(smoke_variable_path,
+                                      type       = picsure::PhenotypicFilterType$FILTER,
+                                      categories = c("Current smoker"))
 ```
 
-### Build a query with a continuous variable - BMI
-Let's practice building a query by filtering on a continuous variable, in this case, BMI. We can find the BMI concept path using a similar approach as above.
+### Build a clause with a continuous variable - BMI
+For the second part of our query, we are interested in participants with a body mass index (BMI) greater than 20. We can find the applicable variables using a similar process; by searching for the term of interest in the variables.
 
 ```{r}
-bmi_variable_path <- tutorial_df[tutorial_df$var_id == "BMI", "name"]
+bmi_variable_path <- tutorial_df[tutorial_df$name == "BMI", "conceptPath"]
 bmi_variable_path
 ```
 
 We can take a look at the minimum and maximum values of the variable using the `min` and `max` columns of the data dictionary.
 
 ```{r}
-tutorial_df[tutorial_df$name == bmi_variable_path, c("min", "max")]
-```
-Let's apply a filter on the "Body Mass Index, weight in kilograms/height meters squared" variable to select only participants with values greater than 20. Note that while in this example only a `min` is specified, a `max` can also be defined for the filter.
-
-```{r}
-query_example <- picsure::addClause(query = query_example, # Query to filter on
-                                               keys = bmi_variable_path, # Variable concept path to filter on
-                                               type = "FILTER", # The type of query, in this case FILTER
-                                               min = 20) # Minimum of the range
+tutorial_df[tutorial_df$conceptPath == bmi_variable_path, c("min", "max")]
 ```
 
-### Adding variables to include in export - Age and Hypertension
-In addition to adding filters, specific variables can be included in the export for analysis. Let's do this for the "Age at exam (years)" and "Hypertensive. Defined as the first exam treated for high blood pressure or second exam in which either Systolic is 6 140 mmHg or Diastolic 6 90mmHg" variables.
+To apply this filter, we will create a separate clause. Let's apply a filter on the "Body Mass Index, weight in kilograms/height meters squared" variable to select only participants with values greater than 20. Note that while in this example only a `min` is specified, a `max` can also be defined for the filter.
 
 ```{r}
-age_variable_path <- tutorial_df[tutorial_df$var_description == "Age at exam (years)", "name"]
-hyperten_variable_path <- tutorial_df[tutorial_df$var_id == "HYPERTEN", "name"]
+bmi_clause <- picsure::buildClause(bmi_variable_path,
+                                    type = picsure::PhenotypicFilterType$FILTER,
+                                    min  = 20)
 ```
 
-Let's add these variables to our query. To do this, we can either use `select()`, `require()`, or `anyof()`. 
-
-`select()` will add these variables for all participants we have filtered thus far, regardless whether they have a value for the variables or not.
-
-`anyof()` will add these variables for all participants that have at least one non-null value for the variables added.
-
-`require()` will add these variables for all participants that have only non-null values for all variables added.
-
-
-For this, let's use `require()` to only select participants that have information for both of these variables. 
+### Building a clause with `REQUIRE` - Age and Hypertension
+In addition to adding the filters, we are interested in participants with age and hypertension measurements. Let's do this for the "Age at exam (years)" and "HYPERTEN" variables.
 
 ```{r}
-query_example <- picsure::addClause(query = query_example, # Query to add to
-                                               keys = c(age_variable_path, hyperten_variable_path), # List of variables to add
-                                               type = "REQUIRE") # Query type REQUIRE
+age_variable_path <- tutorial_df[tutorial_df$description == "Age at exam (years)", "conceptPath"]
+hyperten_variable_path <- tutorial_df[tutorial_df$name == "HYPERTEN", "conceptPath"]
 ```
 
-### Exporting participant-level data from the query
-The query has been constructed and can now be exported for analysis.
+We can create separate clauses for these variables as well using `REQUIRE` to be added to the final query later. Note that `REQUIRE` selects participants that have non-null values for these variables; in other words, selects participants that have some measurement.
 
-In the data dictionary dataframe shown previously, each row represented a single concept path or variable. In the query dataframe, the concept paths are added as columns with each row representing a participant with data that matches your query. 
-
-The dataframe above should contain some automatically exported concept paths, such as `patient_id`, `Parent Study Accession with Subject ID`, `Topmed Study Accession with Subject ID`, and `consents`, and the concept paths we added to our query.
+Note that, here, we need to create two separate clauses to later be combined with `AND`. If both variables are added to a single clause at once, the clause would add these variables with `OR`.
 
 ```{r}
-example_results <- picsure::runQuery(query_example, resultType = 'DATA_FRAME')
+# REQUIRE applies per concept path; a single multi-path clause would OR them.
+# To require BOTH age and hypertension, build one REQUIRE clause per path and AND them.
+age_require_clause      <- picsure::buildClause(age_variable_path,      type = picsure::PhenotypicFilterType$REQUIRE)
+hyperten_require_clause <- picsure::buildClause(hyperten_variable_path, type = picsure::PhenotypicFilterType$REQUIRE)
+```
+
+### Building the query
+Now we have four clauses that should be put together into a single query. We will create a clause group using `picsure::buildClauseGroup` and specify the operator as `AND`.
+
+```{r}
+# Put all clauses together with AND
+all_clauses <- picsure::buildClauseGroup(
+  list(smoke_clause, bmi_clause, age_require_clause, hyperten_require_clause),
+  operator = picsure::GroupOperator$AND
+)
+```
+
+Once the clause group is created, we can build the final query with `picsure::buildQuery()`.
+
+Bonus: Let's say we are interested in reviewing the data for a common complication of smoking and hypertension, like stroke. We don't want to use this variable to filter our cohort, but we are interested in including it in the export for review. We can pass the concept path for the stroke variable into the `includeConcepts` argument of `picsure::buildQuery()`.
+
+```{r}
+stroke_variable_path <- tutorial_df[tutorial_df$name == "STROKE", "conceptPath"]
+
+example_query <- picsure::buildQuery(
+  phenotypicFilter = all_clauses,
+  includeConcepts  = stroke_variable_path
+)
+```
+
+### Running the query and exporting participant-level data
+The query has been constructed and can now be run. `picsure::runQuery()` with `type = picsure::QueryType$PARTICIPANT` returns a data frame of participant-level data.
+
+In the data dictionary data frame shown previously, each row represented a single concept path or variable. In the query data frame, the concept paths are added as columns with each row representing a participant with data that matches your query.
+
+The data frame will contain some automatically exported concept paths, such as `patient_id`, and the concept paths we added to our query.
+
+```{r}
+example_results <- picsure::runQuery(session, example_query, type = picsure::QueryType$PARTICIPANT)
 head(example_results)
 ```
 
@@ -268,8 +308,8 @@ With this example, averages of the age and BMI values could be calculated and a 
 ```{r}
 # Select rows of interest and rename them
 clean_results <- example_results %>% 
-  select("\\tutorial-biolincc_framingham\\AGE\\", "\\tutorial-biolincc_framingham\\BMI\\", "\\tutorial-biolincc_framingham\\CURSMOKE\\", "\\tutorial-biolincc_framingham\\HYPERTEN\\") %>%
-  rename(AGE = "\\tutorial-biolincc_framingham\\AGE\\", BMI = "\\tutorial-biolincc_framingham\\BMI\\", CURSMOKE = "\\tutorial-biolincc_framingham\\CURSMOKE\\", HYPERTEN = "\\tutorial-biolincc_framingham\\HYPERTEN\\")
+  select("\\tutorial-biolincc_framingham\\AGE\\", "\\tutorial-biolincc_framingham\\BMI\\", "\\tutorial-biolincc_framingham\\CURSMOKE\\", "\\tutorial-biolincc_framingham\\HYPERTEN\\", "\\tutorial-biolincc_framingham\\STROKE\\") %>%
+  rename(AGE = "\\tutorial-biolincc_framingham\\AGE\\", BMI = "\\tutorial-biolincc_framingham\\BMI\\", CURSMOKE = "\\tutorial-biolincc_framingham\\CURSMOKE\\", HYPERTEN = "\\tutorial-biolincc_framingham\\HYPERTEN\\", STROKE = "\\tutorial-biolincc_framingham\\STROKE\\")
 head(clean_results)
 ```
 
@@ -306,5 +346,5 @@ ever_smoker <- lapply(clean_results$CURSMOKE, ever_smoker)
 clean_results$mean_age <- as.numeric(mean_age)
 clean_results$mean_bmi <- as.numeric(mean_bmi)
 clean_results$ever_smoker <- as.character(ever_smoker)
-clean_results %>% select("mean_age", "mean_bmi", "ever_smoker", "HYPERTEN") %>% head()
+clean_results %>% select("mean_age", "mean_bmi", "ever_smoker", "HYPERTEN", "STROKE") %>% head()
 ```
