@@ -14,7 +14,7 @@ This tutorial notebook will demonstrate how to query and work with the *BDC* cro
 # Environment set-up
 
 ## System requirements
-- R 3.4 or later
+- R 4.1 or later
 
 ## Install Packages
 
@@ -24,26 +24,27 @@ This tutorial notebook will demonstrate how to query and work with the *BDC* cro
 
 ```{r}
 ### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
-install.packages(c("devtools", "dplyr", "ggplot2"))
+#install.packages(c("devtools", "dplyr", "ggplot2"))
 ```
 
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
+install.packages("tidyverse")
+library(picsure)
 library(dplyr)
 library(ggplot2)
-library(picsure)
+library(tidyr)
 ```
 
 ## Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 ## About Harmonized Variables
@@ -69,70 +70,79 @@ The following phenotypes are included as harmonized variables:
 
 More information about the variable harmonization process is available at https://www.nhlbiwgs.org/sites/default/files/pheno_harmonization_guidelines.pdf
 
-# Working with the TOPMed DCC Harmonized Variables in PIC-SURE
-## 1. Identifying harmonized variables of interest
-First, let's explore what harmonized variables are available in PIC-SURE by searching for the keyword `harmonized`.
+# Exploring the DCC Harmonized Variables in PIC-SURE
+## 1. Identifying harmonized variables of interest using faceted search
+First, let's explore what variables are available for the TOPMed DCC Harmonized dataset. Since we are interested in variables from one study in particular, we can use the faceted search in PIC-SURE. To see what options are available with faceted search, we can run `session$showAllFacets()`.
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized') %>% filter(study_id == 'DCC Harmonized data set')
+session$showAllFacets()
+```
+
+This returns a data frame with six columns:
+
+| Column | Description |
+|---|---|
+| `category` | Category identifier (e.g. `dataset_id`) — pass this to `picsure::addFacet`. |
+| `Category Display` | Human-readable category label (e.g. `Dataset`). |
+| `display` | Facet option's display label. |
+| `description` | Facet option's description, if any. |
+| `value` | Option identifier — pass this to `picsure::addFacet`. |
+| `count` | Number of concepts matching this option. |
+
+To use faceted search, we can build a `facets` object with the category and value(s) we want to use to narrow down search results. In this case, we are interested in the TOPMed DCC Harmonized dataset. To build out this faceted search, we can use the `dataset_id` category with the `DCC Harmonized data set` value with `picsure::addFacet()`.
+
+```{r}
+facets <- picsure::facets(session) # Set up facets object
+picsure::addFacet(facets, "dataset_id", "DCC Harmonized data set") # Add a facet to filter for the DCC Harmonized data set
+facets$view() # We can confirm that the facet was added
+```
+
+Now that we've created our facets object, we can use this for search. The facets can be combined with a search term of interest, but since we are interested in all variables from the DCC Harmonized data set, we can use the facet with an empty search.
+
+```{r}
+harmonized_df <- picsure::searchDictionary(session, facets = facets) # Search the dictionary using the facet we just set up
 head(harmonized_df)
 ```
 
-We can see that the returned variables are all part of the DCC Harmonized dataset unique study ID
+Our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variable. Let's exclude these.
 
 ```{r}
-unique(harmonized_df$study_id)
-```
-
-We can also see that although there are only 78 DCC Harmonized variables, we have found 226 'harmonized' variables in PIC-SURE. This is because our variable results include subject IDs and 'metadata variables' which contain information about the age of the subject when a certain measure was taken, or the units of a variables. Let's exclude these.
-
-```{r}
+# Discarding "subject ID",
+# the variables which only indicate age of the subject at which a given harmonized variable was measured,
+# and variables which indicate the units of a given harmonized variable
+vars_to_remove <- grepl("age_at|SUBJECT_ID|unit_", harmonized_df$conceptPath)
+harmonized_df <- harmonized_df[!vars_to_remove, ]
 dim(harmonized_df)
 ```
 
-```{r}
-# Discarding the variables which only indicate age of the subject at which a given harmonized variable was been measured,
-# and variables which indicate the units of a given harmonized variable
-harmonized_df <- harmonized_df[!grepl(pattern = "age at measurement|harmonization unit", harmonized_df$var_name),]
-print(dim(harmonized_df))
-head(harmonized_df[,c('var_name', 'var_description', 'name', 'study_id')])
-```
-
-We can now see our 78 harmonized variables. This is in line with the [DCC Harmonized Variables documentation](https://github.com/UW-GAC/topmed-dcc-harmonized-phenotypes). 
-
 ## 2. Selecting variables and retrieving data from the database
-
-Let's say we are interested in the subset of harmonized variables pertaining to patient demographics. 
-
-We might do this by selecting variables based on what **data table** or **variable group** the variables belong to. 
-
-We will do this by filtering on the `group_id` column. We can see the values of this column and how many variables are in each group:
+Let's say we are interested in exploring the subset of harmonized variables pertaining to patient demographics. Let's do a search to see which variables have "demographic" as part of the concept path.
 
 ```{r}
-table(harmonized_df$group_id)
+demographic_df <- harmonized_df[grepl("demographic", harmonized_df$conceptPath), ] # Search for "demographic" in the concept path
+head(demographic_df)
+vars_of_interest <- demographic_df$conceptPath # Save concept paths
 ```
 
-Since we are interested in patient demographics, we will filter our dataframe to include all harmonized variables which are part of the `demographic` variable group or data table. 
+## 3. Build and run a PIC-SURE query for participant-level demographics data
+Now that we have identified the concept paths related to demographics, we can use these to build a PIC-SURE query. As a reminder, we first build clauses with single variable filters, then clause groups consisting of multiple clauses, and finally construct the query.
+
+Let's build the clause group programmatically by adding all demographics variables as `ANYRECORD` filters that are combined with `OR`.
 
 ```{r}
-demographic_df <- harmonized_df[grepl('demographic', harmonized_df$group_id),]
-demographic_df[,c('var_name', 'var_description', 'name', 'study_id')]
-vars_of_interest <- demographic_df$name
-```
+# Build a clause group with separate ANYRECORD demographics clauses
+anyof_clauses <- lapply(vars_of_interest, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD))
+demographic_clausegroup <- picsure::buildClauseGroup(anyof_clauses, operator = picsure::GroupOperator$OR)
 
-## Query PIC-SURE for participant-level data for harmonized variables of interest
+# Build the query
+demographic_query <- picsure::buildQuery(phenotypicFilter = demographic_clausegroup)
 
-```{r}
-demographic_query <- picsure::bdc.newQuery(session) # Initialize a new query
-demographic_query <- picsure::addClause(query = demographic_query, 
-                                keys = vars_of_interest,
-                                type = 'ANYOF') 
-
-demographic_results <-  picsure::runQuery(demographic_query)
+# Run the query
+demographic_results <- picsure::runQuery(session, demographic_query, type = picsure::QueryType$PARTICIPANT)
 head(demographic_results)
 ```
 
-## 3. Visualizing sex and race harmonized variables across study cohorts
+## 4. Visualizing the output: sex and race across study cohorts
 ### Male:Female ratio across study cohorts
 
 Below, we wrangle the data to calculate the male/female sex ratio per study cohort and prepare our data for plotting.
@@ -148,7 +158,7 @@ mf_df <- mf_df %>%
               male = sum(sex == 'Male')) %>%
     mutate(mf_ratio = male / female)
 
-head(mf_df)
+mf_df
 ```
 
 ```{r}
