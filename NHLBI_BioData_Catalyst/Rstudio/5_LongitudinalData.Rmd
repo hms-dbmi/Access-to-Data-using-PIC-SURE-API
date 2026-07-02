@@ -19,7 +19,7 @@ For a more basic introduction to the R PIC-SURE API, see the `1_PICSURE_API_101.
 ## Environment Set-Up
 
 ### System Requirements
-R >= 3.4
+R >= 4.1
 
 ### Install Packages
 
@@ -35,22 +35,20 @@ R >= 3.4
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="query_v3", force=T, quiet=FALSE)
 library(dplyr)
 library(stringr)
 library(tidyr)
 library(ggplot2)
-library(picsure)
 ```
 
 ## Connecting to a PIC-SURE Network
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
+library(picsure)
 token_file <- "token.txt"
-token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+my_token <- readLines(token_file, warn = FALSE)[1]
+session <- picsure::connect(platform = picsure::Platform$BDC_AUTHORIZED, token = my_token)
 ```
 
 ## Longitudinal Lipid Variable Example
@@ -65,18 +63,14 @@ In this notebook example, we will:
 
 ### Identify lipid-related variables in the Framingham Heart Study
 
-First, let's search the data dictionary in PIC-SURE using a regular expression to find all variables related to `lipid` *or* `trigliceride`. 
+First, let's search the data dictionary in PIC-SURE. We will search for `lipid` and use the faceted search to filter to the Framingham Heart Study. 
 ```{r}
-lipid_df <- picsure::bdc.searchPicsure(session, 'lipid|triglyceride')  
-```
+facets <- picsure::facets(session) # Set up facets object
+picsure::addFacet(facets, "dataset_id", "phs000007") # Add a facet to filter for FHS
 
-We are interested in variables from the Framingham Heart Study. The study ID associated with this study is `phs000007`. If you don't know the PHS number for a study of interest, you can check the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/psamaui/login).
-
-Here, we filter our variables dataframe to only include those where the studyId matches our PHS number of interest.
-
-```{r}
-filtered_lipid_df <- lipid_df %>% filter(grepl('phs000007', study_id))
-head(filtered_lipid_df)
+lipid_df <- picsure::searchDictionary(session, "lipid", facets = facets)
+print(dim(lipid_df))
+head(lipid_df)
 ```
 
 As you can see, there are a number of variables in the Framingham Heart Study which are related to lipids or triglicerides. In this case study, we are interested specifically in `longitudinal` data, or variables which have been measured over time. 
@@ -84,25 +78,26 @@ As you can see, there are a number of variables in the Framingham Heart Study wh
 ### Identify the longitudinal lipid variables
 In order to identify which lipid variables are measured over time, we will take advantage of the keywords `exam` and `visit`. Through a brief review of our lipid variables in the Framingham Heart Study, we can see that many variables contain an exam or visit number, indicating that it is longitudinal data.
 
-First, we will filter our dataframe containing variables which are related to `lipid` or `triglyceride` in Framingham Heart Study to those which have the keywords `exam #` or `visit #`.
+First, we will filter our dataframe containing variables which are related to `lipid` in Framingham Heart Study to those which have the keywords `exam #` or `visit #`.
 
 ```{r}
-filtered_lipid_df <- filtered_lipid_df %>% 
-    filter(grepl('(exam \\d+|visit \\d+)', var_description, ignore.case = TRUE))
+filtered_lipid_df <- lipid_df %>% 
+    filter(grepl('(exam \\d+|visit \\d+)', description, ignore.case = TRUE))
+head(filtered_lipid_df) # Peek at filtered variables
 ```
 
 Next, we will extract the exam or visit number of each variable into column `exam_number`.
 
 ```{r}
 filtered_lipid_df <- filtered_lipid_df %>%
-    mutate(exam_number = toupper(str_trim(str_extract(var_description, regex('exam \\d+|visit \\d+', ignore_case = TRUE)))))
+    mutate(exam_number = toupper(str_trim(str_extract(description, regex('exam \\d+|visit \\d+', ignore_case = TRUE)))))
 ```
 
 Now we will save the variable name without the exam number as `varname_noexam`. This prepares us for the next step, where we will group the data by the variable name root.
 
 ```{r}
 filtered_lipid_df <- filtered_lipid_df %>%
-    mutate(varname_noexam = str_trim(str_replace(var_description, regex('exam \\d+|visit \\d+', ignore_case = TRUE), '')))
+    mutate(varname_noexam = str_trim(str_replace(description, regex('exam \\d+|visit \\d+', ignore_case = TRUE), '')))
 ```
 
 Finally, we can return a summary table showing which variables have more than one exam recorded.
@@ -110,14 +105,9 @@ Finally, we can return a summary table showing which variables have more than on
 ```{r}
 # Isolate columns of interest
 filtered_lipid_df <- filtered_lipid_df %>% 
-    select(var_name, var_description, exam_number, varname_noexam) %>%
-    mutate(var_name = toupper(var_name)) %>%
+    select(name, description, exam_number, varname_noexam) %>%
+    mutate(name = toupper(name)) %>%
     distinct()
-
-# Create summary table by pivoting the dataframe to the number of exams that are associated with each variable
-longitudinal_lipid_summary <- filtered_lipid_df %>% 
-  select(varname_noexam, exam_number) %>% 
-  pivot_wider(names_from = varname_noexam, values_from = exam_number, values_fn = length)
 
 data.frame(table(filtered_lipid_df$varname_noexam) ) %>% arrange(desc(Freq))
 
@@ -127,35 +117,26 @@ Now that we know which longitudinal variables are available to us, we can choose
 
 ### Identify which longitudinal lipid variable(s) are of interest
 
-We can see from the table above that the variable `treated for lipids` appears to be the most robust, with 32 exams recorded.
+We can see from the table above that the variable `treated for lipids` appears to be the most robust, with 32 exams recored.
 
 In this example, we will further investigate the `treated for lipids` variable by adding all the associated variable IDs to our PIC-SURE query.
 
-To do so, we need the `name` for each variable ID.
+To do so, we need the `conceptPath` for each variable.
 
 ```{r}
-names <- lipid_df %>% filter(grepl('Treated for lipids,', var_description)) %>% pull(name)
+# Get the concept paths for the "treated for lipids" longitudinal variable
+hpds_paths <- lipid_df %>% filter(grepl('treated for lipids', description, ignore.case = TRUE)) %>% pull(conceptPath)
+hpds_paths
 ```
 
-### Query PIC-SURE for longitudinal variables of interest
-First, we will create a new query object.
+We build a query from the selected concept paths and run it against PIC-SURE. The `ANYOF` query pattern uses `buildClause`, `buildClauseGroup`, and `buildQuery` to include all input concept paths, returning only participant records that contain at least one non-null value for those variables. See the `1_PICSURE_API_101.ipynb` notebook for a more in-depth explanation of query methods.
 
 ```{r}
-longitudinal_query <- picsure::bdc.newQuery(session) # Initialize a new query
-```
-
-We will use the `query.anyof().add()` method. This will allow us to include all input variables, but only participant records that contain at least one non-null value for those variables in the output. See the `1_PICSURE_API_101.ipynb` notebook for a more in depth explanation of query methods.
-
-```{r}
-longitudinal_query <- picsure::addClause(query = longitudinal_query, 
-                                         keys = names,
-                                         type = 'ANYOF')
-```
-
-Retrieve the query results as a dataframe
-
-```{r}
-longitudinal_results <- picsure::runQuery(longitudinal_query)
+# Build query using ANYRECORD clauses: include all concept paths, return participants with at least one non-null value
+anyof_clauses <- lapply(hpds_paths, function(p) picsure::buildClause(p, type = picsure::PhenotypicFilterType$ANYRECORD))
+anyof_group   <- picsure::buildClauseGroup(anyof_clauses, operator = picsure::GroupOperator$OR)
+q <- picsure::buildQuery(phenotypicFilter = anyof_group, includeConcepts = hpds_paths)
+longitudinal_results <- picsure::runQuery(session, q, type = picsure::QueryType$PARTICIPANT)
 head(longitudinal_results)
 ```
 
@@ -163,6 +144,13 @@ head(longitudinal_results)
 Let's plot a graph to see whether patients were or were not treated for lipids over time.
 
 First, we will clean the data by removing the subject identifiers and renaming the columns to simply represent the visit number. We can see that our data values are in the form "Yes", "No". We will map them to a boolean representation.
+
+```{r}
+plotdf <- longitudinal_results
+plotdf <- plotdf[,-c(1:4)]
+colnames(plotdf)
+gsub('LIPRX', '', str_extract(colnames(plotdf), 'LIPRX\\d+'))
+```
 
 ```{r}
 plotdf <- longitudinal_results
@@ -179,27 +167,19 @@ plotdf <- plotdf[,!is.na(colnames(plotdf))]
 ```
 
 ```{r}
-head(plotdf)
-```
-
-```{r}
 # map yes/no values to numeric representation
-my_func <- function(vec) {
-    ifelse(str_trim(vec) == 'Yes', 1, 
-           ifelse(str_trim(vec) == 'No', -1, 
-                  0))
-}
-
-for (x in 1:ncol(plotdf)){
-    plotdf[,x] <- my_func(plotdf[,x])
-}
+plotdf <- plotdf %>%
+  mutate(across(
+    everything(),
+    ~ recode(., "Yes" = 1L, "No" = -1L, .missing = 0L)
+  ))
 ```
 
 ```{r}
 head(plotdf)
 ```
 
-Although we have 12792 patients in this dataset with at least one 'treated for lipids' value, some of the data is quite sparse. Let's focus on visualizing patients which have at least 20 values recorded.
+Although we have 13339 patients in this dataset with at least one 'treated for lipids' value, some of the data is quite sparse. Let's focus on visualizing patients which have at least 20 values recorded.
 
 ```{r}
 plotdf <- plotdf %>%
@@ -214,8 +194,8 @@ The heatmap below represents each patient with at least 20 observations on each 
 
 ```{r}
 plotdf$id <- rownames(plotdf)
-plotdf <- pivot_longer(plotdf, cols = colnames(plotdf)[-33], names_to = 'visit')
-plotdf$visit <- factor(plotdf$visit, levels = c(1:32))
+plotdf <- pivot_longer(plotdf, cols = colnames(plotdf)[-30], names_to = 'visit')
+plotdf$visit <- factor(plotdf$visit, levels = c(1:24))
 plotdf$value <- factor(plotdf$value)
 ```
 
