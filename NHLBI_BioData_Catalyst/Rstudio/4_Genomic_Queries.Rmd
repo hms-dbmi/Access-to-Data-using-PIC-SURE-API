@@ -32,20 +32,17 @@ For a more basic introduction to the python PIC-SURE API, see the `1_PICSURE_API
 ```{r}
 Sys.setenv(TAR = "/bin/tar")
 options(unzip = "internal")
-devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref="main", force=T, quiet=FALSE)
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref = "main", force = TRUE, quiet = FALSE)
 library(dplyr)
-library(picsure)
-library(tidyr)
 ```
 
 ### Connecting to a PIC-SURE resource
 
 ```{r}
-PICSURE_network_URL = "https://picsure.biodatacatalyst.nhlbi.nih.gov/picsure"
 token_file <- "token.txt"
 token <- scan(token_file, what = "character")
-session <- picsure::bdc.initializeSession(PICSURE_network_URL, token)
-session <- picsure::bdc.setResource(session = session,  resourceName = "AUTH")
+
+session <- picsure::connect(picsure::Platform$BDC_AUTHORIZED, token)
 ```
 
 # Example 1: Build a query with genomic and phenotypic variables
@@ -55,29 +52,27 @@ We are going to create a new query request from the PIC-SURE resource that was s
 
 For more information about the TOPMed DCC Harmonized dataset, please refer to the [`2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb` notebook](./2_TOPMed_DCC_Harmonized_Variables_analysis.ipynb).
 
-First we will create a new query instance.
+### Search for "sex" in TOPMed DCC Harmonized dataset
+
+We can search for variables within a specific dataset using facets. Let's set up the facets object to search only within the TOPMed DCC Harmonized data set.
 
 ```{r}
-my_query <- picsure::bdc.newQuery(session) # Initialize a new query
+facets <- picsure::facets(session) # Set up facets object
+facets <- picsure::addFacet(facets, "dataset_id", "DCC Harmonized data set") # Add a facet to filter for the DCC Harmonized data set
+facets$view() # We can confirm that the facet was added
 ```
 
-### Find all TOPMed DCC Harmonized variables
-We can search for variables related to our search query using the `bdc::searchPicsure` function. 
-
-In this example, we will retrieve all variables available in the TOPMed DCC Harmonized dataset.
-
-You can find information about the phs number associated with each study and what data are available from the Data Access Dashboard in the PIC-SURE [User Interface](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
+Now that we've created our facets object, we can use this for search. We will use this to search for "sex".
 
 ```{r}
-harmonized_df <- picsure::bdc.searchPicsure(session, 'harmonized', includeValues = TRUE)  %>% filter(study_id == "DCC Harmonized data set")
+sex_dataframe <- picsure::searchDictionary(session, term = "sex", facets = facets) # Search the dictionary using the facet we just set up
+head(sex_dataframe)
 ```
 
-## 1.2 Add categorical phenotypic variable (sex) to the query
-
-First, we will search our TOPMed DCC Harmonized data dictionary for a sex-related variable.
+Now that we have found variables related to our search, we can apply a filter to select Females.
 
 ```{r}
-sex_var <- harmonized_df %>% filter(grepl('subject sex', var_description, ignore.case = TRUE))
+sex_var <- sex_dataframe %>% filter(name == "annotated_sex_1")
 sex_var
 ```
 
@@ -87,119 +82,86 @@ Let's examine the values within this variable.
 sex_var %>% pull(values)
 ```
 
-We are only interested in Female values in this use case - let's apply this filter to our query accordingly.
+We can create a clause to filter to only those participants with a `Female` sex value.
 
 ```{r}
-my_query <- picsure::bdc.newQuery(session)
-my_query <- picsure::addClause(query = my_query, 
-                               keys = sex_var %>% pull(name),
-                               type = 'FILTER',
-                               categories = list('Female'))
+sex_clause <- picsure::buildClause(sex_var$conceptPath, picsure::PhenotypicFilterType$FILTER, categories = "Female")
 ```
 
-## 1.3 Add continuous phenotypic variable (body mass index, BMI) to the query
-For this example, we are only interested in obese participants (BMI >= 30).
+### Search for "body mass index" in TOPMed DCC Harmonized dataset
 
-Following the data dictionary search pattern shown above, we can search for the TOPMed DCC Harmonized dataset variables related to BMI.
+For this example, we are only interested in obese participants (BMI >= 30). We can use the same facets object to search for "body mass index" in the TOPMed DCC Harmonized dataset.
 
 ```{r}
-# Search our TOPMed harmonized dataframe for a BMI variable
-bmi_var <- harmonized_df %>% filter(grepl('body mass index', var_description, ignore.case = TRUE))
-print(paste0(bmi_var$var_name, ': ', bmi_var$name))
-
-# Examine the values
-print(paste0('Min: ', bmi_var$min, ', Max: ', bmi_var$max))
-
-# Filter to obese participants with BMI 30 or more
-my_query <- picsure::addClause(query = my_query, 
-                               keys = bmi_var$name,
-                               type = 'FILTER',
-                               min = 30)
+# Search the TOPMed Harmonized dataset for a BMI variable
+bmi_dataframe <- picsure::searchDictionary(session, term = "body mass index", facets = facets) # Search the dictionary using the facet we just set up
+head(bmi_dataframe)
 ```
 
-## 1.4 Add genomic filters to the query
-To start adding genomic filters to our query, we first need to understand what genomic annotations are available.
+Now we can create a new clause to filter to participants with BMI greater than 30.
 
 ```{r}
-genotype_annotations <- picsure::getGenomicAnnotations(session)
-genotype_annotations
+bmi_clause <- picsure::buildClause(bmi_dataframe$conceptPath, picsure::PhenotypicFilterType$FILTER, min = 30)
 ```
 
-As shown in the genomic_annotations object above, some genomic variables that can be used in queries include `Gene_with_variant`, `Variant_class`, and `Variant_severity`.
+## 1.2 Building the query with the PIC-SURE API: Genomic Filters
 
-#### Add genotypic variable (Gene_with_variant) to the query
+There are several fields that are available to add as part of a genomic filter. The two main fields are `Gene_with_variant` and `Variant_consequence_calculated`. We can search across these fields using `searchGenomicValues()`.
 
-By looking at the values associated with the `Gene_with_variant` annotation we see what genes we can filter the variants by.
+```{r}
+# Peak at a list of genes with variant
+gene_search <- picsure::searchGenomicValues(session, "Gene_with_variant")
+head(gene_search)
+```
+```{r}
+# Peak at a list of variant consequences and severities
+consequence_search <- picsure::genomicConsequences()
+head(consequence_search)
+```
 
 The fat mass and obesity related gene, or *FTO* gene, [has been linked to obesity and other diseases](https://www.ncbi.nlm.nih.gov/gene/79068). Let's search for this gene.
 
 ```{r}
-# get total list of genes
-genes <- genotype_annotations %>% filter(name == 'Gene_with_variant') %>% pull(values)
-genes <- strsplit(genes, ', ')[[1]]
-
-# print the first 10 genes
-print(genes[1:10])
-
-# check if a certain gene of interest, e.g. FTO, is in the gene list
-gene_of_interest <- 'FTO'
-gene_of_interest %in% genes
+# Validate that FTO gene is an option in gene search
+gene_search <- picsure::searchGenomicValues(session, "Gene_with_variant", query = "FTO")
+gene_search
 ```
 
-Let's also say that we only want highly severe variants. We can see the levels of severity shown below.
+Now we can add the filters to the query.
 
 ```{r}
-# what values are available for Variant_severity?
-genotype_annotations %>% filter(name == "Variant_severity") %>% pull(values)
+# Build clauses for the FTO gene and high severity consequences
+fto_gene_clause <- picsure::buildGenomicFilter(picsure::GenomicFilterKey$GENE_WITH_VARIANT, values = "FTO")
+high_severity_clause <- picsure::buildGenomicFilter(picsure::GenomicFilterKey$VARIANT_SEVERITY, values = picsure::VariantSeverity$HIGH)
 ```
 
-The gene list shown above provides a list of values that can be used for the `Gene_with_variant`, in this case genes affected by a variant. Let's say we are interested in participants who have a highly severe *FTO* variant. We can add these filters to the query.
+
+## 1.3 Construct query and retrieve data
+Now let's put together the query clauses that filter to participants with:
+
+* Sex = Female
+* BMI > 30
+* Participants have a highly severe variant on FTO
+
+We will run a count query to find the number of matching participants. This is a great way to preview how many participants match your query criteria without extracting all of the data yet.
 
 ```{r}
-my_query <- picsure::addClause(query = my_query, 
-                               keys = 'Gene_with_variant',
-                               type = 'GENOMIC_FILTER',
-                               categories = list('FTO'))
+pheno_group <- picsure::buildClauseGroup(list(sex_clause, bmi_clause), operator = picsure::GroupOperator$AND)
 
-my_query <- picsure::addClause(query = my_query,
-                               keys = 'Variant_severity',
-                               type = 'GENOMIC_FILTER',
-                               categories = list("HIGH"))
+full_query <- picsure::buildQuery(phenotypicFilter = pheno_group, genomicFilters = list(fto_gene_clause, high_severity_clause))
+count_result <- picsure::runQuery(session, full_query, type = picsure::QueryType$COUNT)
+count_result
 ```
 
-
-## 1.5 Retrieve data from the query
-
-#### Getting query count
-We have now built a query called `my_query` which contains the search criteria we are interested in:
-- Sex = Female
-- BMI > 30
-- Participants have a highly severe *FTO* variant
-
-We will run a count query to find the number of matching participants.
-This is a great way to preview how many participants match your query criteria without extracting the data.
+We will retrieve our results in a dataframe. Note that since we only added sex and BMI to the query, these are the only phenotypic variables returned.
 
 ```{r}
-picsure::runQuery(my_query, resultType = 'Count')
+full_results <- picsure::runQuery(session, full_query, type = "participant")
+head(full_results)
 ```
 
-#### Getting query data
-We will retrieve our results in a dataframe.
-Note that since we only added sex and age to the query, these are the only phenotypic variables returned.
 
-```{r}
-query_result <- picsure::runQuery(my_query)
-```
-
-```{r}
-dim(query_result)
-```
-
-```{r}
-head(query_result)
-```
-
-# Example 2: Use case with *SERPINA1* gene variants as a risk factor for  COPD
+# Example 2: Use case with *SERPINA1* gene variants as a risk factor for COPD
 
 In this example, we will create a query to explore the relationship between the COPD phenotype and variants in the SERPINA1 gene. Variations of the SERPINA1 gene have been found to be a strong risk factor for COPD, which you can read more about [here](https://pubmed.ncbi.nlm.nih.gov/31661293/).
 
@@ -209,20 +171,21 @@ To explore this relationship, we will narrow the cohort down to participants tha
 * have a missense variant of the *SERPINA1* gene
 
 ## 2.1 Create query
-Let's start by creating a new query and finding the variables pertaining to the COPDgene study (phs000179)
+Let's start by creating a facets object to search for variables within the COPDgene study (phs000179).
 
 ```{r}
-# Retrieve all COPDGene variables
-copd_df <- picsure::bdc.searchPicsure(session, 'phs000179', includeValues = TRUE)  
+copd_facets <- picsure::facets(session) # Set up facets object
+copd_facets <- picsure::addFacet(copd_facets, "dataset_id", "phs000179")
+copd_facets$view() # We can confirm that the facet was added
 ```
 
 ### Criteria 1: Participants who have had COPD
-Let's search our dataframe of COPDGene variables to find the one we want to use to filter for participants who have ever had COPD.
+Let's search for COPDGene variables that are related to COPD.
 
 ```{r}
-copd_df %>% 
-    filter(grepl('copd', var_description, ignore.case = TRUE)) %>%
-    select(name, var_name, var_description, values)
+# Search the COPDGene study for COPD variable
+copd_dataframe <- picsure::searchDictionary(session, term = "copd", facets = copd_facets) # Search the dictionary using the facet we just set up
+head(copd_dataframe)
 ```
 
 The variable with the description "COPD: have you ever had COPD" seems the most promising. Let's copy that variable's HPDS path to use in our query. Also note what values are present for this variable- we will filter to participants with value "Yes".
@@ -232,12 +195,7 @@ copd_path <- '\\phs000179\\pht002239\\phv00159731\\COPD\\'
 ```
 
 ```{r}
-copd_query <- picsure::bdc.newQuery(session) # Initialize a new query
-
-copd_query <- picsure::addClause(query = copd_query, 
-                                 keys = copd_path,
-                                 type = 'FILTER',
-                                 categories = list('Yes'))
+copd_clause <- picsure::buildClause(copd_path, picsure::PhenotypicFilterType$FILTER, categories = "Yes")
 ```
 
 ### Criteria 2: Participants with a missense variant on *SERPINA1*
@@ -245,74 +203,43 @@ copd_query <- picsure::addClause(query = copd_query,
 A filter for the *SERPINA1* gene can be added in a way similar to the first query shown above.
 
 ```{r}
-copd_query <- picsure::addClause(query = copd_query, 
-                                 keys = 'Gene_with_variant',
-                                 type = 'GENOMIC_FILTER',
-                                 categories = list('SERPINA1'))
+serpina_gene_clause <- picsure::buildGenomicFilter(picsure::GenomicFilterKey$GENE_WITH_VARIANT, values = "SERPINA1")
 ```
 
 We can take a look at the variant consequences available for filtering to confirm that missense variant is a filtering option.
 
 ```{r}
-# get all "Variant_consequence_calculated" values
-consequences = genotype_annotations %>% filter(name == 'Variant_consequence_calculated') %>% pull(values)
-consequences <- strsplit(consequences, ', ')[[1]]
-print(consequences)
-```
-
-```{r}
-copd_query <- picsure::addClause(query = copd_query, 
-                                 keys = 'Variant_consequence_calculated',
-                                 type = 'GENOMIC_FILTER',
-                                 categories = list("missense_variant"))
+missense_variant_clause <- picsure::buildGenomicFilter(picsure::GenomicFilterKey$VARIANT_CONSEQUENCE_CALCULATED, values = "missense_variant")
 ```
 
 COPDGene, like many studies in BDC, has associated participant genomic data in the TOPMed version of the study. In order to map to these genomic files, we will need the sample identifier from the TOPMed study of COPDGene, which has an accession number of phs000951.
 
 ```{r}
-sample_id_search <- picsure::bdc.searchPicsure(session, 'phs000951', includeValues = FALSE)
-sample_var <- sample_id_search %>% 
-  filter(var_description == "Sample ID") %>%
-  pull(name)
-print(sample_var)
+copd_topmed_facets <- picsure::facets(session)
+copd_topmed_facets <- picsure::addFacet(copd_topmed_facets, "dataset_id", "phs000951")
+sample_id_search <- picsure::searchDictionary(session, term = "sample id", facets = copd_topmed_facets)
+head(sample_id_search)
 ```
 
-To add this variable to the query, let's use `REQUIRE` to require participants to have genomic data from the TOPMed study. 
+To add these variables to the query, we can create a new clause that includes these as concepts in the export once we build the query. For now, we will save them for later.
 
 ```{r}
-copd_query <- picsure::addClause(query = copd_query,
-                                 keys = sample_var,
-                                 type = "REQUIRE")
+sample_vars <- sample_id_search %>% filter(display == "SAMPLE_ID") %>% pull(conceptPath)
+sample_vars
 ```
-
 
 ### 2.2 Get Results
-Now that the filtering is complete, we can use this final query to get counts and perform analysis on the data.
+We can construct the query to retrieve counts and the full data. Let's make the query.
 
 ```{r}
-picsure::runQuery(copd_query, resultType = 'count')
+full_query <- picsure::buildQuery(phenotypicFilter = copd_clause, genomicFilters = list(serpina_gene_clause, missense_variant_clause), includeConcepts = sample_vars)
+full_query_count <- picsure::runQuery(session, full_query, type = picsure::QueryType$COUNT)
+full_query_count
 ```
 
 ```{r}
-copd_result <- picsure::runQuery(copd_query)
-```
-
-```{r}
-dim(copd_result)
-```
-
-```{r}
-head(copd_result)
+full_query_results <- picsure::runQuery(session, full_query, type = picsure::QueryType$PARTICIPANT)
+head(full_query_results)
 ```
 
 The sample identifier column can be used to identify genomic data files from the associated TOPMed study for analysis. The following code can be used to get a list of the sample IDs associated with your cohort. Note that there are multiple samples associated with a single participant. In these cases, the IDs are separated by a tab or `\t` character.
-
-```{r}
-mapping_df <- copd_result %>%
-  select(patient_id, "\\phs000951\\pht005051\\phv00253403\\SAMPLE_ID\\") %>%
-  rename(sample_id = "\\phs000951\\pht005051\\phv00253403\\SAMPLE_ID\\") %>%
-  mutate(sample_id = strsplit(sample_id, "\t")) %>%
-  unnest(sample_id)
-mapping_df
-```
-
