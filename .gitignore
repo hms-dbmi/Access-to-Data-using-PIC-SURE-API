@@ -8,3 +8,4 @@ ORCHID*
 *.DS_Store*
 *.gitignore*
 TODO.md
+*.RData
