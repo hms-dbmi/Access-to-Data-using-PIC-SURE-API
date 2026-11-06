@@ -25,6 +25,8 @@ This folder is different in a few ways worth knowing before you rely on anything
 | Notebook | Language | Audience / origin | Last run rate | Summary |
 |---|---|---|---|---|
 | [BDC_Demo_to_Yale_Lab_2026.ipynb](BDC_Demo_to_Yale_Lab_2026.ipynb) | Python | Live demo for a Yale research lab | September 8, 2026 | End-to-end introduction to the PIC-SURE API on *NHLBI BioData Catalyst®*: connecting with a security token, searching the variable dictionary (with facets), reading concept paths, building categorical / continuous / `REQUIRE` filters into clause groups, running count and participant-level queries, and picking up a cohort built in the web UI by its query ID. Uses the Framingham tutorial study. |
+| [Howard_Course_Digitalis_2026.Rmd](Howard_Course_Digitalis_2026.Rmd) | R (RStudio) | Howard course | Not yet run | Exports a whole study: searches every variable in the Digitalis tutorial study (`tutorial-biolincc_digitalis`) with a `dataset_id` facet, builds a single `ANYRECORD` query across all of them, exports participant-level data, renames the concept-path columns to human-readable variable descriptions, and saves `digitalis_data.csv` with the last node of each concept path as the column name. |
+| [Howard_Course_Digitalis_Analysis_2026.Rmd](Howard_Course_Digitalis_Analysis_2026.Rmd) | R (RStudio) | Howard course | Not yet run in RStudio | Analyzes the `digitalis_data.csv` export from the notebook above: plots ejection fraction by NYHA functional class, runs a one-way ANOVA with Tukey comparisons, and fits a multiple linear regression of EF on NYHA class adjusted for age, sex, BMI, CHF etiology and EF measurement method. |
 
 ## Adding a demo to this folder
 

@@ -1,0 +1,230 @@
+---
+title: "Exporting a Whole Study with the PIC-SURE API: Digitalis Tutorial Dataset"
+output: html_document
+---
+
+**Search every variable in a study, export the participant-level data, and save it as a CSV with readable column names.**
+
+---
+
+### What this notebook covers
+
+1. Connect to the *NHLBI BioData Catalyst®* (BDC) PIC-SURE API with your personal security token
+2. Search the data dictionary for **every variable** in the `tutorial-biolincc_digitalis` study
+3. Build a query with an **`ANYRECORD`** clause across all of those variables
+4. **Export** the participant-level data as a data frame
+5. **Rename** the columns from concept paths to human-readable variable descriptions, to explore the data
+6. **Save** the data as `digitalis_data.csv`, with the last node of each concept path as the column name, plus a data dictionary, `digitalis_dd.csv`
+
+### About the data
+
+The Digitalis Investigation Group (DIG) teaching dataset is a BioLINCC dataset made for teaching purposes. In PIC-SURE its study ID is `tutorial-biolincc_digitalis`.
+
+*Platform:* BDC Authorized PIC-SURE. *Last run:* not yet run against the live platform.
+
+## 1. Environment set-up
+
+**Prerequisites:** R 4.1 or later.
+
+Run the install chunk below once. It installs the PIC-SURE R adapter from GitHub.
+
+*Troubleshooting: if you encounter an error while installing packages or connecting to PIC-SURE, try restarting your R session and trying again.*
+
+```{r}
+# Uncomment this line if you do not have devtools installed
+#install.packages("devtools")
+
+Sys.setenv(TAR = "/bin/tar")
+options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", ref = "query_v3", force = TRUE, quiet = FALSE)
+```
+
+```{r}
+library(picsure)
+library(dplyr)
+```
+
+## 2. Your security token
+
+PIC-SURE authenticates you with a **personal security token**. It encodes who you are and, by extension, which studies you can see.
+
+To get one:
+
+1. Open <https://picsure.biodatacatalyst.nhlbi.nih.gov/> and log in via **RAS**
+2. Click the **Prepare for Analysis** tab: <https://picsure.biodatacatalyst.nhlbi.nih.gov/analyze/api>
+3. Click **Copy** in the Personalized Access Token box
+4. Save it to a file named `token.txt` next to this notebook
+
+> **Your token is personal — treat it like a password.** Do not paste it into a shared notebook, do not commit `token.txt`.
+
+### Connecting
+
+`picsure::connect()` takes the platform you want and your token. `Platform$BDC_AUTHORIZED` indicates that BDC Authorized PIC-SURE is the platform to connect to.
+
+```{r}
+token_file <- "token.txt"
+my_token <- readLines(token_file, warn = FALSE)[1]
+
+session <- picsure::connect(
+  platform = picsure::Platform$BDC_AUTHORIZED,
+  token    = my_token
+)
+```
+
+## 3. Search for every variable in the study
+
+To get all the variables in one study, we search the data dictionary with an **empty search term** and narrow the results with a **facet** on the study's `dataset_id`.
+
+`picsure::facets()` starts an empty facet set, and `picsure::addFacet()` selects the study.
+
+```{r}
+study_id <- "tutorial-biolincc_digitalis"
+
+study_facets <- picsure::facets(session)                        # start an empty facet set
+picsure::addFacet(study_facets, "dataset_id", study_id)         # restrict to the digitalis tutorial study
+```
+
+```{r}
+# An empty search term returns every variable that matches the facet
+digitalis_vars <- picsure::searchDictionary(session, "", facets = study_facets, include_values = TRUE)
+
+# Keep only this study's variables, as a safeguard
+digitalis_vars <- digitalis_vars[digitalis_vars$studyId == study_id, ]
+
+nrow(digitalis_vars)  # How many variables did the search return?
+```
+
+Each row is one variable. The columns we will use are:
+
+| Column | Meaning |
+|---|---|
+| `conceptPath` | The unique path PIC-SURE uses to query the variable |
+| `name` | The variable name used by the original data submitters (e.g. `AGE`) |
+| `description` | A human-readable description of the variable |
+| `dataType` | Whether the variable is categorical or continuous |
+
+```{r}
+head(digitalis_vars[, c("conceptPath", "name", "description", "dataType")], 10)
+```
+
+We save the concept paths to use in the query.
+
+```{r}
+digitalis_paths <- digitalis_vars$conceptPath
+head(digitalis_paths, 10)
+```
+
+## 4. Build a query with `ANYRECORD`
+
+An **`ANYRECORD`** clause selects participants who have a value for **at least one** of the listed concept paths. Passing every digitalis concept path to one clause therefore selects every participant with any data in the study, and the export returns every one of those variables as a column.
+
+```{r}
+digitalis_clause <- picsure::buildClause(
+  digitalis_paths,
+  type = picsure::PhenotypicFilterType$ANYRECORD
+)
+
+digitalis_query <- picsure::buildQuery(
+  phenotypicFilter = digitalis_clause
+)
+```
+
+Before exporting, check how many participants the query matches. Here, we should see 6,800 participants.
+
+```{r}
+digitalis_count <- picsure::runQuery(session, digitalis_query, type = picsure::QueryType$COUNT)
+digitalis_count
+```
+
+## 5. Export the participant-level data
+
+`picsure::runQuery()` with `type = picsure::QueryType$PARTICIPANT` returns a data frame. Each row is a participant, and each column is a concept path, plus a `patient_id` column.
+
+```{r}
+digitalis_data <- picsure::runQuery(session, digitalis_query, type = picsure::QueryType$PARTICIPANT)
+dim(digitalis_data)
+head(digitalis_data)
+```
+
+## 6. Rename columns with human-readable descriptions
+
+Concept paths are precise but hard to read. To explore the data, we build a lookup from each concept path to its `description` from the data dictionary, then rename the columns.
+
+Two details need handling:
+
+- **Missing descriptions:** if a variable has no description, fall back to its `name`.
+- **Duplicate descriptions:** two variables can share a description. A data frame should not have two columns with the same name, so we add the variable `name` in brackets to any duplicates, e.g. `Age at randomization [AGE]`.
+
+```{r}
+# Use the description, or the variable name if the description is empty
+labels <- trimws(ifelse(is.na(digitalis_vars$description), "", digitalis_vars$description))
+labels <- ifelse(labels == "", digitalis_vars$name, labels)
+
+# Make duplicate descriptions unique by adding the variable name
+is_duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
+labels <- ifelse(is_duplicate, paste0(labels, " [", digitalis_vars$name, "]"), labels)
+labels <- make.unique(labels)  # in case the description and name are both repeated
+
+path_to_description <- setNames(labels, digitalis_vars$conceptPath)
+```
+
+```{r}
+# Columns not in the dictionary (such as patient_id) keep their original name
+digitalis_data_readable <- digitalis_data
+matched <- names(digitalis_data_readable) %in% names(path_to_description)
+names(digitalis_data_readable)[matched] <- path_to_description[names(digitalis_data_readable)[matched]]
+
+head(digitalis_data_readable)
+```
+
+Keep the lookup as a small data dictionary, so you can always trace a readable column name back to its concept path.
+
+```{r}
+column_dictionary <- data.frame(
+  column_name = unname(path_to_description),
+  conceptPath = names(path_to_description)
+)
+head(column_dictionary, 10)
+```
+
+## 7. Save the data as a CSV
+
+Descriptions make good labels for exploring, but they are long and contain spaces, which makes them awkward as column names in a CSV. For the saved file we instead use the **last node of each concept path**, which is the variable name. For example, `\tutorial-biolincc_digitalis\AGE\` becomes `AGE`.
+
+If two concept paths end in the same node, `make.unique()` adds a suffix (`AGE`, `AGE.1`) so every column name stays unique.
+
+```{r}
+# Last node of a concept path: drop the trailing backslash, then keep the text after the last backslash
+last_node <- function(concept_path) {
+  sub(".*\\\\", "", sub("\\\\$", "", concept_path))
+}
+
+digitalis_export <- digitalis_data
+names(digitalis_export) <- make.unique(last_node(names(digitalis_export)))
+
+head(digitalis_export)
+```
+
+```{r}
+write.csv(digitalis_export, "digitalis_data.csv", row.names = FALSE)
+```
+
+Save a data dictionary alongside it, so each CSV column can be traced to its description and concept path.
+
+```{r}
+digitalis_dd <- data.frame(
+  column_name = make.unique(last_node(digitalis_vars$conceptPath)),
+  description = unname(path_to_description[digitalis_vars$conceptPath]),
+  conceptPath = digitalis_vars$conceptPath
+)
+head(digitalis_dd, 10)
+
+write.csv(digitalis_dd, "digitalis_dd.csv", row.names = FALSE)
+```
+
+`digitalis_data.csv` and `digitalis_dd.csv` are saved next to this notebook.
+
+### Next steps
+
+- Some participants may have **more than one value** for a variable, separated by a tab (`\t`). Decide how to handle them (for example, first value or mean) before analysis.
+- `digitalis_data.csv` is participant-level data: store it only where your data use agreement allows, and do not commit it to source control.
