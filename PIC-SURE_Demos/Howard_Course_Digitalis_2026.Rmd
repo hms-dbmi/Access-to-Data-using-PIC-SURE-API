@@ -1,0 +1,292 @@
+---
+title: "Creating Cohorts with the PIC-SURE API: Digitalis Tutorial Dataset"
+output: html_document
+---
+
+# Part 1: Data Retrieval
+
+### What this covers
+
+1. Connect to the *NHLBI BioData Catalyst®* (BDC) PIC-SURE API with your personal security token
+2. Search the data dictionary for **every variable** in the `tutorial-biolincc_digitalis` study, finding key variables of interest
+3. Build a query using the variables from the study
+4. **Export** the participant-level data as a data frame
+5. **Rename** the columns from concept paths to human-readable variable descriptions, to explore the data
+6. **Save** the data and data dictionary files as csv files
+### About the data
+
+The Digitalis Investigation Group (DIG) teaching dataset is a BioLINCC dataset made for teaching purposes. In PIC-SURE its study ID is `tutorial-biolincc_digitalis`.
+
+For this course, we are going to investigate the relationship between **ejection fraction** and **New York Heart Association (NYHA) Class**.
+
+* **Ejection fraction** is a quantitative measurement that describes how well the heart circulates blood in the body.
+* **NYHA Class** is a categorical or discrete variable, where patients are categorized into classes based on how much heart failure impacts their physical activity. There are four classes (I, II, III, and IV).
+
+## 1. Environment set-up
+
+**Prerequisites:** R 4.1 or later.
+
+```{r}
+library(picsure)
+library(dplyr)
+```
+
+## 2. Your security token
+
+PIC-SURE authenticates you with a **personal security token**. It encodes who you are and, by extension, which studies you can see.
+
+To get one:
+
+1. Open <https://picsure.biodatacatalyst.nhlbi.nih.gov/> and log in via **BDC Developer**
+2. Click the **Prepare for Analysis** tab: <https://picsure.biodatacatalyst.nhlbi.nih.gov/analyze/api>
+3. Click **Copy** in the Personalized Access Token box
+4. Save it to a file named `token.txt` next to this notebook
+
+> **Your token is personal — treat it like a password.** Do not paste it into a shared notebook, do not commit `token.txt`.
+
+### Connecting
+
+`picsure::connect()` takes the platform you want and your token. `Platform$BDC_AUTHORIZED` indicates that BDC Authorized PIC-SURE is the platform to connect to.
+
+```{r}
+token_file <- "token.txt"
+my_token <- readLines(token_file, warn = FALSE)[1]
+
+session <- picsure::connect(
+  platform = picsure::Platform$BDC_AUTHORIZED,
+  token    = my_token
+)
+```
+
+## 3. Find variables of interest in the study
+
+To get all the variables in one study, we search the data dictionary with an **empty search term** and narrow the results with a **facet** on the study's `dataset_id`.
+
+`picsure::facets()` starts an empty facet set, and `picsure::addFacet()` selects the study.
+
+```{r}
+study_id <- "tutorial-biolincc_digitalis"
+
+study_facets <- picsure::facets(session)                        # start an empty facet set
+picsure::addFacet(study_facets, "dataset_id", study_id)         # restrict to the digitalis tutorial study
+```
+
+```{r}
+# An empty search term returns every variable that matches the facet
+digitalis_vars <- picsure::searchDictionary(session, "", facets = study_facets, include_values = TRUE)
+
+nrow(digitalis_vars)  # How many variables did the search return?
+```
+
+Each row is one variable. The columns we will use are:
+
+| Column | Meaning |
+|---|---|
+| `conceptPath` | The unique path PIC-SURE uses to query the variable |
+| `name` | The variable name used by the original data submitters (e.g. `AGE`) |
+| `description` | A human-readable description of the variable |
+| `dataType` | Whether the variable is categorical or continuous |
+
+```{r}
+head(digitalis_vars[, c("conceptPath", "name", "description", "dataType")], 10)
+```
+
+## 4. Build the query
+
+An **`ANYRECORD`** clause selects participants who have a value for **at least one** of the listed concept paths. Passing every Digitalis concept path to one clause therefore selects every participant with any data in the study, and the export returns every one of those variables as a column.
+
+
+```{r}
+# Creating the ANYRECORD clause
+digitalis_clause <- picsure::buildClause(
+  keys = digitalis_vars$conceptPath,
+  type = picsure::PhenotypicFilterType$ANYRECORD
+)
+
+# Building out the query, using the clause group and all variables in Digitalis
+digitalis_query <- picsure::buildQuery(
+  phenotypicFilter = digitalis_clause
+)
+```
+
+
+## 5. Export the participant-level data
+
+`picsure::runQuery()` with `type = picsure::QueryType$PARTICIPANT` returns a data frame. Each row is a participant, and each column is a concept path, plus a `patient_id` column.
+
+```{r}
+digitalis_data <- picsure::runQuery(session, digitalis_query, type = picsure::QueryType$PARTICIPANT)
+print(c("Shape of data", dim(digitalis_data)))
+head(digitalis_data)
+```
+
+## 6. Rename columns with human-readable descriptions
+
+Concept paths are precise but hard to read. To explore the data, we will first replace the concept paths in the column names with the `name` field from the data dictionary.
+
+```{r}
+# Create a mapping of the column names in the data to the concept paths in the data dictionary
+mapping <- match(names(digitalis_data), digitalis_vars$conceptPath)
+
+# Update the column names from the concept paths to the `name` where the mapping exists
+names(digitalis_data)[!is.na(mapping)] <- digitalis_vars$name[mapping[!is.na(mapping)]]
+```
+
+
+## 7. Save the data as a CSV
+We are going to save this file as a `csv` file to use in our Seven Bridges project. 
+
+```{r}
+write.csv(digitalis_data, "digitalis_data_mod.csv", row.names = FALSE)
+```
+
+Save a data dictionary alongside it, so each CSV column can be traced to its description and concept path.
+
+```{r}
+digitalis_dd <- digitalis_vars %>% select(conceptPath, name, description)
+write.csv(digitalis_dd, "digitalis_dd_mod.csv", row.names = FALSE)
+```
+
+
+# Part 2: Analysis
+In this exercise, we will investigate the relationship between ejection fraction and New York Heart Association (NYHA) class.
+
+* **Ejection fraction** is a measurement that describes how well the left ventricle in the heart pumps.
+
+* **NYHA Class** describes how much a patient's heart failure symptoms impact physical activity. The classes go from I to IV, increasing in symptom severity and physical limitation.
+
+First, we will read in our data from our data retrieval in part 1. Then we will explore and prepare the dataframe for analysis.
+Then, we will run linear regressions to see the relationship between these variables.
+Finally, we will conduct an ANOVA test and assess the assumptions. 
+
+```{r}
+library(dplyr)
+```
+
+
+### 1) Read in and explore data 
+Let's load the data and data dictionary from part 1 for exploration.
+```{r}
+df <- read.csv("/sbgenomics/project-files/digitalis_data_mod.csv")
+head(df)
+```
+```{r}
+dd <- read.csv("/sbgenomics/project-files/digitalis_dd_mod.csv")
+head(dd)
+```
+
+
+We can take a closer look at our variables of interest: `EJF_PER` and `FUNCTCLS`.
+```{r}
+print(c("Variable description", dd %>% filter(name == "EJF_PER") %>% pull(description)))
+summary(df$EJF_PER)
+```
+
+Above, we can see that the ejection fraction variable is a continuous or numeric variable measured as a percentage. The measurements range from 4% to 45%, and two people do not have measurements (NA).
+
+```{r}
+print(c("Variable description", dd %>% filter(name == "FUNCTCLS") %>% pull(description)))
+unique(df$FUNCTCLS)
+```
+The NYHA functional class variable is categorical or discrete. Here we can see that there are four classes in the data, ranging from Class I to Class IV. Additionally, there are some people that do not have an associated class (NA).
+
+There are a few data wrangling steps to take:
+1. The values in the NYHA variable are messy and difficult to work with. We will replace these values with simpler values and transform this character type to a factor type for analysis.
+2. Remove NAs from NYHA variable for analysis.
+
+Update values of NYHA by creating an new variable/column `nyha`
+```{r}
+# Update values of FUNCTCLS variable by creating a new column NYHA
+nyha_levels <- c("I", "II", "III", "IV") # Specify the new values
+
+# Transform the data
+# Create new column NYHA that only has the roman numeral
+df <- df %>%
+  mutate(NYHA = sub("^Class (IV|III|II|I)\\b.*", "\\1", FUNCTCLS)) 
+
+# Make the new NYHA column into a factor type
+df <- df %>%
+  mutate(NYHA = factor(ifelse(NYHA %in% nyha_levels, NYHA, NA), levels = nyha_levels)) 
+
+# Remove people (rows) with NA in NYHA column
+df <- df %>% 
+  filter(!is.na(EJF_PER), !is.na(NYHA))
+```
+
+
+Let's take a look at the summary statistics of ejection fraction for each NYHA class
+```{r}
+ef_by_nyha <- df %>%
+  group_by(NYHA) %>%
+  summarise(
+    n         = n(),
+    mean_ef   = mean(EJF_PER),
+    sd_ef     = sd(EJF_PER),
+    median_ef = median(EJF_PER),
+    iqr_ef    = IQR(EJF_PER)
+  )
+
+ef_by_nyha
+```
+
+
+### 2) Fit a linear model
+Our explanatory variable (independent) is New York Heart Association (NYHA) Class
+Our response variable (dependent) is ejection fraction
+
+First, let's create our linear model.
+
+```{r}
+lm(df$EJF_PER~df$NYHA)
+```
+
+View the summary of the linear model, which includes p-values. 
+
+```{r}
+summary(lm(df$EJF_PER~df$NYHA))
+```
+
+### 3) Plot the variate against the variable of interest 
+
+```{r, fig.height=6}
+plot(df$NYHA, df$EJF_PER, col=4)
+abline(lm(df$EJF_PER~df$NYHA))
+```
+
+
+### 4) Fit a second linear model incorporating other 
+Now let's create a similar linear model, but this time accounting for age and sex. 
+
+```{r}
+fit2=lm(df$EJF_PER~df$NYHA+df$AGE+df$SEX)
+fit2
+```
+View the summary of the second linear model. 
+
+```{r}
+summary(fit2)
+```
+Here, we can see that sex is a significant covariate with a low p-value, but age is not significant. Using this information, we could adjust our model by removing age as a covariate since does not have a significant effect.
+
+
+### 5) Perform ANOVA on the multi-variable linear model 
+
+```{r}
+anova(lm(df$EJF_PER~df$NYHA+df$SEX))
+```
+
+### 6) View Q-Q plot for fit2
+
+```{r}
+qqnorm(resid(fit2))
+qqline(resid(fit2), col = "red")
+```
+
+### 7) Produce residual vs. fitted plot
+
+add a horizontal line at 0 
+
+```{r}
+plot(fitted(fit2), resid(fit2), col=4)
+abline(0,0)
+```
