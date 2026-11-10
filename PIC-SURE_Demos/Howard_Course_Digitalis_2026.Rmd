@@ -249,7 +249,7 @@ summary(lm(df$EJF_PER~df$NYHA))
 ### 3) Plot the variate against the variable of interest 
 
 ```{r, fig.height=6}
-plot(df$NYHA, df$EJF_PER, col=4)
+plot(df$NYHA, df$EJF_PER, col=c("green","yellow","orange","red"), xlab="NYHA Functional Class",ylab="Ejection Fraction (Percentage)")
 abline(lm(df$EJF_PER~df$NYHA))
 ```
 
