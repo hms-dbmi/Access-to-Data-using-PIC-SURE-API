@@ -25,6 +25,7 @@ This folder is different in a few ways worth knowing before you rely on anything
 | Notebook | Language | Audience / origin | Last run rate | Summary |
 |---|---|---|---|---|
 | [BDC_Demo_to_Yale_Lab_2026.ipynb](BDC_Demo_to_Yale_Lab_2026.ipynb) | Python | Live demo for a Yale research lab | September 8, 2026 | End-to-end introduction to the PIC-SURE API on *NHLBI BioData Catalyst®*: connecting with a security token, searching the variable dictionary (with facets), reading concept paths, building categorical / continuous / `REQUIRE` filters into clause groups, running count and participant-level queries, and picking up a cohort built in the web UI by its query ID. Uses the Framingham tutorial study. |
+| [Howard_Course_Digitalis_2026.Rmd](Howard_Course_Digitalis_2026.Rmd) | R | Lab for a Biostatistics course on linear regression | November 10, 2026 | Preparing the tutorial Digitalis dataset for analysis by retrieving all variables in the study, then cleaning and wrangling the data and performing analyses to determine the interaction between ejection fraction and New York Heart Association classification. |
 
 ## Adding a demo to this folder
 
