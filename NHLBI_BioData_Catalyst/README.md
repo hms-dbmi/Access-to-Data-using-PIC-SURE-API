@@ -30,6 +30,7 @@ To get your token, process as follows:
 ### Available notebooks
 
 Example Jupyter notebooks are available in Python and R. Additionally, R Markdown examples are available for RStudio environments. In the R, python, and RStudio folders, six notebooks are available:
+- 0_Open_Access_Data_Dictionary_Search.ipynb (python): A tutorial on searching the PIC-SURE data dictionary with Open Access, using a public access key from the API page instead of an eRA Commons login, including narrowing searches with facets.
 - 0_Export_from_UI.ipynb: A tutorial on how to export a data frame built in the UI into an analysis workspace.
 - 1_PICSURE_API_101: An illustration of the main functionalities of the PIC-SURE API.
 - 2_PheWAS: A straightforward PIC-SURE API use-case, using a PheWAS (Phenome-Wide Association Study) analysis as an illustration example.
