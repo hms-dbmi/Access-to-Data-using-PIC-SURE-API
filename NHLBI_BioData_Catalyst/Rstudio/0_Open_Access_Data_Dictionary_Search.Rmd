@@ -1,0 +1,205 @@
+---
+title: An R Markdown document converted from "0_Open_Access_Data_Dictionary_Search.ipynb"
+output: html_document
+---
+
+
+# Searching the PIC-SURE Data Dictionary with Open Access
+This tutorial notebook shows how to use the PIC-SURE API with **Open Access**. With Open Access, you do not need to log in with your RAS credentials or have any approved dbGaP studies. All you need is a public access key, which lets you search the PIC-SURE data dictionary.
+
+## PIC-SURE R API
+### What is PIC-SURE?
+As part of the *NHLBI BioData Catalyst® (BDC)* ecosystem, the Patient Information Commons: Standard Unification of Research Elements (PIC-SURE) platform has been integrating clinical and genomic datasets from multiple TOPMed and TOPMed-related studies funded by the National Heart, Lung, and Blood Institute (NHLBI).
+
+Original data exposed through the PIC-SURE API encompasses a large heterogeneity of data organization underneath. PIC-SURE hides this complexity and exposes the different study datasets in a single tabular format. By simplifying the process of data extraction, it allows investigators to focus on downstream analysis and to facilitate reproducible science.
+
+PIC-SURE API GitHub repositories:
+* https://github.com/hms-dbmi/pic-sure-r-adapter-hpds
+
+ ------- 
+
+## Getting your public access key
+To use Open Access through the API, you will need a public access key. To request one:
+
+1. In a web browser, go to the [*BDC Powered by PIC-SURE* website](https://picsure.biodatacatalyst.nhlbi.nih.gov/).
+2. Navigate to the **API** page.
+3. Request a public access key and copy it.
+
+**Keep your key private. Do not share it or commit it to a code repository.**
+
+Next, create a file in your working directory called `open_token.txt`. Paste the public access key in this file and save it.
+
+## Environment set-up
+
+### Pre-requisites
+* R 4.1 or later
+
+### Install packages
+The first step to using the PIC-SURE API is to install the `picsure` package from GitHub.
+
+**Note that if you are using the dedicated PIC-SURE environment within the *BDC Powered by Seven Bridges* platform, the necessary packages have already been installed.**
+
+```{r}
+### Uncomment this code if you are not using the PIC-SURE environment in *BDC-Seven Bridges*, or if you do not have all the necessary dependencies installed.
+#install.packages("devtools")
+```
+
+```{r}
+#Sys.setenv(TAR = "/bin/tar")
+#options(unzip = "internal")
+devtools::install_github("hms-dbmi/pic-sure-r-adapter-hpds", force=T, quiet=FALSE)
+```
+
+```{r}
+library(picsure)
+```
+
+## Connecting to Open PIC-SURE
+The following is required to connect to PIC-SURE with Open Access:
+* the platform that should be connected, `picsure::Platform$BDC_OPEN`
+* your public access key, read from the `open_token.txt` file created above
+
+Note that we use `picsure::Platform$BDC_OPEN` here rather than `picsure::Platform$BDC_AUTHORIZED`, which is used in the other notebooks in this folder.
+
+```{r}
+token_file <- "open_token.txt"
+my_open_token <- trimws(readLines(token_file, warn = FALSE)[1])
+
+session <- picsure::connect(
+  platform = picsure::Platform$BDC_OPEN,
+  token    = my_open_token
+)
+```
+
+## Searching the PIC-SURE data dictionary
+The data dictionary describes every variable available in PIC-SURE. Use `picsure::searchDictionary()` to search it for a term of interest. The search looks across variable names, descriptions, and study information, and returns the results as a data frame.
+
+Let's search for the term `blood pressure`.
+
+```{r}
+bp_df <- picsure::searchDictionary(session, "blood pressure")  # Search for "blood pressure"
+nrow(bp_df)  # How many variables did the search return?
+```
+
+```{r}
+head(bp_df)  # View the first 6 rows
+```
+
+Each row of the results is one variable. Some of the most useful columns are:
+
+| Column | Description |
+|---|---|
+| `conceptPath` | Unique path to the variable; used to build queries with Authorized Access |
+| `name` | Variable name (for dbGaP studies, the phv accession) |
+| `display` | Short display name of the variable |
+| `description` | Description of the variable |
+| `dataType` | Whether the variable is categorical or continuous |
+| `studyId` | Study accession (e.g. `phs000007`) |
+| `studyAcronym` | Study abbreviation (e.g. `FHS`) |
+| `values` | For categorical variables, the possible values (stored as a list column) |
+| `min`, `max` | For continuous variables, the minimum and maximum values |
+
+Each variable is organized as a concept path that contains information about the study, variable group, and variable. Though the specifics of the concept paths depend on the type of study, the overall information included is the same.
+
+| Data organization | TOPMed & TOPMed-related studies | BioLINCC & COVID-19 studies (including public data) |
+|-------------------|---------------------------------|-----------------------------|
+| General organization | Data organized using the format implemented by the database of Genotypes and Phenotypes (dbGaP). Generally, a given study will have several tables, and those tables have several variables. | Data do not follow dbGaP format; there are no phv or pht accessions. Data are organized in groups of like variables, when available. |
+| Concept path structure | \\phs\\pht\\phv\\variable name\\ | \\phs\\variable name\\ |
+| Variable ID | phv corresponding to the variable accession number | Equivalent to variable name |
+
+Let's take a closer look at the details for the first variable in the search results.
+
+```{r}
+str(bp_df[1, ])  # Look at first variable
+```
+
+We can see which studies these variables come from by counting the results per study.
+
+```{r}
+head(sort(table(bp_df$studyAcronym), decreasing = TRUE), 10)  # Top 10 studies with "blood pressure" variables
+```
+
+## Narrowing a search with facets
+As we can see above, results are returned from many different studies.
+Facets let you filter search results by category, such as a specific study or a type of data. These are the same filters shown in the left-hand panel of the PIC-SURE website.
+
+### Viewing the available facets
+`session$showAllFacets()` returns every facet category and option as a data frame, along with how many variables match each option. The `category` column contains the name to use when selecting a facet, and the `value` column contains the option to select.
+
+```{r}
+all_facets <- session$showAllFacets()
+unique(all_facets$category)  # What are the facet options?
+```
+
+```{r}
+head(all_facets, 10)
+```
+
+For this example, we will use the **Framingham Heart Study (FHS)**, which has the study accession `phs000007`.
+
+```{r}
+study_id <- "phs000007"  # Framingham Heart Study
+```
+
+### Searching with a facet
+To apply facets to a search:
+1. Create a facet object with `picsure::facets()`.
+2. Select options with `picsure::addFacet(facets, category, value)`. You can pass a single value or a vector of values.
+3. Pass the facet object to `picsure::searchDictionary()` with the `facets =` argument.
+
+Let's search for `blood pressure` variables in the Framingham Heart Study only.
+
+```{r}
+fhs_facets <- picsure::facets(session)  # Create a facet object with no selections
+fhs_facets <- picsure::addFacet(fhs_facets, "dataset_id", study_id)  # Select the Framingham Heart Study
+fhs_facets$view()  # Show which facets are selected
+```
+
+```{r}
+fhs_bp_df <- picsure::searchDictionary(session, "blood pressure", facets = fhs_facets)
+nrow(fhs_bp_df)  # How many FHS variables match "blood pressure"?
+```
+
+```{r}
+head(fhs_bp_df)  # See first variables
+```
+
+Studies often record the same concept in several places, such as in different tables, exams, or cohorts. Let's compare how the matching Framingham variables are described and which values they use.
+
+```{r}
+fhs_bp_df[, c("name", "display", "description", "dataType", "values")]
+```
+
+### Clearing facets
+To remove a selection, use `picsure::removeFacet()` with the same category and value that you added.
+
+```{r}
+fhs_facets <- picsure::removeFacet(fhs_facets, "dataset_id", study_id)
+fhs_facets$view()
+```
+
+### Large searches and paging
+Broad search terms can match many thousands of variables. By default, `searchDictionary()` collects every page of results for you. To look at results one page at a time instead, pass `page =` (starting at 0) and `page_size =`. To read all results this way, increase `page` until a page comes back with fewer than `page_size` rows.
+
+```{r}
+first_page <- picsure::searchDictionary(session, "blood pressure", page = 0, page_size = 100)
+nrow(first_page)  # How many variables were returned with this search?
+```
+
+## Saving your search results
+Data dictionary results can be saved like any other data frame. For example, to save the Framingham `blood pressure` variables to a CSV file:
+
+Note that the `values` and `meta` columns are list columns, which `write.csv()` cannot save directly. Below, we collapse `values` into a single text field separated by `; ` and leave out `meta`.
+
+```{r}
+fhs_bp_export <- fhs_bp_df[, setdiff(names(fhs_bp_df), "meta")]
+fhs_bp_export$values <- vapply(fhs_bp_export$values, function(v) paste(unlist(v), collapse = "; "), character(1))
+
+write.csv(fhs_bp_export, "fhs_bp_variables.csv", row.names = FALSE)
+```
+
+## Next steps
+With Open Access, you have searched the PIC-SURE data dictionary and narrowed the results with facets. To go further:
+
+* **Feasibility assessments with Authorized Access:** To get participant counts and build cohorts with these variables, log in with your eRA Commons account and use your personal access token. See the Authorized Access feasibility notebook *(link to be added; ALS-13754)*.
+* **Building queries and retrieving participant-level data:** See [`1_PICSURE_API_101.ipynb`](./1_PICSURE_API_101.ipynb) for how to build queries and export data for studies you are authorized to access.

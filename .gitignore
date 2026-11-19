@@ -4,7 +4,6 @@ ORCHID*
 *ipynb_checkpoints*
 .idea
 .project
-*data_dictionary*
 *.DS_Store*
 *.gitignore*
 TODO.md
