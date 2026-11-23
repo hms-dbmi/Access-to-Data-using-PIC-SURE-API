@@ -1,0 +1,12 @@
+.git
+.gitignore
+**/.ipynb_checkpoints
+**/__pycache__
+**/*.pyc
+.idea
+.project
+**/.DS_Store
+.env
+**/*data_dictionary*
+**/*token.txt*
+docs/superpowers

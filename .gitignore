@@ -1,8 +1,10 @@
 *token.txt*
+ORCHID*
 *__pycache__*
 *ipynb_checkpoints*
 .idea
 .project
-*data_dictionary*
 *.DS_Store*
 *.gitignore*
+TODO.md
+*.RData
